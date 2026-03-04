@@ -65,10 +65,11 @@ import { TranslatePipe } from '../pipes/translate.pipe';
             </div>
             
             <!-- Properties Menu -->
-            <div class="pt-6">
-                <div class="px-3 pb-3">
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ 'SIDEBAR.Management' | translate }}</span>
-                </div>
+            @if (userRole() === 'owner' || properties().length > 0) {
+                <div class="pt-6">
+                    <div class="px-3 pb-3">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ 'SIDEBAR.Management' | translate }}</span>
+                    </div>
                 <div class="px-2 space-y-2">
                     @if(properties().length > 0) {
                     <div class="relative">
@@ -186,6 +187,7 @@ import { TranslatePipe } from '../pipes/translate.pipe';
                     }
                 </div>
             </div>
+            }
 
         }
 
@@ -277,8 +279,10 @@ import { TranslatePipe } from '../pipes/translate.pipe';
       <!-- Footer User Profile -->
       <div class="px-4 py-4 border-t border-white/10 flex-shrink-0 bg-black/20 backdrop-blur-sm">
         <div class="flex items-center cursor-pointer group/profile" (click)="onOpenSettings()" data-debug-id="nav-profile-settings">
-            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-white flex items-center justify-center font-bold mr-3 shadow-md border border-white/10 overflow-hidden"
-                 [class.from-purple-900.to-purple-700]="userRole() === 'admin'">
+            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 text-white flex items-center justify-center font-bold mr-3 shadow-md border border-white/10 overflow-hidden transition-all duration-300 group-hover/profile:border-[#D4AF37]/50"
+                 [class.from-purple-900.to-purple-700]="userRole() === 'admin'"
+                 [class.from-yellow-700.to-yellow-900]="userRole() === 'owner'"
+                 [class.ring-2.ring-yellow-500.ring-offset-2.ring-offset-slate-900]="userRole() === 'owner'">
                 @if (userAvatar()) {
                     <img [src]="userAvatar()" class="w-full h-full object-cover" />
                 } @else {
@@ -290,8 +294,15 @@ import { TranslatePipe } from '../pipes/translate.pipe';
                 <div class="flex items-center text-xs mt-0.5">
                     <span class="w-1.5 h-1.5 rounded-full mr-2 shadow-sm" [class]="getTierIndicatorClass(userPlan())"></span>
                     <span class="font-semibold" [class]="getPlanColor()">{{ displayPlanName() }}</span>
+                    
                     @if(userRole() === 'admin') {
-                        <span class="bg-purple-900/50 text-purple-300 border border-purple-500/30 text-[9px] px-1.5 py-0.5 rounded-full ml-2">ADMIN</span>
+                        <span class="bg-purple-900/50 text-purple-300 border border-purple-500/30 text-[9px] px-1.5 py-0.5 rounded-full ml-2 uppercase font-mono font-bold">Admin</span>
+                    } @else if(userRole() === 'owner') {
+                        <span class="bg-yellow-900/50 text-yellow-300 border border-yellow-500/30 text-[9px] px-1.5 py-0.5 rounded-full ml-2 uppercase font-mono font-bold shadow-[0_0_8px_rgba(234,179,8,0.2)]">Owner</span>
+                    } @else if(userRole() === 'property_manager') {
+                        <span class="bg-blue-900/50 text-blue-300 border border-blue-500/30 text-[9px] px-1.5 py-0.5 rounded-full ml-2 uppercase font-mono font-bold">Manager</span>
+                    } @else if(userRole() === 'supplier') {
+                        <span class="bg-green-900/50 text-green-300 border border-green-500/30 text-[9px] px-1.5 py-0.5 rounded-full ml-2 uppercase font-mono font-bold">Supplier</span>
                     }
                 </div>
             </div>

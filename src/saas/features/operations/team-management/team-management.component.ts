@@ -138,16 +138,7 @@ export class TeamManagementComponent {
     session = inject(SessionStore);
     tier = computed(() => this.session.userProfile()?.plan || 'Freemium');
 
-    members = signal<TeamMember[]>([
-        {
-            id: '1',
-            name: 'JosB (You)',
-            email: 'jose@example.com',
-            role: 'Owner',
-            permissions: 'Full Access',
-            lastActive: 'Now',
-            status: 'Active'
-        },
+    localMembers = signal<TeamMember[]>([
         {
             id: '2',
             name: 'Marie Adjunct',
@@ -159,6 +150,29 @@ export class TeamManagementComponent {
         }
     ]);
 
+    members = computed(() => {
+        const profile = this.session.userProfile();
+        const role = profile?.role || 'user';
+        const displayRole = this.formatRole(role);
+
+        const you: TeamMember = {
+            id: '1',
+            name: 'JosB (You)',
+            email: profile?.email || 'jose@example.com',
+            role: displayRole,
+            permissions: role === 'owner' || role === 'admin' ? 'Full Access' : 'Standard Access',
+            lastActive: 'Now',
+            status: 'Active'
+        };
+
+        return [you, ...this.localMembers()];
+    });
+
+    formatRole(role: string): string {
+        if (!role) return 'User';
+        return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+
     inviteMember() {
         const newMember: TeamMember = {
             id: Math.random().toString(36).substr(2, 9),
@@ -169,6 +183,6 @@ export class TeamManagementComponent {
             lastActive: 'Never',
             status: 'Pending'
         };
-        this.members.update(prev => [...prev, newMember]);
+        this.localMembers.update(prev => [...prev, newMember]);
     }
 }

@@ -1,6 +1,6 @@
 
 import { Injectable, computed, signal, inject } from '@angular/core';
-import { ContextData, ReportData, Scores, UserProfile, AppPlan, PlanConfig, AppTier, AppPhase, Feature } from '../types';
+import { ContextData, ReportData, Scores, UserProfile, AppPlan, PlanConfig, AppTier, AppPhase, Feature, UserRole } from '../types';
 import { GeminiService } from '../services/gemini.service';
 import { HostRepository } from '../services/host-repository.service';
 import { SupabaseService } from '../services/supabase.service';
@@ -398,8 +398,8 @@ export class SessionStore {
 
         this.currentStep.set('dashboard');
 
-        // Apply Debug Override if exists
-        await this.checkDebugPlanOverride();
+        // Apply Debug Overrides if they exist
+        await this.checkDebugOverrides();
     }
 
     private setUserFromSupabase(user: any, profile: UserProfile | null = null) {
@@ -508,6 +508,14 @@ export class SessionStore {
     }
 
     // Debug Helper
+    async setRole(role: UserRole) {
+        if (this.userProfile()) {
+            localStorage.setItem('debug_simulated_role', role);
+            this.userProfile.update(u => u ? { ...u, role } : null);
+        }
+    }
+
+    // Debug Helper
     async setPlan(plan: AppPlan) {
         if (this.userProfile()) {
             // If we are "turning off" simulation (returning to real plan), we might need a way to know what the real plan was. 
@@ -528,12 +536,18 @@ export class SessionStore {
         }
     }
 
-    // Internal: Check for debug override and apply it
-    private async checkDebugPlanOverride() {
+    // Internal: Check for debug overrides and apply them
+    private async checkDebugOverrides() {
         const debugPlan = localStorage.getItem('debug_simulated_plan') as AppPlan | null;
         if (debugPlan && this.userProfile()) {
             console.log("Applying Debug Plan Override:", debugPlan);
-            await this.setPlan(debugPlan); // Reuse logic (will re-save to localstorage but that's fine)
+            await this.setPlan(debugPlan);
+        }
+
+        const debugRole = localStorage.getItem('debug_simulated_role') as UserRole | null;
+        if (debugRole && this.userProfile()) {
+            console.log("Applying Debug Role Override:", debugRole);
+            this.userProfile.update(u => u ? { ...u, role: debugRole } : null);
         }
     }
 

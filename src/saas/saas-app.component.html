@@ -38,14 +38,26 @@
 
             <!-- Header Actions -->
             <div class="flex items-center gap-4">
-                <!-- DEBUG: Tier Selector -->
-                <div class="hidden md:flex items-center bg-indigo-500/10 rounded-lg px-2 border border-indigo-500/20">
-                    <span class="text-xs text-indigo-300 font-bold mr-2 uppercase">Simulate:</span>
+                <!-- DEBUG: Selectors -->
+                <div
+                    class="hidden md:flex items-center gap-2 bg-indigo-500/10 rounded-lg px-2 border border-indigo-500/20">
+                    <span class="text-xs text-indigo-300 font-bold uppercase">Simulate:</span>
+
+                    <!-- Role -->
+                    <select #roleSelect (change)="onRoleChange(roleSelect.value)" [value]="userRole()"
+                        aria-label="Role Selector"
+                        class="bg-transparent text-white text-xs font-mono font-bold py-1 focus:ring-0 border-none outline-none cursor-pointer border-r border-indigo-500/20 pr-2 mr-1">
+                        @for(role of availableRoles; track role) {
+                        <option [value]="role" class="bg-slate-800 text-white">{{ role | uppercase }}</option>
+                        }
+                    </select>
+
+                    <!-- Tier -->
                     <select #planSelect (change)="onPlanChange(planSelect.value)" [value]="userPlan()"
                         aria-label="Tier Selector"
                         class="bg-transparent text-white text-xs font-mono font-bold py-1 focus:ring-0 border-none outline-none cursor-pointer">
-                        @for(tier of availableTiers; track tier) {
-                        <option [value]="tier" class="bg-slate-800 text-white">{{ tier }}</option>
+                        @for(tier of availableTiers; track tier.id) {
+                        <option [value]="tier.id" class="bg-slate-800 text-white">{{ tier.name }}</option>
                         }
                     </select>
                 </div>

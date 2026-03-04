@@ -80,11 +80,22 @@ export class SaaSAppComponent implements OnInit {
   properties = signal<Property[]>([]);
 
   // Debug: Available Tiers for Selector
-  availableTiers = ['TIER_0', 'TIER_1', 'TIER_2', 'TIER_3'];
+  availableTiers = [
+    { id: 'TIER_0', name: 'Freemium' },
+    { id: 'TIER_1', name: 'Bronze' },
+    { id: 'TIER_2', name: 'Silver' },
+    { id: 'TIER_3', name: 'Gold' }
+  ];
+  availableRoles = ['user', 'admin', 'supplier', 'property_manager', 'owner'];
 
   onPlanChange(plan: string): void {
     console.log('[SaaSApp] Switching Plan to:', plan);
     this.store.setPlan(plan as any);
+  }
+
+  onRoleChange(role: string): void {
+    console.log('[SaaSApp] Switching Role to:', role);
+    this.store.setRole(role as any);
   }
 
   // Computed values

@@ -14,7 +14,7 @@ export interface Scores {
   mindset: number;
 }
 
-export type UserRole = 'user' | 'admin';
+export type UserRole = 'user' | 'admin' | 'supplier' | 'property_manager' | 'owner';
 export type AppPlan = 'Freemium' | 'Bronze' | 'Silver' | 'Gold' | 'TIER_0' | 'TIER_1' | 'TIER_2' | 'TIER_3';
 
 export interface AppTier {
