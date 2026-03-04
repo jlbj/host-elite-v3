@@ -27,6 +27,7 @@ export class SessionStore {
     readonly userProfile = signal<UserProfile | null>(null);
     readonly error = signal<string | null>(null);
     readonly isLoading = signal<boolean>(false);
+    readonly isMVPMode = signal<boolean>(false);
 
     // New Signal for Grace Period Warning
     readonly showEmailWarning = signal<boolean>(false);
@@ -44,6 +45,13 @@ export class SessionStore {
 
     // UI Structure Signals (Phases & Features)
     readonly phases = signal<AppPhase[]>([]);
+    readonly visiblePhases = computed(() => {
+        const allPhases = this.phases();
+        if (!this.isMVPMode()) return allPhases;
+
+        const hiddenIds = ['PH_1_INVEST', 'PH_2_DESIGN', 'PH_6_SCALE'];
+        return allPhases.filter(p => !hiddenIds.includes(p.id));
+    });
     readonly featuresHierarchy = signal<any[]>([]);
 
     // Computed Features by Phase
@@ -515,6 +523,13 @@ export class SessionStore {
         }
     }
 
+    // Debug Helper: MVP Mode
+    setMVPMode(enabled: boolean) {
+        this.isMVPMode.set(enabled);
+        localStorage.setItem('debug_is_mvp_mode', enabled ? 'true' : 'false');
+        console.log('[SessionStore] MVP Mode set to:', enabled);
+    }
+
     // Debug Helper
     async setPlan(plan: AppPlan) {
         if (this.userProfile()) {
@@ -548,6 +563,12 @@ export class SessionStore {
         if (debugRole && this.userProfile()) {
             console.log("Applying Debug Role Override:", debugRole);
             this.userProfile.update(u => u ? { ...u, role: debugRole } : null);
+        }
+
+        const debugMVP = localStorage.getItem('debug_is_mvp_mode');
+        if (debugMVP !== null) {
+            console.log("Applying MVP Mode Override:", debugMVP);
+            this.isMVPMode.set(debugMVP === 'true');
         }
     }
 

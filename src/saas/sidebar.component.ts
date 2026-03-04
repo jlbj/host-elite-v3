@@ -156,7 +156,7 @@ import { TranslatePipe } from '../pipes/translate.pipe';
                                 <!-- Phases Section -->
                                 <div class="space-y-1">
                                     <p class="px-3 text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-2 opacity-80">{{ 'SIDEBAR.Phases' | translate }}</p>
-                                    @for(phase of store.phases(); track phase.id) {
+                                    @for(phase of store.visiblePhases(); track phase.id) {
                                         <a (click)="changeView({id: phase.id, title: phase.name, icon: 'dashboard'}, prop.name)"
                                         class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-r-lg cursor-pointer transition-all relative"
                                         [class]="activeView().id === phase.id && activeView().propertyName === prop.name 

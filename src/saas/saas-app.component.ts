@@ -98,11 +98,17 @@ export class SaaSAppComponent implements OnInit {
     this.store.setRole(role as any);
   }
 
+  onMVPModeChange(mode: string): void {
+    const isMVP = mode === 'MVP';
+    this.store.setMVPMode(isMVP);
+  }
+
   // Computed values
   userRole = computed<UserRole>(() => this.store.userProfile()?.role || 'user');
   userName = computed<string>(() => this.store.userProfile()?.full_name || 'Hôte');
   userPlan = computed<string>(() => this.store.userProfile()?.plan || this.reportData().recommendedPlan);
   userAvatar = computed<string | undefined>(() => this.store.userProfile()?.avatar_url);
+  isMVPMode = computed(() => this.store.isMVPMode());
 
   // private readonly angleIds = ['DIM_MKT', 'DIM_EXP', 'DIM_OPS', 'DIM_PRICING', 'DIM_LEGAL', 'mindset'];
   isAngleView = computed(() => this.activeView().id.startsWith('PH_'));

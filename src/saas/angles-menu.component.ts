@@ -44,7 +44,7 @@ export class PhasesMenuComponent {
   private store = inject(SessionStore);
   private sanitizer = inject(DomSanitizer);
 
-  phases = this.store.phases;
+  phases = this.store.visiblePhases;
 
   activePhaseId() {
     // Logic to determine active phase from active view
