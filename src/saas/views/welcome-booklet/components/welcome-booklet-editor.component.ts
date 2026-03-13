@@ -124,7 +124,7 @@ export class WelcomeBookletEditorComponent {
 
     // AI Generation Helpers
     hasAiAccess() { return true; } // Mock for now
-    isAiLoading = this.service.isLoading; // Re-use service loading or dedicated AI loading
+    isAiLoading = this.aiService.isAiLoading; // Fix: use aiService loading signal
 
     regenerateSection(sectionId: string, event: Event) {
         event.stopPropagation();

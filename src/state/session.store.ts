@@ -27,7 +27,7 @@ export class SessionStore {
     readonly userProfile = signal<UserProfile | null>(null);
     readonly error = signal<string | null>(null);
     readonly isLoading = signal<boolean>(false);
-    readonly isMVPMode = signal<boolean>(false);
+    readonly isMVPMode = signal<boolean>(true);
 
     // New Signal for Grace Period Warning
     readonly showEmailWarning = signal<boolean>(false);
@@ -565,11 +565,12 @@ export class SessionStore {
             this.userProfile.update(u => u ? { ...u, role: debugRole } : null);
         }
 
-        const debugMVP = localStorage.getItem('debug_is_mvp_mode');
-        if (debugMVP !== null) {
-            console.log("Applying MVP Mode Override:", debugMVP);
-            this.isMVPMode.set(debugMVP === 'true');
-        }
+        // --- ENFORCING MVP MODE ---
+        // const debugMVP = localStorage.getItem('debug_is_mvp_mode');
+        // if (debugMVP !== null) {
+        //     console.log("Applying MVP Mode Override:", debugMVP);
+        //     this.isMVPMode.set(debugMVP === 'true');
+        // }
     }
 
     async updateProfile(data: Partial<UserProfile>): Promise<void> {

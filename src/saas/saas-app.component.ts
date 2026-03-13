@@ -29,6 +29,7 @@ import { ProfileModalComponent } from './components/profile-settings-modal.compo
 import { CalendarToolComponent } from './features/legacy/calendar-tool/components/calendar-tool.component';
 
 import { ProfitabilityViewComponent } from './views/profitability-view.component';
+import { WelcomeBookletService } from './views/welcome-booklet/welcome-booklet.service';
 
 @Component({
   selector: 'saas-app',
@@ -73,6 +74,7 @@ export class SaaSAppComponent implements OnInit {
   private fb: FormBuilder = inject(FormBuilder);
   translationService = inject(TranslationService);
   notifService = inject(NotificationService);
+  private bookletService = inject(WelcomeBookletService);
 
   // Local State
   initialView: View = { id: 'dashboard', title: 'Bienvenue', icon: 'home' };

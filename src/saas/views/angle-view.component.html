@@ -200,6 +200,8 @@
                 *ngComponentOutlet="ComponentClass; inputs: { feature: activeFeature(), propertyDetails: propertyDetails() }"></ng-container>
         </div>
     </div>
+    } @else if (activeToolId() === 'welcome-booklet-view') {
+    <saas-welcome-booklet-view class="h-full block" [propertyName]="view().propertyName!"></saas-welcome-booklet-view>
     } @else if (activeToolId() === 'microsite') {
     <app-microsite-container [propertyName]="view().propertyName!" (close)="closeTool()">
     </app-microsite-container>

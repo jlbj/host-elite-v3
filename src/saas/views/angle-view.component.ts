@@ -27,6 +27,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
 import { WelcomeBookletService } from './welcome-booklet/welcome-booklet.service';
 import { OnboardingService, OnboardingQuestion } from '../../services/onboarding.service';
 import { DEFAULT_QUESTIONS } from '../../services/data/default-questions';
+import { WelcomeBookletViewComponent } from './welcome-booklet-view.component';
 
 
 
@@ -47,7 +48,8 @@ import { DEFAULT_QUESTIONS } from '../../services/data/default-questions';
         CalendarToolComponent,
         ProfitabilityCalculatorComponent,
         MarketAlertsComponent,
-        PropertyAuditComponent
+        PropertyAuditComponent,
+        WelcomeBookletViewComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './angle-view.component.html',
@@ -102,13 +104,20 @@ export class PhaseViewComponent implements OnInit {
             }
             groups[dimId].features.push(f);
         });
-        return Object.values(groups);
+
+        const result = Object.values(groups);
+
+        // Move Operations (DIM_OPS) to the front
+        const opsIndex = result.findIndex(d => d.id === 'DIM_OPS');
+        if (opsIndex > 0) {
+            const opsDim = result.splice(opsIndex, 1)[0];
+            result.unshift(opsDim);
+        }
+
+        return result;
     });
 
     private legacyToolMapping: Record<string, string> = {
-        'MKT_01': 'microsite',
-        'MKT_02': 'ai-prompts',
-        'MKT_03': 'visibility-audit',
         'EXP_01': 'booklet',
         'EXP_02': 'ai-assistant',
         'EXP_03': 'microsite',
@@ -163,6 +172,20 @@ export class PhaseViewComponent implements OnInit {
         if (ComponentClass) {
             this.activeFeature.set(feature);
             this.activeFeatureComponent.set(ComponentClass);
+            return;
+        }
+
+        if (feature.id === 'MKT_00') {
+            this.bookletService.activeTab.set('listing');
+            this.activeToolId.set('welcome-booklet-view');
+            return;
+        } else if (feature.id === 'MKT_01') {
+            this.bookletService.activeTab.set('booklet');
+            this.activeToolId.set('welcome-booklet-view');
+            return;
+        } else if (feature.id === 'MKT_02') {
+            this.bookletService.activeTab.set('microsite');
+            this.activeToolId.set('welcome-booklet-view');
             return;
         }
 

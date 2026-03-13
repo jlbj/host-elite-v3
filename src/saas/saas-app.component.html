@@ -61,13 +61,7 @@
                         }
                     </select>
 
-                    <!-- MVP Mode -->
-                    <select #modeSelect (change)="onMVPModeChange(modeSelect.value)" [value]="isMVPMode() ? 'MVP' : 'FULL'"
-                        aria-label="App Mode Selector"
-                        class="bg-transparent text-white text-xs font-mono font-bold py-1 focus:ring-0 border-none outline-none cursor-pointer border-l border-indigo-500/20 pl-2 ml-1">
-                        <option value="FULL" class="bg-slate-800 text-white">FULL</option>
-                        <option value="MVP" class="bg-slate-800 text-white">MVP</option>
-                    </select>
+                    <!-- MVP Mode toggle removed for MVP enforcement -->
                 </div>
 
                 <!-- Global Language Switcher -->

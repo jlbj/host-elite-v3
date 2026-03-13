@@ -37,6 +37,7 @@ import { NinetyDayCounterComponent } from './operations/ninety-day-counter/ninet
 import { TaskAutomationComponent } from './operations/task-automation/task-automation.component';
 import { ProviderAppComponent } from './operations/provider-app/provider-app.component';
 import { ChecklistsToolComponent } from './operations/checklists-tool/checklists-tool.component';
+import { DataEntryFeatureComponent } from './operations/data-entry-feature/data-entry-feature.component';
 
 // Marketing
 import { ListingOptimizationComponent } from './marketing/listing-optimization/listing-optimization.component';
@@ -95,11 +96,10 @@ export const FEATURE_COMPONENTS: Record<string, Type<any>> = {
     'OPS_09': ProviderAppComponent,
     'OPS_10': MaintenanceTrackerComponent,
     'OPS_11': ChecklistsToolComponent,
+    'OPS_12': DataEntryFeatureComponent,
 
     // Marketing (4)
-    'MKT_00': ListingOptimizationComponent,
-    'MKT_01': PhotoGuideComponent,
-    'MKT_02': AiListingWriterComponent,
+    // Removed MKT_00, MKT_01, MKT_02 here because they are handled in angle-view.component.ts mappings for Welcome Booklet
     'MKT_03': DirectBookingComponent,
     'MKT_04': ListingOptimizationComponent, // Placeholder
 
