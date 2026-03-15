@@ -31,7 +31,7 @@ import { TaxObligationsComponent } from './legal/tax-obligations/tax-obligations
 
 // Operations
 import { MaintenanceTrackerComponent } from './operations/maintenance-tracker/maintenance-tracker.component';
-import { IcalSyncComponent } from './operations/ical-sync/ical-sync.component';
+import { CalendarToolComponent } from './legacy/calendar-tool/components/calendar-tool.component';
 import { ChannelManagerComponent } from './operations/channel-manager/channel-manager.component';
 import { TeamManagementComponent } from './operations/team-management/team-management.component';
 import { InvestorPortalComponent } from './operations/investor-portal/investor-portal.component';
@@ -97,7 +97,7 @@ export const FEATURE_COMPONENTS: Record<string, Type<any>> = {
 
     // Operations (14 - including sub-features)
     'OPS_01': ConstructionScheduleComponent,
-    'OPS_02': IcalSyncComponent,
+    'OPS_02': CalendarToolComponent,
     'OPS_03': ChannelManagerComponent,
     'OPS_03_AIRBNB': ChannelManagerComponent,
     'OPS_03_BOOKING': ChannelManagerComponent,
