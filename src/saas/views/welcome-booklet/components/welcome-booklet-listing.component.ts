@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WelcomeBookletService } from '../welcome-booklet.service';
 import { TranslatePipe } from '../../../../pipes/translate.pipe';
@@ -11,6 +11,13 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
 })
 export class WelcomeBookletListingComponent {
     service = inject(WelcomeBookletService);
+
+    @Input() set propertyDetails(value: any) {
+        if (value && value.name) {
+            this.service.propertyName.set(value.name);
+        }
+    }
+
     cdr = inject(ChangeDetectorRef);
     editorForm = this.service.editorForm;
     propertyName = this.service.propertyName;

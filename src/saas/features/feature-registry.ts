@@ -50,11 +50,16 @@ import { YieldSetupComponent } from './pricing/yield-setup/yield-setup.component
 import { RevparOptimizerComponent } from './pricing/revpar-optimizer/revpar-optimizer.component';
 import { MarketAlertsComponent } from './pricing/market-alerts/market-alerts.component';
 
-// Experience
+// experience
 import { EssentialsListComponent } from './experience/essentials-list/essentials-list.component';
 import { WelcomeBookComponent } from './experience/welcome-book/welcome-book.component';
 import { InventoryGeneratorComponent } from './experience/inventory-generator/inventory-generator.component';
 import { GuestAiChatbotComponent } from './experience/guest-ai-chatbot/guest-ai-chatbot.component';
+
+// Welcome Booklet (Marketing)
+import { WelcomeBookletListingComponent } from '../views/welcome-booklet/components/welcome-booklet-listing.component';
+import { WelcomeBookletPreviewComponent } from '../views/welcome-booklet/components/welcome-booklet-preview.component';
+import { WelcomeBookletMicrositeComponent } from '../views/welcome-booklet/components/welcome-booklet-microsite.component';
 
 export const FEATURE_COMPONENTS: Record<string, Type<any>> = {
     // Finance (11)
@@ -99,7 +104,9 @@ export const FEATURE_COMPONENTS: Record<string, Type<any>> = {
     'OPS_12': DataEntryFeatureComponent,
 
     // Marketing (4)
-    // Removed MKT_00, MKT_01, MKT_02 here because they are handled in angle-view.component.ts mappings for Welcome Booklet
+    'MKT_00': WelcomeBookletListingComponent,
+    'MKT_01': WelcomeBookletPreviewComponent,
+    'MKT_02': WelcomeBookletMicrositeComponent,
     'MKT_03': DirectBookingComponent,
     'MKT_04': ListingOptimizationComponent, // Placeholder
 

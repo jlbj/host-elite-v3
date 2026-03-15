@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, Input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
@@ -15,6 +15,12 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
 })
 export class WelcomeBookletPreviewComponent {
     service = inject(WelcomeBookletService);
+
+    @Input() set propertyDetails(value: any) {
+        if (value && value.name) {
+            this.service.propertyName.set(value.name);
+        }
+    }
     aiService = inject(WelcomeBookletAiService);
 
     editorForm = this.service.editorForm;

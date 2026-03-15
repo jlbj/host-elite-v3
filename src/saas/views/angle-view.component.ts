@@ -175,19 +175,6 @@ export class PhaseViewComponent implements OnInit {
             return;
         }
 
-        if (feature.id === 'MKT_00') {
-            this.bookletService.activeTab.set('listing');
-            this.activeToolId.set('welcome-booklet-view');
-            return;
-        } else if (feature.id === 'MKT_01') {
-            this.bookletService.activeTab.set('booklet');
-            this.activeToolId.set('welcome-booklet-view');
-            return;
-        } else if (feature.id === 'MKT_02') {
-            this.bookletService.activeTab.set('microsite');
-            this.activeToolId.set('welcome-booklet-view');
-            return;
-        }
 
         const legacyId = this.legacyToolMapping[feature.id];
         if (legacyId) {

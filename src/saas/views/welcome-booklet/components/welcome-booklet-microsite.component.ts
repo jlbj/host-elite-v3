@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WelcomeBookletService } from '../welcome-booklet.service';
 import { MicrositeRendererComponent } from '../../../components/microsite-renderer/microsite-renderer.component';
@@ -11,6 +11,12 @@ import { MicrositeRendererComponent } from '../../../components/microsite-render
 })
 export class WelcomeBookletMicrositeComponent {
     service = inject(WelcomeBookletService);
+
+    @Input() set propertyDetails(value: any) {
+        if (value && value.name) {
+            this.service.propertyName.set(value.name);
+        }
+    }
 
     // Signals
     config = this.service.micrositeConfig; // Source of truth (already resolved in service)
