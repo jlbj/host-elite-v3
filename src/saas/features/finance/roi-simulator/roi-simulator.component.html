@@ -1,0 +1,405 @@
+<div class="h-full flex flex-col gap-6 animate-fade-in-up">
+   <!-- Header -->
+   <div class="flex justify-between items-start">
+    <div>
+      <h1 class="text-3xl font-extrabold text-white tracking-tight">{{ 'ROI.RoiCashflowArchitect' | translate }}</h1>
+      <p class="text-slate-400 mt-2 max-w-2xl">{{ 'ROI.ProfessionalFinancialModelingEngineWith' | translate }}</p>
+    </div>
+     <div class="flex flex-col items-end gap-2">
+        <!-- Tier Badge -->
+        <span class="px-3 py-1 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 border border-amber-500/30 rounded-full text-[10px] font-bold text-amber-400 uppercase tracking-widest">
+            {{ getTierLabel() }}
+        </span>
+        @if (aiReport()) {
+            <button (click)="generateAIReview()" [disabled]="isGeneratingReport()" class="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1">
+                @if (isGeneratingReport()) {
+                    <svg class="animate-spin h-3 w-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                } @else {
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                }
+                {{ 'ROI.RefreshAnalysis' | translate }}
+            </button>
+        }
+     </div>
+   </div>
+
+   <!-- Main Grid -->
+   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
+        <!-- Left Panel: Input Form -->
+        <div class="lg:col-span-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2">
+            <div class="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
+                <h3 class="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                    <span class="material-icons text-indigo-400 text-lg">apartment</span>
+                    {{ 'ROI.PropertyDetails' | translate }}
+                </h3>
+                
+                <!-- Property Type -->
+                <div class="mb-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">{{ 'ROI.PropertyType' | translate }}</label>
+                    <select [ngModel]="formValues().propertyType" (ngModelChange)="updateForm('propertyType', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white">
+                        <option value="apartment">{{ 'ROI.Apartment' | translate }}</option>
+                        <option value="house">{{ 'ROI.House' | translate }}</option>
+                        <option value="loft">{{ 'ROI.Loft' | translate }}</option>
+                        <option value="villa">{{ 'ROI.Villa' | translate }}</option>
+                        <option value="room">{{ 'ROI.Room' | translate }}</option>
+                    </select>
+                </div>
+
+                <!-- Location -->
+                <div class="mb-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">{{ 'ROI.Location' | translate }}</label>
+                    <select [ngModel]="formValues().propertyCountry" (ngModelChange)="updateForm('propertyCountry', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white">
+                        <option value="France">{{ 'ROI.France' | translate }}</option>
+                        <option value="Spain">{{ 'ROI.Spain' | translate }}</option>
+                        <option value="Portugal">{{ 'ROI.Portugal' | translate }}</option>
+                        <option value="UK">{{ 'ROI.UK' | translate }}</option>
+                        <option value="Germany">{{ 'ROI.Germany' | translate }}</option>
+                        <option value="Italy">{{ 'ROI.Italy' | translate }}</option>
+                        <option value="US">{{ 'ROI.US' | translate }}</option>
+                        <option value="Other">{{ 'ROI.Other' | translate }}</option>
+                    </select>
+                </div>
+
+                <!-- City Tier -->
+                <div class="mb-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">{{ 'ROI.CityTier' | translate }}</label>
+                    <select [ngModel]="formValues().cityTier" (ngModelChange)="updateForm('cityTier', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white">
+                        <option value="tier1">{{ 'ROI.Tier1' | translate }}</option>
+                        <option value="tier2">{{ 'ROI.Tier2' | translate }}</option>
+                        <option value="tier3">{{ 'ROI.Tier3' | translate }}</option>
+                        <option value="tier4">{{ 'ROI.Tier4' | translate }}</option>
+                    </select>
+                </div>
+
+                <!-- Purchase Price -->
+                <div class="mb-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">{{ 'ROI.PurchasePrice' | translate }}</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">€</span>
+                        <input type="number" [ngModel]="formValues().purchasePrice" (ngModelChange)="updateForm('purchasePrice', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg pl-8 pr-3 py-2.5 text-sm text-white">
+                    </div>
+                </div>
+
+                <!-- Notary Fees -->
+                <div class="mb-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">{{ 'ROI.NotaryFees' | translate }}</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">€</span>
+                        <input type="number" [ngModel]="formValues().notaryFees" (ngModelChange)="updateForm('notaryFees', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg pl-8 pr-3 py-2.5 text-sm text-white">
+                    </div>
+                </div>
+
+                <!-- Renovation Budget -->
+                <div class="mb-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">{{ 'ROI.RenovationBudget' | translate }}</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">€</span>
+                        <input type="number" [ngModel]="formValues().renovationBudget" (ngModelChange)="updateForm('renovationBudget', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg pl-8 pr-3 py-2.5 text-sm text-white">
+                    </div>
+                </div>
+
+                <!-- Mortgage -->
+                <div class="mb-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" [ngModel]="formValues().useMortgage" (ngModelChange)="updateForm('useMortgage', $event)" class="w-4 h-4 rounded border-white/20 bg-slate-900/50 text-indigo-500">
+                        <span class="text-xs text-slate-400">{{ 'ROI.UseMortgage' | translate }}</span>
+                    </label>
+                </div>
+
+                @if (formValues().useMortgage) {
+                    <div class="space-y-3 pl-2 border-l-2 border-indigo-500/30">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">{{ 'ROI.DownPayment' | translate }} (%)</label>
+                            <input type="number" [ngModel]="formValues().downPaymentPercent" (ngModelChange)="updateForm('downPaymentPercent', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">{{ 'ROI.InterestRate' | translate }} (%)</label>
+                            <input type="number" [ngModel]="formValues().interestRate" (ngModelChange)="updateForm('interestRate', $event)" step="0.1" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">{{ 'ROI.LoanTerm' | translate }} (years)</label>
+                            <input type="number" [ngModel]="formValues().loanTerm" (ngModelChange)="updateForm('loanTerm', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Operational Inputs -->
+            <div class="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
+                <h3 class="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                    <span class="material-icons text-emerald-400 text-lg">trending_up</span>
+                    {{ 'ROI.OperationalParameters' | translate }}
+                </h3>
+
+                <!-- Nightly Rate -->
+                <div class="mb-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">{{ 'ROI.AvgNightlyRate' | translate }}</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">€</span>
+                        <input type="number" [ngModel]="formValues().avgNightlyRate" (ngModelChange)="updateForm('avgNightlyRate', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg pl-8 pr-3 py-2.5 text-sm text-white">
+                    </div>
+                </div>
+
+                <!-- Occupancy -->
+                <div class="mb-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">{{ 'ROI.OccupancyRate' | translate }} (%)</label>
+                    <input type="number" [ngModel]="formValues().occupancyRate" (ngModelChange)="updateForm('occupancyRate', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white">
+                    <input type="range" [ngModel]="formValues().occupancyRate" (ngModelChange)="updateForm('occupancyRate', $event)" min="1" max="100" class="w-full mt-2 accent-indigo-500">
+                </div>
+
+                <!-- Seasonality -->
+                <div class="mb-4">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-2">{{ 'ROI.Seasonality' | translate }}</label>
+                    <select [ngModel]="formValues().seasonality" (ngModelChange)="updateForm('seasonality', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white">
+                        <option value="low">{{ 'ROI.Low' | translate }}</option>
+                        <option value="medium">{{ 'ROI.Medium' | translate }}</option>
+                        <option value="high">{{ 'ROI.High' | translate }}</option>
+                    </select>
+                </div>
+
+                <!-- Operating Costs -->
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">{{ 'ROI.ManagementFee' | translate }} (%)</label>
+                        <input type="number" [ngModel]="formValues().managementFeePercent" (ngModelChange)="updateForm('managementFeePercent', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">{{ 'ROI.UtilitiesMonthly' | translate }} (€)</label>
+                        <input type="number" [ngModel]="formValues().utilitiesMonthly" (ngModelChange)="updateForm('utilitiesMonthly', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">{{ 'ROI.MaintenanceAnnual' | translate }} (€)</label>
+                        <input type="number" [ngModel]="formValues().maintenanceAnnual" (ngModelChange)="updateForm('maintenanceAnnual', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">{{ 'ROI.InsuranceAnnual' | translate }} (€)</label>
+                        <input type="number" [ngModel]="formValues().insuranceAnnual" (ngModelChange)="updateForm('insuranceAnnual', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">{{ 'ROI.PropertyTaxAnnual' | translate }} (€)</label>
+                        <input type="number" [ngModel]="formValues().propertyTaxAnnual" (ngModelChange)="updateForm('propertyTaxAnnual', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">{{ 'ROI.CleaningFee' | translate }} (€)</label>
+                        <input type="number" [ngModel]="formValues().cleaningFeePerStay" (ngModelChange)="updateForm('cleaningFeePerStay', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">{{ 'ROI.SuppliesPerGuest' | translate }} (€)</label>
+                        <input type="number" [ngModel]="formValues().suppliesPerGuest" (ngModelChange)="updateForm('suppliesPerGuest', $event)" class="w-full bg-slate-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Results -->
+        <div class="lg:col-span-8 flex flex-col gap-4 overflow-y-auto custom-scrollbar pr-2">
+            <!-- Key Metrics Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 rounded-xl p-4 border border-emerald-500/20">
+                    <p class="text-[10px] font-bold text-emerald-400 uppercase">{{ 'ROI.GrossRevenue' | translate }}</p>
+                    <p class="text-xl font-bold text-white mt-1">{{ formatCurrency(annualRevenue()) }}</p>
+                </div>
+                <div class="bg-gradient-to-br from-rose-500/10 to-rose-600/5 rounded-xl p-4 border border-rose-500/20">
+                    <p class="text-[10px] font-bold text-rose-400 uppercase">{{ 'ROI.TotalExpenses' | translate }}</p>
+                    <p class="text-xl font-bold text-white mt-1">{{ formatCurrency(totalExpenses()) }}</p>
+                </div>
+                <div class="bg-gradient-to-br from-indigo-500/10 to-indigo-600/5 rounded-xl p-4 border border-indigo-500/20">
+                    <p class="text-[10px] font-bold text-indigo-400 uppercase">{{ 'ROI.NetOperatingIncome' | translate }}</p>
+                    <p class="text-xl font-bold text-white mt-1">{{ formatCurrency(netOperatingIncome()) }}</p>
+                </div>
+                <div class="bg-gradient-to-br from-amber-500/10 to-amber-600/5 rounded-xl p-4 border border-amber-500/20">
+                    <p class="text-[10px] font-bold text-amber-400 uppercase">{{ 'ROI.CashOnCash' | translate }}</p>
+                    <p class="text-xl font-bold text-white mt-1">{{ cashOnCashReturn() | number:'1.1-1' }}%</p>
+                </div>
+            </div>
+
+            <!-- 10-Year Projection -->
+            <div class="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
+                <h3 class="text-sm font-bold text-slate-300 mb-4 flex items-center gap-2">
+                    <span class="material-icons text-amber-400 text-lg">show_chart</span>
+                    {{ 'ROI.ProjectedReturns' | translate }} (10-Year)
+                </h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="border-b border-white/10">
+                                <th class="text-left py-2 px-2 text-slate-400 font-medium">{{ 'ROI.Year' | translate }}</th>
+                                <th class="text-right py-2 px-2 text-slate-400 font-medium">{{ 'ROI.Revenue' | translate }}</th>
+                                <th class="text-right py-2 px-2 text-slate-400 font-medium">{{ 'ROI.Expenses' | translate }}</th>
+                                <th class="text-right py-2 px-2 text-slate-400 font-medium">{{ 'ROI.NOI' | translate }}</th>
+                                <th class="text-right py-2 px-2 text-slate-400 font-medium">{{ 'ROI.DebtService' | translate }}</th>
+                                <th class="text-right py-2 px-2 text-amber-400 font-medium">{{ 'ROI.CashFlow' | translate }}</th>
+                                <th class="text-right py-2 px-2 text-emerald-400 font-medium">{{ 'ROI.COCReturn' | translate }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (year of projectedYears(); track year.year) {
+                                <tr class="border-b border-white/5 hover:bg-white/5">
+                                    <td class="py-2 px-2 text-slate-300">{{ year.year }}</td>
+                                    <td class="py-2 px-2 text-right text-slate-300">{{ formatCurrency(year.revenue) }}</td>
+                                    <td class="py-2 px-2 text-right text-slate-300">{{ formatCurrency(year.expenses) }}</td>
+                                    <td class="py-2 px-2 text-right text-slate-300">{{ formatCurrency(year.noi) }}</td>
+                                    <td class="py-2 px-2 text-right text-slate-300">{{ formatCurrency(year.debtService) }}</td>
+                                    <td class="py-2 px-2 text-right font-bold" [class]="year.cashFlow >= 0 ? 'text-amber-400' : 'text-rose-400'">{{ formatCurrency(year.cashFlow) }}</td>
+                                    <td class="py-2 px-2 text-right font-bold" [class]="year.cocReturn >= 0 ? 'text-emerald-400' : 'text-rose-400'">{{ year.cocReturn | number:'1.1-1' }}%</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ROI Breakdown -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Revenue Breakdown -->
+                <div class="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase mb-3">{{ 'ROI.RevenueBreakdown' | translate }}</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.GrossPotential' | translate }}</span>
+                            <span class="text-xs text-white font-medium">{{ formatCurrency(grossPotentialRevenue()) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.OccupancyLoss' | translate }}</span>
+                            <span class="text-xs text-rose-400">-{{ formatCurrency(occupancyLoss()) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.OtherIncome' | translate }}</span>
+                            <span class="text-xs text-white">{{ formatCurrency(otherIncome()) }}</span>
+                        </div>
+                        <div class="border-t border-white/10 pt-2 mt-2 flex justify-between">
+                            <span class="text-xs text-slate-300 font-bold">{{ 'ROI.TotalRevenue' | translate }}</span>
+                            <span class="text-xs text-emerald-400 font-bold">{{ formatCurrency(annualRevenue()) }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expense Breakdown -->
+                <div class="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase mb-3">{{ 'ROI.ExpenseBreakdown' | translate }}</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.Management' | translate }}</span>
+                            <span class="text-xs text-white">{{ formatCurrency(managementFee()) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.Utilities' | translate }}</span>
+                            <span class="text-xs text-white">{{ formatCurrency(utilitiesAnnual()) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.Maintenance' | translate }}</span>
+                            <span class="text-xs text-white">{{ formatCurrency(maintenanceAnnual()) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.Insurance' | translate }}</span>
+                            <span class="text-xs text-white">{{ formatCurrency(insuranceAnnual()) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.PropertyTax' | translate }}</span>
+                            <span class="text-xs text-white">{{ formatCurrency(propertyTaxAnnual()) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.Cleaning' | translate }}</span>
+                            <span class="text-xs text-white">{{ formatCurrency(cleaningAnnual()) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.Supplies' | translate }}</span>
+                            <span class="text-xs text-white">{{ formatCurrency(suppliesAnnual()) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs text-slate-500">{{ 'ROI.Mortgage' | translate }}</span>
+                            <span class="text-xs text-white">{{ formatCurrency(mortgagePaymentAnnual()) }}</span>
+                        </div>
+                        <div class="border-t border-white/10 pt-2 mt-2 flex justify-between">
+                            <span class="text-xs text-slate-300 font-bold">{{ 'ROI.TotalExpenses' | translate }}</span>
+                            <span class="text-xs text-rose-400 font-bold">{{ formatCurrency(totalExpenses()) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis Toggle -->
+            <div class="bg-slate-800/50 rounded-2xl p-5 border border-white/5">
+                <button (click)="toggleProfiler()" class="w-full flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-300 flex items-center gap-2">
+                        <span class="material-icons text-purple-400 text-lg">psychology</span>
+                        {{ 'ROI.AIAnalysis' | translate }}
+                    </h3>
+                    <svg class="w-5 h-5 text-slate-400 transition-transform" [class.rotate-180]="propertyProfilerExpanded()" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                
+                @if (propertyProfilerExpanded()) {
+                    <div class="mt-4 pt-4 border-t border-white/5">
+                        <p class="text-xs text-slate-400 mb-4">{{ 'ROI.AnalysisDescription' | translate }}</p>
+                        <button (click)="generateAIReview()" [disabled]="isGeneratingReport()" class="w-full py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            {{ 'ROI.GenerateAIAnalysis' | translate }}
+                        </button>
+                    </div>
+                }
+            </div>
+
+            <!-- AI Report -->
+            @if (aiReport()) {
+                <div class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-2xl p-6 border border-purple-500/20">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                            <span class="material-icons text-white">auto_awesome</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white">{{ 'ROI.AIInvestmentAnalysis' | translate }}</h3>
+                            <p class="text-xs text-slate-400">{{ propertyAddress() }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Strengths -->
+                        <div class="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
+                            <h4 class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <span class="material-icons text-emerald-400 text-sm">check_circle</span>
+                                Key Strengths
+                            </h4>
+                            <ul class="space-y-2">
+                                @for (point of aiReport()?.strengths; track point) {
+                                    <li class="flex items-start gap-2 group/li">
+                                        <span class="material-icons text-emerald-500 text-[14px] mt-0.5 group-hover/li:scale-125 transition-transform">check</span>
+                                        <p class="text-xs text-slate-300 leading-relaxed">{{ point }}</p>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+
+                        <!-- Weaknesses -->
+                        <div class="bg-rose-500/10 rounded-xl p-4 border border-rose-500/20">
+                            <h4 class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <span class="material-icons text-rose-400 text-sm">warning</span>
+                                Risk Factors
+                            </h4>
+                            <ul class="space-y-2">
+                                @for (point of aiReport()?.opportunities; track point) {
+                                    <li class="flex items-start gap-2 group/li">
+                                        <span class="material-icons text-rose-500 text-[14px] mt-0.5 group-hover/li:scale-125 transition-transform">warning</span>
+                                        <p class="text-xs text-slate-300 leading-relaxed">{{ point }}</p>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                     </div>
+
+                     <!-- Recommended Strategy -->
+                     <div class="bg-indigo-500/10 rounded-2xl p-6 border border-indigo-500/20 mt-4">
+                        <h4 class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-3">AI Strategic Verdict</h4>
+                        <p class="text-sm text-slate-200 font-medium leading-relaxed italic">
+                            "{{ aiReport()?.comprehensive_verdict }}"
+                        </p>
+                     </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
