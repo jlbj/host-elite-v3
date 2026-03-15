@@ -78,6 +78,7 @@ export const FEATURE_COMPONENTS: Record<string, Type<any>> = {
     'FIN_08': CommissionSplitterComponent,
     'FIN_09': NonResidentTaxComponent,
     'FIN_10': DoubleTaxReportComponent,
+    'FIN_11': SmartLedgerComponent,
 
     // Legal (9)
     'LEG_00': ComplianceCheckerComponent,
