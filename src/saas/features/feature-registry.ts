@@ -24,6 +24,10 @@ import { ImpressumComponent } from './legal/impressum/impressum.component';
 import { CompanyAuditComponent } from './legal/company-audit/company-audit.component';
 import { MandateGeneratorComponent } from './legal/mandate-generator/mandate-generator.component';
 import { ForeignIdComponent } from './legal/foreign-id/foreign-id.component';
+import { RentalContractTemplateComponent } from './legal/rental-contract-template/rental-contract-template.component';
+import { PropertyLicensingComponent } from './legal/property-licensing/property-licensing.component';
+import { InsuranceRequirementsComponent } from './legal/insurance-requirements/insurance-requirements.component';
+import { TaxObligationsComponent } from './legal/tax-obligations/tax-obligations.component';
 
 // Operations
 import { MaintenanceTrackerComponent } from './operations/maintenance-tracker/maintenance-tracker.component';
@@ -85,6 +89,10 @@ export const FEATURE_COMPONENTS: Record<string, Type<any>> = {
     'LEG_06': CompanyAuditComponent,
     'LEG_07': MandateGeneratorComponent,
     'LEG_08': ForeignIdComponent,
+    'LEG_09': RentalContractTemplateComponent,
+    'LEG_10': PropertyLicensingComponent,
+    'LEG_11': InsuranceRequirementsComponent,
+    'LEG_12': TaxObligationsComponent,
 
     // Operations (14 - including sub-features)
     'OPS_01': ConstructionScheduleComponent,
