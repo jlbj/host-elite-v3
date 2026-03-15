@@ -11,14 +11,9 @@ import { PropertyDashboardViewComponent } from './property-dashboard-view.compon
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="space-y-6">
-      <div>
-        <h1 class="text-3xl font-bold text-white">Gestion : {{ view().title }}</h1>
-        <p class="mt-2 text-slate-200">Suivez les performances et indicateurs clés de votre propriété.</p>
-      </div>
-
       <!-- Content -->
       <div class="pt-2">
-        <saas-property-dashboard-view></saas-property-dashboard-view>
+        <saas-property-dashboard-view [propertyName]="view().propertyName || ''"></saas-property-dashboard-view>
       </div>
     </div>
   `
