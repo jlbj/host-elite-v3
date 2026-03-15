@@ -197,7 +197,7 @@
         </button>
         <div class="flex-1 min-h-0">
             <ng-container
-                *ngComponentOutlet="ComponentClass; inputs: { feature: activeFeature(), propertyDetails: propertyDetails() }"></ng-container>
+                *ngComponentOutlet="ComponentClass; inputs: { feature: activeFeature(), propertyDetails: propertyDetails(), selectFeature: openFeatureById.bind(this) }"></ng-container>
         </div>
     </div>
     } @else if (activeToolId() === 'welcome-booklet-view') {

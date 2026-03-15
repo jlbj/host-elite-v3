@@ -83,10 +83,15 @@ export class PhaseViewComponent implements OnInit {
     maturityInfo = signal<any>(null);
 
     // Computed Data for Phase View
+    private hiddenFeatureIds = [
+        'OPS_03', 'OPS_03_AIRBNB', 'OPS_03_BOOKING', 'OPS_03_VRBO',
+        'OPS_05', 'OPS_08', 'OPS_09'
+    ];
+
     phaseFeatures = computed(() => {
         const viewId = this.view().id;
         const allFeatures = this.store.featuresByPhase();
-        return allFeatures[viewId] || [];
+        return (allFeatures[viewId] || []).filter(f => !this.hiddenFeatureIds.includes(f.id));
     });
 
     phaseDimensions = computed(() => {
@@ -183,6 +188,29 @@ export class PhaseViewComponent implements OnInit {
             console.log("Opening new feature (not implemented):", feature.name);
             this.saveMessage.set(`Feature "${feature.name}" is coming soon!`);
             setTimeout(() => this.saveMessage.set(null), 3000);
+        }
+    }
+
+    openFeatureById(featureId: string) {
+        const features = this.store.featuresHierarchy();
+        const feature = features.find(f => f.id === featureId);
+        if (feature) {
+            const FeatureClass = FEATURE_COMPONENTS[featureId];
+            if (FeatureClass) {
+                this.activeFeatureComponent.set(FeatureClass);
+                this.activeFeature.set({
+                    id: feature.id,
+                    name: feature.name,
+                    description: feature.description || '',
+                    dimension_id: feature.dimension_id,
+                    phase_id: feature.phase_id,
+                    parent_feature_id: feature.parent_feature_id,
+                    dimension_name: feature.app_dimensions?.name,
+                    phase_name: feature.phases?.name,
+                    required_tier: 'TIER_0',
+                    flavors: []
+                });
+            }
         }
     }
 
