@@ -91,10 +91,10 @@ export class HostRepository {
     private readonly defaultSubViews: View[] = [
         // Phase 1: Préparation
         { id: 'manage-property', title: 'Manage', icon: 'settings', phase: 'preparation', requiredTier: 'TIER_1' },
-        { id: 'welcome-booklet', title: 'NAV.welcome-booklet', icon: 'info', featureId: 'booklet', phase: 'preparation', requiredTier: 'TIER_1' },
+        { id: 'welcome-booklet', title: 'NAV.welcome-booklet', icon: 'info', featureId: 'MKT_00', phase: 'preparation', requiredTier: 'TIER_1' },
 
         // Phase 2: Lancement
-        { id: 'widget-library', title: 'NAV.widget-library', icon: 'widgets', featureId: 'microsite', phase: 'launch', requiredTier: 'TIER_1' },
+        { id: 'widget-library', title: 'NAV.widget-library', icon: 'widgets', featureId: 'MKT_02', phase: 'launch', requiredTier: 'TIER_1' },
 
         // Phase 3: Exploitation
         { id: 'property-calendar', title: 'NAV.property-calendar', icon: 'calendar', phase: 'exploitation', requiredTier: 'TIER_2' },

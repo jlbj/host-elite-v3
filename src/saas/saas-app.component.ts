@@ -177,9 +177,9 @@ export class SaaSAppComponent implements OnInit {
       targetPropertyName = this.activeView().propertyName;
     }
 
-    // 2. If still no property and we are going to a Phase view, try to pick the first one
+    // 2. If still no property and we are going to a Phase view or Welcome Booklet, try to pick the first one
     // This ensures components like 'Marketing Description' have a context to load data.
-    if (!targetPropertyName && view.id.startsWith('PH_')) {
+    if (!targetPropertyName && (view.id.startsWith('PH_') || view.id === 'welcome-booklet')) {
       const props = this.properties();
       if (props.length > 0) {
         targetPropertyName = props[0].name;
@@ -187,7 +187,7 @@ export class SaaSAppComponent implements OnInit {
     }
 
     // 3. Update the view
-    if (targetPropertyName && view.id.startsWith('PH_')) {
+    if (targetPropertyName && (view.id.startsWith('PH_') || view.id === 'welcome-booklet' || view.id === 'manage-property')) {
       this.activeView.set({ ...view, propertyName: targetPropertyName });
     } else {
       this.activeView.set(view);

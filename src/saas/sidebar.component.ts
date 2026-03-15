@@ -357,6 +357,7 @@ export class SidebarComponent {
         { id: 'dashboard', title: 'Bienvenue', icon: 'home' },
         { id: 'global-dashboard', title: 'Tableau de bord', icon: 'dashboard', featureId: 'analytics' },
         { id: 'my-calendars', title: 'Mes Calendriers', icon: 'calendar' },
+        { id: 'welcome-booklet', title: 'NAV.welcome-booklet', icon: 'info', featureId: 'MKT_00' },
     ];
 
     trainingViews: View[] = [

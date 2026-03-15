@@ -34,7 +34,7 @@ export class WelcomeBookletMicrositeComponent {
     });
 
     // Computed properties for template
-    propertyDetails = computed(() => ({
+    viewDetails = computed(() => ({
         property_equipments: this.service.propertyEquipments().map(name => ({ name }))
     }));
 
