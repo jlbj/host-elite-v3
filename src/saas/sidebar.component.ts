@@ -152,28 +152,6 @@ import { TranslatePipe } from '../pipes/translate.pipe';
                                         }
                                     }
                                 </div>
-
-                                <!-- Phases Section -->
-                                <div class="space-y-1">
-                                    <p class="px-3 text-[9px] font-bold text-slate-600 uppercase tracking-widest mb-2 opacity-80">{{ 'SIDEBAR.Phases' | translate }}</p>
-                                    @for(phase of store.visiblePhases(); track phase.id) {
-                                        <a (click)="changeView({id: phase.id, title: phase.name, icon: 'dashboard'}, prop.name)"
-                                        class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-r-lg cursor-pointer transition-all relative"
-                                        [class]="activeView().id === phase.id && activeView().propertyName === prop.name 
-                                            ? 'text-white bg-white/5 border-l-2 border-[#D4AF37] -ml-[1px]' 
-                                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'"
-                                        [attr.data-debug-id]="'nav-phase-' + phase.id">
-                                        
-                                        <div class="flex items-center min-w-0">
-                                            <span class="w-5 h-5 mr-3 flex items-center justify-center flex-shrink-0 transition-colors"
-                                                  [class]="activeView().id === phase.id && activeView().propertyName === prop.name ? 'text-[#D4AF37]' : 'text-slate-600 group-hover:text-slate-400'"
-                                                  [innerHTML]="getIcon('dashboard')"></span>
-                                            <span class="truncate">{{ ( 'PHASE.' + phase.id | translate ) }}</span>
-                                        </div>
-                                        <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 font-bold border border-white/5">PH{{ phase.sort_order }}</span>
-                                        </a>
-                                    }
-                                </div>
                             </div>
                         </div>
                     } @else {

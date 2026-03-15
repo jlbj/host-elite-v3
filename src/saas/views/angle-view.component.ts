@@ -85,7 +85,7 @@ export class PhaseViewComponent implements OnInit {
     // Computed Data for Phase View
     private hiddenFeatureIds = [
         'OPS_03', 'OPS_03_AIRBNB', 'OPS_03_BOOKING', 'OPS_03_VRBO',
-        'OPS_05', 'OPS_08', 'OPS_09'
+        'OPS_04', 'OPS_05', 'OPS_08', 'OPS_09'
     ];
 
     phaseFeatures = computed(() => {
