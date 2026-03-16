@@ -333,7 +333,7 @@ export class SidebarComponent {
 
     mainViews: View[] = [
         { id: 'dashboard', title: 'Bienvenue', icon: 'home' },
-        { id: 'global-dashboard', title: 'Tableau de bord', icon: 'dashboard' },
+        { id: 'global-dashboard', title: 'Tableau de bord', icon: 'dashboard', featureId: 'analytics' },
         { id: 'my-calendars', title: 'Mes Calendriers', icon: 'calendar' },
     ];
 
