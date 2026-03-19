@@ -18,8 +18,13 @@
             </button>
         </div>
         <div class="p-6 overflow-y-auto">
+            <!-- BACKUP: Original plain text interpolation
             <p class="text-slate-600 whitespace-pre-wrap leading-relaxed">{{ guideModalState().content ||
                 ('BOOKLET.no_info' | translate) }}</p>
+            -->
+            <!-- innerHTML rendering (supports WYSIWYG HTML output) -->
+            <div class="text-slate-600 leading-relaxed prose prose-sm max-w-none"
+                [innerHTML]="sanitizeHtml(guideModalState().content || ('BOOKLET.no_info' | translate))"></div>
         </div>
         <div class="p-4 bg-slate-50 border-t border-slate-100 text-center">
             <button (click)="closeGuideModal()" class="text-sm font-semibold text-blue-600 hover:underline">{{
@@ -68,9 +73,14 @@
                 <span
                     class="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-12 h-1 bg-current opacity-50 rounded-full"></span>
             </h2>
+            <!-- BACKUP: Original plain text interpolation
             <p
                 class="text-lg md:text-xl leading-relaxed opacity-90 whitespace-pre-wrap font-light text-justify md:text-center">
                 {{ marketingText }}</p>
+            -->
+            <!-- innerHTML rendering (supports WYSIWYG HTML output) -->
+            <div class="text-lg md:text-xl leading-relaxed opacity-90 font-light text-justify md:text-center prose prose-invert max-w-none"
+                [innerHTML]="sanitizeHtml(marketingText)"></div>
         </div>
         }
 
@@ -156,16 +166,31 @@
                     translate }} 15h00, {{ 'BOOKLET.departure_before' | translate }}
                     {{ content?.departure?.checkoutTime || '11h00' }}</p>
                 @if(content?.rules?.partyPolicy) {
+                <!-- BACKUP: Original plain text interpolation
                 <p class="flex items-center justify-center"><span class="mr-2">🎉</span> {{
                     content.rules.partyPolicy }}</p>
+                -->
+                <p class="flex items-center justify-center"><span class="mr-2">🎉</span>
+                    <span class="prose prose-sm max-w-none" [innerHTML]="sanitizeHtml(content.rules.partyPolicy)"></span>
+                </p>
                 }
                 @if(content?.rules?.nonSmokingPolicy) {
+                <!-- BACKUP: Original plain text interpolation
                 <p class="flex items-center justify-center"><span class="mr-2">🚭</span> {{
                     content.rules.nonSmokingPolicy }}</p>
+                -->
+                <p class="flex items-center justify-center"><span class="mr-2">🚭</span>
+                    <span class="prose prose-sm max-w-none" [innerHTML]="sanitizeHtml(content.rules.nonSmokingPolicy)"></span>
+                </p>
                 }
                 @if(content?.rules?.quietHours) {
+                <!-- BACKUP: Original plain text interpolation
                 <p class="flex items-center justify-center"><span class="mr-2">🤝</span> {{ content.rules.quietHours
                     }}</p>
+                -->
+                <p class="flex items-center justify-center"><span class="mr-2">🤝</span>
+                    <span class="prose prose-sm max-w-none" [innerHTML]="sanitizeHtml(content.rules.quietHours)"></span>
+                </p>
                 }
             </div>
         </div>
@@ -183,8 +208,12 @@
                         class="h-32 bg-slate-100 rounded-lg mb-4 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
                         🍝</div>
                     <h4 class="font-bold text-lg mb-2 text-slate-800">{{ 'BOOKLET.dining' | translate }}</h4>
+                    <!-- BACKUP: Original plain text line-clamp
                     <p class="text-sm text-slate-600 line-clamp-3">{{ content?.dining?.recommendedRestaurants ||
                         ('BOOKLET.dining_desc' | translate) }}</p>
+                    -->
+                    <div class="text-sm text-slate-600 line-clamp-3 prose prose-sm max-w-none"
+                        [innerHTML]="sanitizeHtml(content?.dining?.recommendedRestaurants || ('BOOKLET.dining_desc' | translate))"></div>
                     <div
                         class="mt-4 text-blue-600 text-xs font-bold uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         {{ 'BOOKLET.view_list' | translate }}
@@ -197,8 +226,12 @@
                         class="h-32 bg-slate-100 rounded-lg mb-4 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
                         🏃</div>
                     <h4 class="font-bold text-lg mb-2 text-slate-800">{{ 'BOOKLET.activities' | translate }}</h4>
+                    <!-- BACKUP: Original plain text line-clamp
                     <p class="text-sm text-slate-600 line-clamp-3">{{ content?.activities?.hiking ||
                         ('BOOKLET.activities_desc' | translate) }}</p>
+                    -->
+                    <div class="text-sm text-slate-600 line-clamp-3 prose prose-sm max-w-none"
+                        [innerHTML]="sanitizeHtml(content?.activities?.hiking || ('BOOKLET.activities_desc' | translate))"></div>
                     <div
                         class="mt-4 text-blue-600 text-xs font-bold uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         {{ 'BOOKLET.view_activities' | translate }}
@@ -211,8 +244,12 @@
                         class="h-32 bg-slate-100 rounded-lg mb-4 flex items-center justify-center text-4xl group-hover:scale-110 transition-transform">
                         🛒</div>
                     <h4 class="font-bold text-lg mb-2 text-slate-800">{{ 'BOOKLET.practical' | translate }}</h4>
+                    <!-- BACKUP: Original plain text line-clamp
                     <p class="text-sm text-slate-600 line-clamp-3">{{ content?.transport?.localTaxis ||
                         ('BOOKLET.practical_desc' | translate) }}</p>
+                    -->
+                    <div class="text-sm text-slate-600 line-clamp-3 prose prose-sm max-w-none"
+                        [innerHTML]="sanitizeHtml(content?.transport?.localTaxis || ('BOOKLET.practical_desc' | translate))"></div>
                     <div
                         class="mt-4 text-blue-600 text-xs font-bold uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         {{ 'BOOKLET.view_details' | translate }}

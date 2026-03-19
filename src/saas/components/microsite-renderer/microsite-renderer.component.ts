@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MicrositeConfig, BuilderPhoto } from '../../views/welcome-booklet/booklet-definitions';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { TranslationService } from '../../../services/translation.service';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 interface GuideModalState {
     isOpen: boolean;
@@ -32,6 +33,7 @@ export class MicrositeRendererComponent {
     @Input() userEmail: string = '';
 
     private translationService = inject(TranslationService);
+    private sanitizer = inject(DomSanitizer);
 
     // Internal state for the guide modal
     guideModalState = signal<GuideModalState>({ isOpen: false, title: '', content: '', icon: '' });
@@ -54,5 +56,9 @@ export class MicrositeRendererComponent {
 
     closeGuideModal() {
         this.guideModalState.update(s => ({ ...s, isOpen: false }));
+    }
+
+    sanitizeHtml(html: string): SafeHtml {
+        return this.sanitizer.bypassSecurityTrustHtml(html || '');
     }
 }

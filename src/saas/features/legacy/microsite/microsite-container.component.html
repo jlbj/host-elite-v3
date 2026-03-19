@@ -128,12 +128,24 @@
                 <!-- Description Editor -->
                 <div>
                     <label class="text-xs text-slate-300 block mb-1">{{ 'MICROSITE.Description' | translate }}</label>
-                    <textarea [ngModel]="marketingText()" (ngModelChange)="marketingText.set($event)" rows="6"
-                        [attr.data-debug-id]="'microsite-description-textarea'"
-                        class="w-full rounded-lg border-white/20 text-sm bg-white/10 text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-indigo-500"
+                    <!-- BACKUP: Original textarea - kept for reference
+                <textarea [ngModel]="marketingText()" (ngModelChange)="marketingText.set($event)" rows="6"
+                    [attr.data-debug-id]="'microsite-description-textarea'"
+                    class="w-full rounded-lg border-white/20 text-sm bg-white/10 text-white placeholder-slate-400 focus:border-indigo-500 focus:ring-indigo-500"
+                    [placeholder]="'MICROSITE.DescriptionPlaceholder' | translate"
+                    [attr.aria-label]="'MICROSITE.Description' | translate"
+                    [title]="'MICROSITE.Description' | translate"></textarea>
+                -->
+                <!-- ngx-editor (WYSIWYG) -->
+                <div class="NgxEditor__Wrapper dark-editor rounded-lg overflow-hidden border border-white/20">
+                    <ngx-editor-menu [editor]="marketingEditor" [toolbar]="toolbarConfig"></ngx-editor-menu>
+                    <ngx-editor [editor]="marketingEditor" [ngModel]="marketingText()"
+                        (ngModelChange)="marketingText.set($event)"
+                        [attr.data-debug-id]="'microsite-description-editor'"
                         [placeholder]="'MICROSITE.DescriptionPlaceholder' | translate"
-                        [attr.aria-label]="'MICROSITE.Description' | translate"
-                        [title]="'MICROSITE.Description' | translate"></textarea>
+                        class="dark-editor-content">
+                    </ngx-editor>
+                </div>
                 </div>
 
                 <div class="pt-2 border-t border-white/10 mt-2 space-y-3">
@@ -227,12 +239,24 @@
                         <div>
                             <label class="block text-xs font-medium text-slate-400 mb-1">{{ 'MICROSITE.Restaurants' |
                                 translate }}</label>
+                            <!-- BACKUP: Original textarea
                             <textarea rows="3" [ngModel]="content?.guideGastro?.recommandationRestaurants"
                                 (ngModelChange)="updateBookletText('guideGastro', 'recommandationRestaurants', $event)"
                                 data-debug-id="guide-restaurants-textarea"
                                 class="w-full text-xs rounded border-white/20 bg-white/10 text-white placeholder-slate-500"
                                 [attr.aria-label]="'MICROSITE.GuideRestaurantsAria' | translate"
                                 [title]="'MICROSITE.Restaurants' | translate"></textarea>
+                            -->
+                            <!-- ngx-editor (WYSIWYG) -->
+                            <div class="NgxEditor__Wrapper dark-editor rounded-lg overflow-hidden border border-white/20">
+                                <ngx-editor-menu [editor]="guideEditor" [toolbar]="toolbarConfig"></ngx-editor-menu>
+                                <ngx-editor [editor]="guideEditor"
+                                    [ngModel]="content?.guideGastro?.recommandationRestaurants"
+                                    (ngModelChange)="updateBookletText('guideGastro', 'recommandationRestaurants', $event)"
+                                    [attr.data-debug-id]="'guide-restaurants-editor'"
+                                    class="dark-editor-content text-xs">
+                                </ngx-editor>
+                            </div>
                         </div>
                         <!-- Add other guide fields here if needed per original code, kept brief for now as they are dynamically bound in the renderer via content object -->
                     </div>

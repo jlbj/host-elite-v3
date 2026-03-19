@@ -120,3 +120,187 @@
         flex: none !important;
     }
 }
+
+
+/* ============================================
+   ngx-editor Dark Theme (WYSIWYG Editor)
+   ============================================ */
+
+/* Microsite Container Dark Editor */
+.dark-editor ::ng-deep .NgxEditor {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    border-radius: 0;
+    min-height: 100px;
+    border-radius: 0.5rem;
+}
+
+.dark-editor ::ng-deep .NgxEditor__MenuBar {
+    background: rgba(30,41,59,0.9);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding: 6px 10px;
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.dark-editor ::ng-deep .NgxEditor__Content {
+    color: white;
+    font-size: 0.875rem;
+    border-radius: 0 0 0.5rem 0.5rem;
+}
+
+.dark-editor ::ng-deep .NgxEditor__Content .ProseMirror {
+    min-height: 100px;
+    padding: 12px 14px;
+    color: white;
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.dark-editor ::ng-deep .NgxEditor__Content .ProseMirror:focus {
+    outline: none;
+}
+
+.dark-editor ::ng-deep .NgxEditor__Content .ProseMirror p.is-editor-empty:first-child::before {
+    color: rgba(148,163,184,0.5);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+}
+
+/* Toolbar buttons */
+.dark-editor ::ng-deep button {
+    color: #94a3b8;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.dark-editor ::ng-deep button:hover {
+    color: #e2e8f0;
+    background: rgba(255,255,255,0.1);
+}
+
+.dark-editor ::ng-deep button.active {
+    color: #818cf8;
+    background: rgba(129,140,248,0.2);
+}
+
+/* Toolbar icons */
+.dark-editor ::ng-deep button svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Editor content styling */
+.dark-editor ::ng-deep .ProseMirror h1,
+.dark-editor ::ng-deep .ProseMirror h2,
+.dark-editor ::ng-deep .ProseMirror h3 {
+    color: white;
+    margin-bottom: 0.5em;
+    margin-top: 1em;
+}
+
+.dark-editor ::ng-deep .ProseMirror ul,
+.dark-editor ::ng-deep .ProseMirror ol {
+    padding-left: 1.5em;
+    margin: 0.5em 0;
+}
+
+.dark-editor ::ng-deep .ProseMirror li {
+    margin: 0.25em 0;
+}
+
+.dark-editor ::ng-deep .ProseMirror blockquote {
+    border-left: 3px solid #6366f1;
+    padding-left: 1em;
+    color: #cbd5e1;
+    margin: 1em 0;
+}
+
+.dark-editor ::ng-deep .ProseMirror code {
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    padding: 0.1em 0.3em;
+    font-size: 0.9em;
+}
+
+.dark-editor ::ng-deep .ProseMirror pre {
+    background: rgba(0,0,0,0.3);
+    border-radius: 6px;
+    padding: 1em;
+    overflow-x: auto;
+}
+
+.dark-editor ::ng-deep .ProseMirror a {
+    color: #818cf8;
+    text-decoration: underline;
+}
+
+.dark-editor ::ng-deep .ProseMirror hr {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    margin: 1.5em 0;
+}
+
+/* ============================================
+   Microsite Renderer: Prose/HTML Rendering
+   ============================================ */
+
+/* Prose styling for rendered WYSIWYG content in the microsite */
+.microsite-prose {
+    color: inherit;
+    line-height: 1.7;
+}
+
+.microsite-prose p {
+    margin-bottom: 1em;
+}
+
+.microsite-prose h1,
+.microsite-prose h2,
+.microsite-prose h3 {
+    font-weight: bold;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+.microsite-prose ul,
+.microsite-prose ol {
+    padding-left: 1.5em;
+    margin: 0.75em 0;
+}
+
+.microsite-prose li {
+    margin: 0.3em 0;
+}
+
+.microsite-prose blockquote {
+    border-left: 3px solid currentColor;
+    padding-left: 1em;
+    opacity: 0.85;
+    font-style: italic;
+    margin: 1em 0;
+}
+
+.microsite-prose a {
+    text-decoration: underline;
+}
+
+.microsite-prose code {
+    background: rgba(0,0,0,0.08);
+    border-radius: 3px;
+    padding: 0.1em 0.3em;
+    font-size: 0.9em;
+}
+
+.microsite-prose strong {
+    font-weight: 600;
+}
+
+.microsite-prose em {
+    font-style: italic;
+}

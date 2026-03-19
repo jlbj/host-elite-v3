@@ -10,12 +10,15 @@ import { SessionStore } from '../../../../state/session.store';
 import { WelcomeBookletService } from '../../../views/welcome-booklet/welcome-booklet.service';
 import { MicrositeRendererComponent } from '../../../components/microsite-renderer/microsite-renderer.component';
 import { MicrositeConfig, SectionDef, BuilderPhoto, resolveMicrositeConfig } from '../../../views/welcome-booklet/booklet-definitions';
+import { NgxEditorModule } from 'ngx-editor';
+import { Editor } from 'ngx-editor';
+import { DOCUMENT } from '@angular/common';
 
 
 @Component({
     selector: 'app-microsite-container',
     standalone: true,
-    imports: [CommonModule, FormsModule, TranslatePipe, MicrositeRendererComponent],
+    imports: [CommonModule, FormsModule, TranslatePipe, MicrositeRendererComponent, NgxEditorModule],
     templateUrl: './microsite-container.component.html',
     styles: [`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -78,6 +81,10 @@ export class MicrositeContainerComponent {
     marketingText = signal<string>('');
     bookletContent = signal<any>(null);
 
+    // ngx-editor instances
+    marketingEditor: Editor;
+    guideEditor: Editor;
+
     // Computed
     visiblePhotos = computed(() => this.micrositePhotos().filter(p => p.visible));
 
@@ -103,13 +110,29 @@ export class MicrositeContainerComponent {
         { id: 'luxury', label: 'MICROSITE.ThemeLuxury' },
     ];
 
+    readonly toolbarConfig = [
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote'],
+        ['bullet_list', 'ordered_list'],
+        [{ heading: ['h1', 'h2', 'h3', 'h4'] }],
+        ['link'],
+        ['format_clear'],
+    ];
+
     constructor() {
+        this.marketingEditor = new Editor();
+        this.guideEditor = new Editor();
         effect(() => {
             const prop = this.propertyName();
             if (prop) {
                 this.loadPropertyData(prop);
             }
         });
+    }
+
+    ngOnDestroy(): void {
+        this.marketingEditor.destroy();
+        this.guideEditor.destroy();
     }
 
     async loadPropertyData(propName: string) {

@@ -8,6 +8,7 @@ import { SaaSAppComponent } from './saas/saas-app.component';
 import { StepperComponent } from './components/stepper.component';
 import { DebugTooltipComponent } from './components/debug-tooltip.component';
 import { SessionStore } from './state/session.store';
+import { NgxEditorModule } from 'ngx-editor';
 
 @Component({
   selector: 'app-root',
@@ -21,7 +22,8 @@ import { SessionStore } from './state/session.store';
     ResultsStepComponent,
     SaaSAppComponent,
     StepperComponent,
-    DebugTooltipComponent
+    DebugTooltipComponent,
+    NgxEditorModule
   ],
   styles: [`
     :host {
