@@ -112,10 +112,7 @@ export const FEATURE_COMPONENTS: Record<string, Type<any>> = {
     'OPS_11': ChecklistsToolComponent,
     'OPS_12': DataEntryFeatureComponent,
 
-    // Marketing (4)
-    'MKT_00': WelcomeBookletListingComponent,
-    'MKT_01': WelcomeBookletPreviewComponent,
-    'MKT_02': WelcomeBookletMicrositeComponent,
+    // Marketing (4) - MKT_00 handled via legacyToolMapping for WYSIWYG editor
     'MKT_03': DirectBookingComponent,
     'MKT_04': ListingOptimizationComponent, // Placeholder
 

@@ -255,7 +255,11 @@
                 </div>
 
                 <div class="w-full h-full overflow-y-auto bg-white custom-scrollbar relative">
-                    <app-welcome-booklet-preview class="block min-h-full"></app-welcome-booklet-preview>
+                    @if (previewType() === 'listing') {
+                        <app-welcome-booklet-listing class="block min-h-full"></app-welcome-booklet-listing>
+                    } @else {
+                        <app-welcome-booklet-preview class="block min-h-full"></app-welcome-booklet-preview>
+                    }
                 </div>
             </div>
 

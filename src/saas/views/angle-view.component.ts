@@ -14,6 +14,8 @@ import { MicrositeContainerComponent } from '../features/legacy/microsite/micros
 import { AiPromptsComponent } from '../features/legacy/ai-prompts/ai-prompts.component';
 import { VisibilityAuditComponent } from '../features/legacy/visibility-audit/visibility-audit.component';
 import { BookletToolComponent } from '../features/legacy/booklet-tool/booklet-tool.component';
+import { ListingEditorComponent } from '../features/legacy/listing-editor/listing-editor.component';
+import { ListingOptimizationComponent } from '../features/marketing/listing-optimization/listing-optimization.component';
 import { AiMessageAssistantComponent } from '../features/legacy/ai-message-assistant/ai-message-assistant.component';
 import { ChecklistsToolComponent } from '../features/legacy/checklists/checklists-tool.component';
 import { DelegationSimulatorComponent } from '../features/legacy/delegation/delegation-simulator.component';
@@ -43,6 +45,8 @@ import { WelcomeBookletViewComponent } from './welcome-booklet-view.component';
         BookletToolComponent,
         AiMessageAssistantComponent,
         ChecklistsToolComponent,
+        ListingOptimizationComponent,
+        ListingEditorComponent,
         MicrositeContainerComponent,
         DelegationSimulatorComponent,
         CalendarToolComponent,
@@ -123,17 +127,26 @@ export class PhaseViewComponent implements OnInit {
     });
 
     private legacyToolMapping: Record<string, string> = {
+        // Marketing - MKT_00 opens ListingEditorComponent (WYSIWYG listing editor)
+        'MKT_00': 'listing-editor',
+        'MKT_01': 'booklet',
+        'MKT_02': 'microsite',
+        // Experience
         'EXP_01': 'booklet',
         'EXP_02': 'ai-assistant',
         'EXP_03': 'microsite',
         'EXP_04': 'ai-assistant',
+        // Operations
         'OPS_01': 'construction-schedule',
         'OPS_02': 'calendar-sync',
         'OPS_03': 'calendar-sync',
         'OPS_11': 'checklists',
+        // Finance
         'FIN_01': 'profitability',
         'FIN_09': 'delegation-sim',
+        // Pricing
         'PRI_03': 'market-alerts',
+        // Legal
         'LEG_00': 'property-audit'
     };
 
@@ -192,6 +205,20 @@ export class PhaseViewComponent implements OnInit {
     }
 
     openFeatureById(featureId: string) {
+        // Handle MKT features
+        if (featureId === 'MKT_00') {
+            this.activeToolId.set('listing-editor');
+            return;
+        } else if (featureId === 'MKT_01') {
+            this.bookletService.activeTab.set('booklet');
+            this.activeToolId.set('booklet');
+            return;
+        } else if (featureId === 'MKT_02') {
+            this.bookletService.activeTab.set('microsite');
+            this.activeToolId.set('microsite');
+            return;
+        }
+
         const features = this.store.featuresHierarchy();
         const feature = features.find(f => f.id === featureId);
         if (feature) {

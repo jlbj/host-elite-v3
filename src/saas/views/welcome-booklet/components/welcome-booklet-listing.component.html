@@ -1,11 +1,10 @@
-<div
-    class="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-2xl shadow-2xl p-6 animate-fade-in font-sans text-white">
+<div class="bg-white border-0 shadow-none rounded-none p-6 animate-fade-in font-sans text-slate-900 w-full max-w-5xl mx-auto">
 
     <div class="max-w-5xl mx-auto">
 
         <!-- 1. Header & Title -->
         <div class="mb-6">
-            <h2 class="text-3xl font-bold text-slate-900 mb-2">{{ propertyName() }}</h2>
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">{{ displayTitle() }}</h2>
             <div class="flex items-center text-sm text-slate-600 space-x-2">
                 <span>★ 4.98 · {{ editorForm.get('address')?.value || 'Adresse masquée' }}</span>
             </div>

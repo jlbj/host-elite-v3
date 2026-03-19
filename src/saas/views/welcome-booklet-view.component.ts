@@ -29,6 +29,8 @@ export class WelcomeBookletViewComponent implements OnInit {
         this.service.propertyName.set(value);
     }
 
+    @Input() hideTabs = false;
+
     activeTab = this.service.activeTab;
     isLoading = this.service.isLoading;
     saveMessage = this.service.saveMessage;

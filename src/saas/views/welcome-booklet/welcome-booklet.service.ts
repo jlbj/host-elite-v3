@@ -24,6 +24,8 @@ export class WelcomeBookletService implements OnDestroy {
 
     // State
     activeTab = signal<'edit' | 'listing' | 'microsite' | 'booklet'>('edit');
+    listingEditorTitle = signal<string>('');
+    listingEditorStyle = signal<any>({});
     isLoading = signal(false);
     saveMessage = signal<string | null>(null);
 

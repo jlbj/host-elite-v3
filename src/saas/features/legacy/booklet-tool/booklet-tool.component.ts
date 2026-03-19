@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BookletContentConfigComponent } from './booklet-content-config.component';
 import { WelcomeBookletPreviewComponent } from '../../../views/welcome-booklet/components/welcome-booklet-preview.component';
+import { WelcomeBookletListingComponent } from '../../../views/welcome-booklet/components/welcome-booklet-listing.component';
 import { HostRepository } from '../../../../services/host-repository.service';
 import { SessionStore } from '../../../../state/session.store';
 import { TranslatePipe } from '../../../../pipes/translate.pipe';
@@ -13,7 +14,7 @@ import { GeminiService } from '../../../../services/gemini.service';
 @Component({
     selector: 'app-booklet-tool',
     standalone: true,
-    imports: [CommonModule, TranslatePipe, FormsModule, BookletContentConfigComponent, WelcomeBookletPreviewComponent],
+    imports: [CommonModule, TranslatePipe, FormsModule, BookletContentConfigComponent, WelcomeBookletPreviewComponent, WelcomeBookletListingComponent],
     templateUrl: './booklet-tool.component.html',
     styles: [`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -24,6 +25,7 @@ import { GeminiService } from '../../../../services/gemini.service';
 })
 export class BookletToolComponent {
     propertyName = input.required<string>();
+    previewType = input<'booklet' | 'listing'>('booklet');
     close = output<void>();
 
     bookletService = inject(WelcomeBookletService); // Make public for template access

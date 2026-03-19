@@ -200,8 +200,12 @@
                 *ngComponentOutlet="ComponentClass; inputs: { feature: activeFeature(), propertyDetails: propertyDetails(), selectFeature: openFeatureById.bind(this) }"></ng-container>
         </div>
     </div>
+    } @else if (activeToolId() === 'welcome-booklet-edit') {
+    <saas-welcome-booklet-view class="h-full block" [propertyName]="view().propertyName!" [hideTabs]="true"></saas-welcome-booklet-view>
     } @else if (activeToolId() === 'welcome-booklet-view') {
     <saas-welcome-booklet-view class="h-full block" [propertyName]="view().propertyName!"></saas-welcome-booklet-view>
+    } @else if (activeToolId() === 'listing-optimization') {
+    <mkt-00-listing-audit class="h-full block"></mkt-00-listing-audit>
     } @else if (activeToolId() === 'microsite') {
     <app-microsite-container [propertyName]="view().propertyName!" (close)="closeTool()">
     </app-microsite-container>
@@ -209,6 +213,10 @@
     <app-ai-prompts [propertyName]="view().propertyName!" (close)="closeTool()"></app-ai-prompts>
     } @else if (activeToolId() === 'visibility-audit') {
     <app-visibility-audit [propertyName]="view().propertyName!" (close)="closeTool()"></app-visibility-audit>
+    } @else if (activeToolId() === 'listing-editor') {
+    <app-listing-editor [propertyName]="view().propertyName!" (close)="closeTool()"></app-listing-editor>
+    } @else if (activeToolId() === 'listing-optimization') {
+    <mkt-00-listing-audit class="h-full block"></mkt-00-listing-audit>
     } @else if (activeToolId() === 'booklet') {
     <app-booklet-tool [propertyName]="view().propertyName!"></app-booklet-tool>
     } @else if (activeToolId() === 'ai-assistant') {
