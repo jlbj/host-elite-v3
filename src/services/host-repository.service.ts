@@ -338,6 +338,13 @@ export class HostRepository {
             arrival_instructions: formData.experience?.arrivalInstructions,
             house_rules_text: formData.experience?.houseRules,
             emergency_contact_info: formData.experience?.emergencyContact,
+            property_type: formData.propertyDetails?.property_type,
+            rooms: formData.propertyDetails?.rooms,
+            bedrooms: formData.propertyDetails?.bedrooms,
+            bathrooms: formData.propertyDetails?.bathrooms,
+            surface_area: formData.propertyDetails?.surface_area,
+            max_guests: formData.propertyDetails?.max_guests,
+            bed_count: formData.propertyDetails?.bed_count,
         };
 
         const { error: propError } = await this.supabase

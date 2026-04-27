@@ -130,6 +130,22 @@
             <div class="flex-1 overflow-y-auto p-6" [formGroupName]="section.formGroupName">
                 <h2 class="text-3xl font-bold text-blue-900 mb-6">{{ section.previewTitle | translate }}</h2>
                 @switch(section.id) {
+                @case('arrival') {
+                <div class="space-y-4 text-slate-700">
+                    @if(isValidContent(editorForm.get('arrival.checkInTime')?.value)) { <h4 class="font-bold">{{ 'BOOKLET.arrival_time' | translate }}</h4>
+                    <p>{{ editorForm.get('arrival.checkInTime')?.value }}</p> }
+                    @if(isValidContent(editorForm.get('arrival.arrivalInstructions')?.value)) { <h4 class="font-bold mt-4">{{ 'BOOKLET.arrival_instructions' | translate }}</h4>
+                    <p class="whitespace-pre-wrap">{{ editorForm.get('arrival.arrivalInstructions')?.value }}</p> }
+                    @if(isValidContent(editorForm.get('arrival.keyRetrieval')?.value)) { <h4 class="font-bold mt-4">{{ 'BOOKLET.arrival_keys' | translate }}</h4>
+                    <p class="whitespace-pre-wrap">{{ editorForm.get('arrival.keyRetrieval')?.value }}</p> }
+                    @if(isValidContent(editorForm.get('arrival.accessCodes')?.value)) { <h4 class="font-bold mt-4">{{ 'BOOKLET.arrival_codes' | translate }}</h4>
+                    <p class="whitespace-pre-wrap">{{ editorForm.get('arrival.accessCodes')?.value }}</p> }
+                    @if(isValidContent(editorForm.get('arrival.parkingArrival')?.value)) { <h4 class="font-bold mt-4">{{ 'BOOKLET.arrival_parking' | translate }}</h4>
+                    <p class="whitespace-pre-wrap">{{ editorForm.get('arrival.parkingArrival')?.value }}</p> }
+                    @if(isValidContent(editorForm.get('arrival.lateArrival')?.value)) { <h4 class="font-bold mt-4">{{ 'BOOKLET.arrival_late' | translate }}</h4>
+                    <p class="whitespace-pre-wrap">{{ editorForm.get('arrival.lateArrival')?.value }}</p> }
+                </div>
+                }
                 @case('departure') {
                 <div class="space-y-4 text-slate-700">
                     <h4 class="font-bold">{{ 'BOOKLET.departure_heading' | translate }}</h4>

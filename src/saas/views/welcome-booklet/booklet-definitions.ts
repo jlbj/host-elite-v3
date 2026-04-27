@@ -29,6 +29,26 @@ export const WIDGET_DEFINITIONS: Record<string, { name: string, icon: string }> 
 };
 
 export const CONTROL_LABELS: Record<string, Record<string, string>> = {
+    'propertyDetails': {
+        property_type: 'BOOKLET.fields.property_type',
+        rooms: 'BOOKLET.fields.rooms',
+        bedrooms: 'BOOKLET.fields.bedrooms',
+        bathrooms: 'BOOKLET.fields.bathrooms',
+        surface_area: 'BOOKLET.fields.surface_area',
+        max_guests: 'BOOKLET.fields.max_guests',
+        bed_count: 'BOOKLET.fields.bed_count',
+    },
+    'arrival': {
+        checkInTime: 'BOOKLET.fields.checkInTime',
+        arrivalInstructions: 'BOOKLET.fields.arrivalInstructions',
+        keyRetrieval: 'BOOKLET.fields.keyRetrieval',
+        accessCodes: 'BOOKLET.fields.accessCodes',
+        parkingArrival: 'BOOKLET.fields.parkingArrival',
+        lateArrival: 'BOOKLET.fields.lateArrival',
+        meetingPoint: 'BOOKLET.fields.meetingPoint',
+        firstSteps: 'BOOKLET.fields.firstSteps',
+        baggageStorage: 'BOOKLET.fields.baggageStorage',
+    },
     'welcome': {
         welcomeMessage: 'BOOKLET.fields.welcomeMessage',
         hostContact: 'BOOKLET.fields.hostContact',
@@ -216,6 +236,8 @@ export const CONTROL_LABELS: Record<string, Record<string, string>> = {
 
 // Raw sections configuration with SVG strings
 export const SECTIONS_CONFIG: BookletSection[] = [
+    { id: 'propertyDetails', formGroupName: 'propertyDetails', editorTitle: `BOOKLET.propertyDetails`, previewTitle: 'BOOKLET.propertyDetails', description: 'BOOKLET.desc.propertyDetails', iconSource: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18h18m-9-9.75v9a2.25 2.25 0 0 1-2.25 2.25h-1.5a2.25 2.25 0 0 1-2.25-2.25v-9a2.25 2.25 0 0 1 2.25-2.25h1.5m-9 9.75h9m-9-9.75v9a2.25 2.25 0 0 1-2.25 2.25h-1.5a2.25 2.25 0 0 1-2.25-2.25v-9a2.25 2.25 0 0 1 2.25-2.25h1.5" /></svg>` },
+    { id: 'arrival', formGroupName: 'arrival', editorTitle: `BOOKLET.arrival`, previewTitle: 'BOOKLET.arrival', description: 'BOOKLET.desc.arrival', iconSource: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z" /></svg>` },
     { id: 'welcome', formGroupName: 'welcome', editorTitle: `BOOKLET.welcome_editor`, previewTitle: 'BOOKLET.welcome', description: 'BOOKLET.desc.welcome', iconSource: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h7.5"/></svg>` },
     { id: 'accessibility', formGroupName: 'accessibility', editorTitle: `BOOKLET.accessibility`, previewTitle: 'BOOKLET.accessibility', description: 'BOOKLET.desc.accessibility', iconSource: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6"><path d="M11.53 2.3A1.85 1.85 0 0 0 10 3.85V11h3.85a1.85 1.85 0 1 0 0-3.7H12V5.7A1.85 1.85 0 0 0 11.53 2.3ZM12 12.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2Z" /><path d="M4.53 11.2A3.3 3.3 0 0 0 2 14.5v.5a1 1 0 0 0 1 1h1.5a1 1 0 0 0 1-1v-.5a3.3 3.3 0 0 0-2.97-3.3Zm13 0A3.3 3.3 0 0 0 14.56 14v1.5a1 1 0 0 0 1 1H17a1 1 0 0 0 1-1v-1.5a3.3 3.3 0 0 0-3.47-3.3Z" /><path fill-rule="evenodd" d="M12 1a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5ZM9.5 3.5a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0Z" clip-rule="evenodd" /></svg>` },
     { id: 'systems', formGroupName: 'systems', editorTitle: `BOOKLET.systems`, previewTitle: 'BOOKLET.systems', description: 'BOOKLET.desc.systems', iconSource: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 0 1-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 0 1 .947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 0 1-2.287-.947ZM10 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" /></svg>` },

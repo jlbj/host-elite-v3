@@ -134,12 +134,25 @@ export class WelcomeBookletService implements OnDestroy {
                 // MAPPING: DB (French) -> Form (English)
                 defaults = {
                     address: prop.address || '',
+                    propertyDetails: {
+                        property_type: prop.property_type || '',
+                        rooms: prop.rooms || '',
+                        bedrooms: prop.bedrooms || '',
+                        bathrooms: prop.bathrooms || '',
+                        surface_area: prop.surface_area || '',
+                        max_guests: prop.max_guests || '',
+                        bed_count: prop.bed_count || '',
+                    },
                     welcome: {
                         welcomeMessage: prop.listing_description || '',
                         hostContact: prop.cleaning_contact_info || '',
                         emergencyContact: prop.emergency_contact_info || ''
                     },
                     systems: { wifi: prop.wifi_code ? `Wi-Fi Code: ${prop.wifi_code}` : '' },
+                    arrival: { 
+                        arrivalInstructions: prop.arrival_instructions || '',
+                        keyRetrieval: prop.arrival_instructions || ''
+                    },
                     rules: { quietHours: prop.house_rules_text || '', keyManagement: prop.arrival_instructions || '' }
                 };
                 if (prop.cover_image_url) defaults.coverImageUrl = prop.cover_image_url;
@@ -260,6 +273,9 @@ export class WelcomeBookletService implements OnDestroy {
                 const photos = this.editorForm.value.photos;
                 await this.repository.savePropertyPhotos(this.propertyId()!, photos);
                 this.propertyPhotos.set(photos.filter((p: any) => p.url));
+                await this.repository.updatePropertyData(this.propertyId()!, {
+                    propertyDetails: this.editorForm.value.propertyDetails
+                });
             }
             this.saveMessage.set(this.translationService.translate('COMMON.Saved'));
             setTimeout(() => this.saveMessage.set(null), 3000);

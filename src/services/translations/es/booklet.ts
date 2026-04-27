@@ -17,6 +17,15 @@ export const booklet = {
     'BOOKLET.ChooseCategory': '-- Elegir --',
     'BOOKLET.EnterDetails': 'Introduce los detalles o usa la IA...',
 
+    // Fields - Property Details
+    'BOOKLET.fields.property_type': 'Tipo de propiedad',
+    'BOOKLET.fields.rooms': 'Número de habitaciones',
+    'BOOKLET.fields.bedrooms': 'Dormitorios',
+    'BOOKLET.fields.bathrooms': 'Baños',
+    'BOOKLET.fields.surface_area': 'Superficie (m²)',
+    'BOOKLET.fields.max_guests': 'Huéspedes máx',
+    'BOOKLET.fields.bed_count': 'Número de camas',
+
     // Fields - Welcome
     'BOOKLET.fields.welcomeMessage': 'Mensaje de Bienvenida / Descripción',
     'BOOKLET.fields.hostContact': 'Datos de contacto del anfitrión o gestor',
@@ -236,6 +245,29 @@ export const booklet = {
     'BOOKLET.administrative': 'Admin y Emergencias',
     'BOOKLET.extraServices': 'Servicios Adicionales',
     'BOOKLET.departure': 'Procedimiento de Salida',
+
+    'BOOKLET.propertyDetails': 'Detalles de la Propiedad',
+    'BOOKLET.desc.propertyDetails': 'Características físicas y capacidades del alojamiento',
+
+    'BOOKLET.arrival': 'Procedimiento de Llegada',
+    'BOOKLET.desc.arrival': 'Instrucciones de llegada, recuperación de llaves e información',
+
+    'BOOKLET.fields.checkInTime': 'Hora de entrada',
+    'BOOKLET.fields.arrivalInstructions': 'Instrucciones de llegada',
+    'BOOKLET.fields.keyRetrieval': 'Recuperación de llaves',
+    'BOOKLET.fields.accessCodes': 'Códigos de acceso',
+    'BOOKLET.fields.parkingArrival': 'Aparcamiento a la llegada',
+    'BOOKLET.fields.lateArrival': 'Procedimiento de llegada tardía',
+    'BOOKLET.fields.meetingPoint': 'Punto de encuentro',
+    'BOOKLET.fields.firstSteps': 'Primeros pasos',
+    'BOOKLET.fields.baggageStorage': 'Guardarropaja',
+
+    'BOOKLET.arrival_time': 'Hora de entrada',
+    'BOOKLET.arrival_instructions': 'Instrucciones de llegada',
+    'BOOKLET.arrival_keys': 'Recuperación de llaves',
+    'BOOKLET.arrival_codes': 'Códigos de acceso',
+    'BOOKLET.arrival_parking': 'Aparcamiento',
+    'BOOKLET.arrival_late': 'Llegada tardía',
 
     'BOOKLET.PropertyPhotos': 'Fotos de la Propiedad',
     'BOOKLET.ManageCategories': 'Gestionar Categorías',

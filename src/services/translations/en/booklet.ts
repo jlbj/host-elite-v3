@@ -17,6 +17,15 @@ export const booklet = {
     'BOOKLET.ChooseCategory': '-- Choose --',
     'BOOKLET.EnterDetails': 'Enter details or use AI...',
 
+    // Fields - Property Details
+    'BOOKLET.fields.property_type': 'Property Type',
+    'BOOKLET.fields.rooms': 'Total Rooms',
+    'BOOKLET.fields.bedrooms': 'Bedrooms',
+    'BOOKLET.fields.bathrooms': 'Bathrooms',
+    'BOOKLET.fields.surface_area': 'Surface Area (m²)',
+    'BOOKLET.fields.max_guests': 'Max Guests',
+    'BOOKLET.fields.bed_count': 'Number of Beds',
+
     // Fields - Welcome
     'BOOKLET.fields.welcomeMessage': 'Welcome Message / Description',
     'BOOKLET.fields.hostContact': 'Host or manager contact details',
@@ -236,6 +245,29 @@ export const booklet = {
     'BOOKLET.administrative': 'Admin & Crisis',
     'BOOKLET.extraServices': 'Additional Services',
     'BOOKLET.departure': 'Departure Procedure',
+
+    'BOOKLET.propertyDetails': 'Property Details',
+    'BOOKLET.desc.propertyDetails': 'Physical property characteristics and capacities',
+
+    'BOOKLET.arrival': 'Arrival Procedure',
+    'BOOKLET.desc.arrival': 'Check-in instructions, key retrieval, and arrival information',
+
+    'BOOKLET.fields.checkInTime': 'Check-in Time',
+    'BOOKLET.fields.arrivalInstructions': 'Arrival Instructions',
+    'BOOKLET.fields.keyRetrieval': 'Key Retrieval',
+    'BOOKLET.fields.accessCodes': 'Access Codes',
+    'BOOKLET.fields.parkingArrival': 'Parking on Arrival',
+    'BOOKLET.fields.lateArrival': 'Late Arrival Procedure',
+    'BOOKLET.fields.meetingPoint': 'Meeting Point',
+    'BOOKLET.fields.firstSteps': 'First Steps Upon Entry',
+    'BOOKLET.fields.baggageStorage': 'Baggage Storage',
+
+    'BOOKLET.arrival_time': 'Check-in Time',
+    'BOOKLET.arrival_instructions': 'Arrival Instructions',
+    'BOOKLET.arrival_keys': 'Key Retrieval',
+    'BOOKLET.arrival_codes': 'Access Codes',
+    'BOOKLET.arrival_parking': 'Parking',
+    'BOOKLET.arrival_late': 'Late Arrival',
 
     'BOOKLET.PropertyPhotos': 'Property Photos',
     'BOOKLET.ManageCategories': 'Manage categories',

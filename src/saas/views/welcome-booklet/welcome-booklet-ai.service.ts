@@ -93,6 +93,7 @@ export class WelcomeBookletAiService {
         if (key === 'wifi') return 'Donne un format type : "Réseau : [NOM], Mot de passe : [MDP]".';
         if (key === 'bakery') return 'Suggère une boulangerie réputée dans le quartier si possible, ou explique comment en trouver une.';
         if (key === 'supermarket') return 'Indique les chaînes de supermarchés habituelles en France.';
+        if (sectionId === 'arrival') return "Donne des instructions claires d'arrivée avec code porte, digicode, et stationnement.";
         if (sectionId === 'departure') return 'Donne des instructions standards de départ (poubelles, clés, lumières).';
         return '';
     }

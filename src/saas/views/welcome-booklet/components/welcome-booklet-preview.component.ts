@@ -158,7 +158,7 @@ export class WelcomeBookletPreviewComponent {
         if (style === 'emoji') {
             // We need a mapping from section ID to emoji since sections use SVGs by default
             const emojiMap: Record<string, string> = {
-                'welcome': '👋', 'accessibility': '♿', 'systems': '🔧', 'security': '🛡️',
+                'propertyDetails': '🏠', 'arrival': '🚀', 'welcome': '👋', 'accessibility': '♿', 'systems': '🔧', 'security': '🛡️',
                 'kitchen': '🍳', 'livingRoom': '🛋️', 'bedrooms': '🛏️', 'laundry': '🧺',
                 'wellness': '🧖', 'parking': '🅿️', 'rules': '📜', 'pets': '🐾',
                 'waste': '♻️', 'dining': '🍽️', 'activities': '🏄', 'localInfo': 'ℹ️',
