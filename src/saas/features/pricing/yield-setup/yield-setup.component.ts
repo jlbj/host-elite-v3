@@ -1,5 +1,5 @@
 import { TranslationService } from '../../../../services/translation.service';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Feature } from '../../../../types';
 import { SessionStore } from '../../../../state/session.store';
@@ -249,7 +249,7 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
 })
 export class YieldSetupComponent {
     translate = inject(TranslationService);
-    feature = computed(() => ({
+    featureData = computed(() => ({
         id: 'PRI_01',
         name: this.translate.instant('YIELSETU.Title'),
         description: this.translate.instant('YIELSETU.Description'),
@@ -263,6 +263,10 @@ export class YieldSetupComponent {
     isTier3 = computed(() => this.tier() === 'Gold' || this.tier() === 'TIER_3');
 
     margin = signal(25);
+
+    @Input() feature?: any;
+    @Input() propertyDetails?: any;
+    @Input() selectFeature?: (featureId: string) => void;
 
     forecast = signal([
         { name: 'January', demand: 40 },
