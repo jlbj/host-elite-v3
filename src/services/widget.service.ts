@@ -85,9 +85,9 @@ export class WidgetService {
   // --- Devises (Frankfurter) ---
   async getExchangeRate(base: string = 'EUR', target: string = 'USD'): Promise<number | null> {
     try {
-      const url = `https://api.frankfurter.app/latest?from=${base}&to=${target}`;
+      const url = `https://open.er-api.com/v6/latest/${base}`;
       const res: any = await firstValueFrom(this.http.get(url));
-      return res.rates[target] || null;
+      return res.rates?.[target] || null;
     } catch (e) {
       return null;
     }

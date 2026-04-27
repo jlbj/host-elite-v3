@@ -32,6 +32,10 @@ import { WelcomeBookletEditorComponent } from '../../../views/welcome-booklet/co
 export class DataEntryFeatureComponent {
     service = inject(WelcomeBookletService);
 
+    @Input() feature?: any;
+    @Input() propertyDetails?: any;
+    @Input() selectFeature?: (featureId: string) => void;
+
     @Input() set propertyName(val: string) {
         if (val) {
             this.service.propertyName.set(val);
