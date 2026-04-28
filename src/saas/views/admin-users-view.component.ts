@@ -5,6 +5,8 @@ import { HostRepository } from '../../services/host-repository.service';
 import { SessionStore } from '../../state/session.store';
 import { UserProfile, AppPlan, ApiKey, PlanConfig, Feature } from '../../types';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AIProviderType } from '../../services/ai/ai.service';
+import { AIConfigService } from '../../services/ai/ai-config.service';
 
 @Component({
     selector: 'saas-admin-users-view',
@@ -45,8 +47,9 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 })
 export class AdminUsersViewComponent implements OnInit {
     private repository = inject(HostRepository);
-    private store = inject(SessionStore); // Inject Store for immediate updates
+    private store = inject(SessionStore);
     private fb: FormBuilder = inject(FormBuilder);
+    private aiConfigService = inject(AIConfigService);
 
     // Global Config (Linked to store for reading, but local signal for form state)
     showPlanBadges = signal(false);
@@ -76,6 +79,12 @@ export class AdminUsersViewComponent implements OnInit {
 
     // Search/Filter
     featureSearch = signal('');
+
+    // AI Config State
+    aiProvider = signal<AIProviderType>('gemini');
+    aiModel = signal<string>('gemini-2.0-flash');
+    availableProviders: AIProviderType[] = ['gemini', 'openai', 'claude', 'openrouter', 'ollama'];
+    isAiConfigSaving = signal(false);
 
     // Built-in Templates and Help
     readonly FEATURE_TEMPLATES: Record<string, any> = {
@@ -168,6 +177,7 @@ export class AdminUsersViewComponent implements OnInit {
 
         this.apiKeyForm = this.fb.group({
             name: ['', Validators.required],
+            provider: ['gemini', Validators.required],
             key: ['', Validators.required]
         });
     }
@@ -178,6 +188,30 @@ export class AdminUsersViewComponent implements OnInit {
         this.refreshApiKeys();
         this.refreshPlans();
         this.refreshFeatures();
+        this.refreshAiConfig();
+    }
+
+    async refreshAiConfig() {
+        try {
+            await this.aiConfigService.initialize();
+            this.aiProvider.set(this.aiConfigService.activeProvider);
+            this.aiModel.set(this.aiConfigService.activeModel);
+        } catch (e) {
+            console.error("Error loading AI config:", e);
+        }
+    }
+
+    async saveAiConfig() {
+        this.isAiConfigSaving.set(true);
+        try {
+            await this.aiConfigService.setProviderAndSave(this.aiProvider(), this.aiModel());
+            this.showSuccess(`IA configurée: ${this.aiProvider()} / ${this.aiModel()}`);
+        } catch (e: any) {
+            console.error("Error saving AI config:", e);
+            alert(`Erreur: ${e?.message || e}`);
+        } finally {
+            this.isAiConfigSaving.set(false);
+        }
     }
 
     async refreshFeatures() {
@@ -349,10 +383,10 @@ CREATE POLICY "Admin update plans" ON app_plans FOR UPDATE USING (
 
     async submitApiKey() {
         if (this.apiKeyForm.valid) {
-            const { name, key } = this.apiKeyForm.value;
+            const { name, provider, key } = this.apiKeyForm.value;
             try {
-                await this.repository.addApiKey(name, key);
-                this.showSuccess("Clé API ajoutée et chiffrée avec succès !");
+                await this.repository.addApiKey(name, key, provider);
+                this.showSuccess(`Clé ${provider.toUpperCase()} ajoutée !`);
                 this.closeKeyModal();
                 await this.refreshApiKeys();
             } catch (e: any) {

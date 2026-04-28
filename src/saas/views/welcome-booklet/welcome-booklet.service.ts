@@ -34,6 +34,7 @@ export class WelcomeBookletService implements OnDestroy {
     activeWidgets = signal<Record<string, boolean>>({});
     propertyPhotos = signal<{ url: string, category: string }[]>([]);
     propertyEquipments = signal<string[]>([]);
+    propertyDetails = signal<{ bedrooms?: number, bathrooms?: number, maxGuests?: number }>({});
 
     // FAQ Signal (derived from form)
     faqItems = signal<FaqItem[]>([]);
@@ -121,6 +122,11 @@ export class WelcomeBookletService implements OnDestroy {
                 console.log('[WelcomeBookletService] Loaded Property Data:', prop);
                 this.propertyId.set(prop.id);
                 if (prop.property_equipments) this.propertyEquipments.set(prop.property_equipments.map((e: any) => e.name));
+                this.propertyDetails.set({
+                    bedrooms: prop.bedrooms || 0,
+                    bathrooms: prop.bathrooms || 0,
+                    maxGuests: prop.max_guests || 0
+                });
 
                 // Photos
                 const pArray = this.editorForm.get('photos') as FormArray;

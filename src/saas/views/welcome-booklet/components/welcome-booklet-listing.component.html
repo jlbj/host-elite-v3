@@ -6,7 +6,7 @@
         <div class="mb-6">
             <h2 class="text-3xl font-bold text-slate-900 mb-2">{{ displayTitle() }}</h2>
             <div class="flex items-center text-sm text-slate-600 space-x-2">
-                <span>★ 4.98 · {{ editorForm.get('address')?.value || 'Adresse masquée' }}</span>
+                <span>★ 4.98 · {{ editorForm.get('address')?.value || ('LISTING.HiddenAddress' | translate) }}</span>
             </div>
         </div>
 
@@ -15,18 +15,18 @@
         <div class="grid grid-cols-4 grid-rows-2 gap-2 h-[350px] rounded-2xl overflow-hidden mb-8 shadow-sm">
             <!-- Main Photo (Left) -->
             <div class="col-span-2 row-span-2 relative group cursor-pointer">
-                <img [src]="photos[0]?.url || 'assets/placeholder.jpg'" alt="Vue principale du logement"
+                <img [src]="photos[0]?.url || 'assets/placeholder.jpg'" [alt]="'LISTING.MainPhotoAlt' | translate"
                     class="w-full h-full object-cover group-hover:brightness-90 transition-all">
             </div>
 
             <!-- Side Photos -->
             @for (i of [1, 2, 3, 4]; track i) {
             <div class="relative group cursor-pointer col-span-1 row-span-1">
-                <img [src]="photos[i]?.url || 'assets/placeholder.jpg'" alt="Vue du logement"
+                <img [src]="photos[i]?.url || 'assets/placeholder.jpg'" [alt]="'LISTING.PhotoAlt' | translate"
                     class="w-full h-full object-cover group-hover:brightness-90 transition-all">
                 @if(i === 4 && photos.length > 5) {
                 <div class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-lg">
-                    +{{ photos.length - 5 }} photos
+                    +{{ photos.length - 5 }} {{ 'LISTING.Photos' | translate }}
                 </div>
                 }
             </div>
@@ -41,9 +41,9 @@
                 <!-- Host Info -->
                 <div class="flex justify-between items-center pb-6 border-b border-gray-200">
                     <div>
-                        <h3 class="text-xl font-semibold">Logement entier : hôte, {{ userEmail()?.email?.split('@')?.[0]
-                            || 'Un Superhost' }}</h3>
-                        <p class="text-slate-500 text-sm">2 voyageurs · 1 chambre · 1 lit · 1 salle de bain</p>
+                        <h3 class="text-xl font-semibold">{{ 'LISTING.EntirePlace' | translate }} {{ userEmail()?.email?.split('@')?.[0]
+                            || ('LISTING.Superhost' | translate) }}</h3>
+                        <p class="text-slate-500 text-sm">{{ propertyDetails().maxGuests || 2 }} {{ 'LISTING.Guests' | translate }} · {{ propertyDetails().bedrooms || 1 }} {{ 'LISTING.Bedrooms' | translate }} · {{ (propertyDetails().bedrooms || 1) }} {{ 'LISTING.Beds' | translate }} · {{ propertyDetails().bathrooms || 1 }} {{ 'LISTING.Bathrooms' | translate }}</p>
                     </div>
                     <div class="w-12 h-12 bg-slate-200 rounded-full overflow-hidden">
                         <svg class="w-full h-full text-slate-400" fill="currentColor" viewBox="0 0 24 24">
@@ -53,57 +53,38 @@
                     </div>
                 </div>
 
-                <!-- Highlights -->
-                <div class="space-y-4 pb-6 border-b border-gray-200">
-                    <div class="flex items-start">
-                        <div class="font-bold text-lg mr-4 w-6">♕</div>
-                        <div>
-                            <div class="font-bold text-base">Hôte expérimenté</div>
-                            <div class="text-sm text-slate-500">Cet hôte a reçu d'excellentes évaluations.</div>
-                        </div>
-                    </div>
-                    <div class="flex items-start">
-                        <div class="font-bold text-lg mr-4 w-6">📍</div>
-                        <div>
-                            <div class="font-bold text-base">Idéalement situé</div>
-                            <div class="text-sm text-slate-500">95 % des voyageurs récents ont noté l'emplacement 5
-                                étoiles.</div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- THE DESCRIPTION -->
                 <div class="py-4">
-                    <h3 class="text-xl font-bold mb-4">À propos de ce logement</h3>
+                    <h3 class="text-xl font-bold mb-4">{{ 'LISTING.AboutThisPlace' | translate }}</h3>
                     <div
                         class="prose prose-slate max-w-none text-base leading-relaxed whitespace-pre-line text-slate-700">
-                        {{ editorForm.get('welcome.welcomeMessage')?.value }}
+                        {{ translatedDescription() }}
                     </div>
                 </div>
 
                 <!-- Amenities -->
                 <div class="py-6 border-t border-gray-200">
-                    <h3 class="text-xl font-bold mb-4">Ce que propose ce logement</h3>
+                    <h3 class="text-xl font-bold mb-4">{{ 'LISTING.WhatOffers' | translate }}</h3>
                     <div class="grid grid-cols-2 gap-4">
                         @if (propertyEquipments().length > 0) {
                         @for(equip of propertyEquipments(); track equip) {
                         <div class="flex items-center space-x-3 text-slate-700">
                             <span class="w-6 text-center text-xl">•</span>
-                            <span>{{ equip }}</span>
+                            <span>{{ translateEquipment(equip) }}</span>
                         </div>
                         }
                         } @else {
                         <div class="flex items-center space-x-3 text-slate-700"><span class="w-6 text-center">📶</span>
-                            <span>Wifi rapide</span>
+                            <span>{{ 'LISTING.Wifi' | translate }}</span>
                         </div>
                         <div class="flex items-center space-x-3 text-slate-700"><span class="w-6 text-center">🍳</span>
-                            <span>Cuisine équipée</span>
+                            <span>{{ 'LISTING.Kitchen' | translate }}</span>
                         </div>
                         <div class="flex items-center space-x-3 text-slate-700"><span class="w-6 text-center">🅿️</span>
-                            <span>Parking gratuit</span>
+                            <span>{{ 'LISTING.Parking' | translate }}</span>
                         </div>
                         <div class="flex items-center space-x-3 text-slate-700"><span class="w-6 text-center">❄️</span>
-                            <span>Climatisation</span>
+                            <span>{{ 'LISTING.AC' | translate }}</span>
                         </div>
                         }
                     </div>
@@ -113,30 +94,18 @@
             <!-- Right Column: Contact Host (Independent Style) -->
             <div class="hidden md:block">
                 <div class="sticky top-6 border border-gray-200 rounded-xl p-8 shadow-xl bg-white text-center">
-                    <h3 class="text-xl font-bold mb-2">Ce logement vous intéresse ?</h3>
-                    <p class="text-slate-500 text-sm mb-6">Les tarifs et disponibilités sont sur demande directe.</p>
+                    <h3 class="text-xl font-bold mb-2">{{ 'LISTING.Interested' | translate }}</h3>
+                    <p class="text-slate-500 text-sm mb-6">{{ 'LISTING.RatesUponRequest' | translate }}</p>
 
                     <div class="space-y-4">
                         <button
                             class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-lg text-lg transition-colors">
-                            Contacter l'Hôte
+                            {{ 'LISTING.ContactHost' | translate }}
                         </button>
                         <button
                             class="w-full bg-white border-2 border-slate-900 text-slate-900 font-bold py-3 rounded-lg text-lg hover:bg-slate-50 transition-colors">
-                            Demander un Devis
+                            {{ 'LISTING.RequestQuote' | translate }}
                         </button>
-                    </div>
-
-                    <div class="mt-6 pt-6 border-t border-gray-100">
-                        <div class="flex items-center justify-center space-x-2 text-sm text-slate-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
-                                fill="currentColor">
-                                <path fill-rule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 0 001.414 0l4-4z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                            <span>Réponse garantie sous 24h</span>
-                        </div>
                     </div>
                 </div>
             </div>

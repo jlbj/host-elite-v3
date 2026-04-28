@@ -258,7 +258,7 @@
                     @if (previewType() === 'listing') {
                         <app-welcome-booklet-listing class="block min-h-full"></app-welcome-booklet-listing>
                     } @else {
-                        <app-welcome-booklet-preview class="block min-h-full"></app-welcome-booklet-preview>
+                        <app-welcome-booklet-preview [propertyDetails]="{ name: propertyName() }" class="block min-h-full"></app-welcome-booklet-preview>
                     }
                 </div>
             </div>

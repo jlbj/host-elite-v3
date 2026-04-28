@@ -1,10 +1,11 @@
 import { TranslationService } from '../../../../services/translation.service';
-import { Component, computed, inject, signal, Input } from '@angular/core';
+import { Component, computed, inject, signal, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Feature } from '../../../../types';
 import { SessionStore } from '../../../../state/session.store';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../../../pipes/translate.pipe';
+import { GeminiService } from '../../../../services/gemini.service';
 
 @Component({
     selector: 'pri-01-yield-setup',
@@ -139,11 +140,38 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
                         <div class="flex items-center gap-2">
                             <div class="w-2 h-2 bg-amber-500 rounded-full"></div> <span class="text-slate-500">{{ 'YIELD.High' | translate }}</span>
                         </div>
-                    </div>
-                </div>
+</div>
+                 </div>
 
-                <!-- Heatmap Bars -->
-                <div class="flex-1 flex items-end justify-between gap-1 md:gap-2 pb-6 relative">
+                 <!-- Left Y-Axis (Demand %) -->
+                 <div class="absolute left-0 top-0 bottom-6 w-10 flex flex-col justify-between text-[9px] text-slate-500 font-mono pr-2 py-2">
+                     <span class="self-end">100%</span>
+                     <span class="self-end">75%</span>
+                     <span class="self-end">50%</span>
+                     <span class="self-end">25%</span>
+                     <span class="self-end">0%</span>
+                 </div>
+
+                 <!-- Right Y-Axis (Price €) -->
+                 <div class="absolute right-0 top-0 bottom-6 w-12 flex flex-col justify-between text-[9px] text-orange-400 font-mono pl-2 py-2">
+                     <span class="self-start">€{{ priceRange().max }}</span>
+                     <span class="self-start">€{{ priceRange().mid }}</span>
+                     <span class="self-start">€{{ priceRange().mid }}</span>
+                     <span class="self-start">€{{ priceRange().mid }}</span>
+                     <span class="self-start">€{{ priceRange().min }}</span>
+                 </div>
+
+                 <!-- Grid Lines -->
+                 <div class="absolute left-10 right-12 top-0 bottom-6 flex flex-col justify-between pointer-events-none">
+                     <div class="border-b border-white/5"></div>
+                     <div class="border-b border-white/5"></div>
+                     <div class="border-b border-white/5"></div>
+                     <div class="border-b border-white/5"></div>
+                     <div class="border-b border-white/5"></div>
+                 </div>
+
+                 <!-- Heatmap Bars -->
+                <div class="ml-10 mr-12 flex-1 flex items-end justify-between gap-1 md:gap-2 pb-6 relative">
                     
                     @if(isTier3()) {
                         <!-- AI Projection Line Overlay -->
@@ -155,17 +183,32 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
                                       stroke-width="2" 
                                       stroke-dasharray="4,4" 
                                       class="opacity-70 drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]"></path>
+                                <path [attr.d]="pricePath()" 
+                                      fill="none" 
+                                      stroke="url(#gradient-price)" 
+                                      stroke-width="2" 
+                                      class="opacity-90 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]"></path>
                                 <defs>
                                     <linearGradient id="gradient-ai" x1="0%" y1="0%" x2="100%" y2="0%">
                                         <stop offset="0%" style="stop-color:#6366f1" />
                                         <stop offset="100%" style="stop-color:#10b981" />
                                     </linearGradient>
+                                    <linearGradient id="gradient-price" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#f59e0b" />
+                                        <stop offset="100%" style="stop-color:#ef4444" />
+                                    </linearGradient>
                                 </defs>
                             </svg>
                         </div>
-                        <div class="absolute top-0 right-0 bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] px-3 py-1.5 rounded-full backdrop-blur-md flex items-center gap-2 z-20 shadow-lg">
-                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
-                            <span>✨ AI Predictive Demand</span>
+                        <div class="absolute top-0 right-0 flex flex-col gap-2 z-20">
+                            <div class="bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] px-3 py-1.5 rounded-full backdrop-blur-md flex items-center gap-2 shadow-lg">
+                                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                                <span>✨ AI Demand</span>
+                            </div>
+                            <div class="bg-orange-500/10 border border-orange-500/30 text-orange-300 text-[10px] px-3 py-1.5 rounded-full backdrop-blur-md flex items-center gap-2 shadow-lg">
+                                <span class="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
+                                <span>💰 Est. Price</span>
+                            </div>
                         </div>
                     }
 
@@ -247,16 +290,19 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
         }
     `]
 })
-export class YieldSetupComponent {
+export class YieldSetupComponent implements OnInit {
     translate = inject(TranslationService);
+    session = inject(SessionStore);
+    geminiService = inject(GeminiService);
     featureData = computed(() => ({
         id: 'PRI_01',
         name: this.translate.instant('YIELSETU.Title'),
         description: this.translate.instant('YIELSETU.Description'),
     } as any));
 
-    session = inject(SessionStore);
     tier = computed(() => this.session.userProfile()?.plan || 'Freemium');
+
+    isLoadingMarket = signal(false);
 
     isTier0 = computed(() => this.tier() === 'Freemium' || this.tier() === 'TIER_0');
     isTier2 = computed(() => this.tier() === 'Silver' || this.tier() === 'TIER_2' || this.tier() === 'Gold' || this.tier() === 'TIER_3');
@@ -292,11 +338,73 @@ export class YieldSetupComponent {
         return d;
     });
 
+    pricePath = computed(() => {
+        const basePrice = 85;
+        const marginPct = this.margin();
+        const prices = this.forecast().map((m, i) => {
+            const price = basePrice * (0.5 + m.demand / 100) * (1 + marginPct / 100);
+            const minPrice = 85 * 0.5 * (1 + marginPct / 100);  // ~51 with 20% margin
+            const maxPrice = 85 * 1.5 * (1 + marginPct / 100); // ~153 with 20% margin
+            const normalizedY = ((price - minPrice) / (maxPrice - minPrice)) * 100;
+            return `${(i * 100) / 11},${100 - normalizedY}`;
+        });
+        let d = `M ${prices[0]}`;
+        for (let i = 0; i < prices.length; i++) {
+            d += ` L ${prices[i]}`;
+        }
+        return d;
+    });
+
+    priceRange = computed(() => {
+        const basePrice = 85;
+        const marginPct = this.margin();
+        const minPrice = Math.floor(basePrice * 0.5 * (1 + marginPct / 100));
+        const maxPrice = Math.ceil(basePrice * 1.5 * (1 + marginPct / 100));
+        const midPrice = Math.floor((minPrice + maxPrice) / 2);
+        return { min: minPrice, mid: midPrice, max: maxPrice };
+    });
+
     recalculate() {
-        // Simulation of dynamic recalculation
-        this.forecast.update(prev => prev.map(m => ({
-            ...m,
-            demand: Math.min(100, Math.max(20, m.demand + (Math.random() * 10 - 5)))
-        })));
+        this.loadMarketAnalysis();
+    }
+
+    ngOnInit() {
+        if (this.isTier3()) {
+            this.loadMarketAnalysis();
+        }
+    }
+
+    async loadMarketAnalysis() {
+        if (!this.propertyDetails) return;
+        
+        this.isLoadingMarket.set(true);
+        try {
+            const context = {
+                propertyType: this.propertyDetails.type || 'Apartment',
+                hostCountry: this.propertyDetails.country || 'Spain',
+                propertyCountry: this.propertyDetails.country || 'Spain',
+                rooms: this.propertyDetails.rooms || 2,
+                totalSize: this.propertyDetails.size || 80,
+                gardenSize: this.propertyDetails.gardenSize || 0,
+                hasPool: this.propertyDetails.hasPool || false,
+                additionalDetails: this.propertyDetails.description || ''
+            };
+
+            const address = this.propertyDetails.address || this.propertyDetails.location || 'Spain';
+            const analysis = await this.geminiService.getMarketAnalysis(address, context);
+
+            if (analysis.monthlySeasonality && analysis.monthlySeasonality.length === 12) {
+                const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+                this.forecast.set(months.map((name, i) => ({
+                    name,
+                    demand: analysis.monthlySeasonality![i]
+                })));
+            }
+        } catch (error) {
+            console.error('Failed to load market analysis:', error);
+        } finally {
+            this.isLoadingMarket.set(false);
+        }
     }
 }

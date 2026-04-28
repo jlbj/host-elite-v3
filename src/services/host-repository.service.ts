@@ -783,9 +783,9 @@ export class HostRepository {
         return data as ApiKey[];
     }
 
-    async addApiKey(name: string, clearKey: string): Promise<void> {
+    async addApiKey(name: string, clearKey: string, provider: string = 'gemini'): Promise<void> {
         if (!this.supabaseService.isConfigured) throw new Error("DB not configured");
-        const { error } = await this.supabase.rpc('add_api_key', { key_name: name, clear_key: clearKey });
+        const { error } = await this.supabase.rpc('add_api_key', { key_name: name, clear_key: clearKey, p_provider: provider });
         if (error) throw error;
     }
 

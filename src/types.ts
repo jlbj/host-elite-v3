@@ -47,6 +47,7 @@ export interface UserProfile {
 export interface ApiKey {
   id: string;
   name: string;
+  provider: string;
   is_active: boolean;
   created_at: string;
 }

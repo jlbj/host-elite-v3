@@ -111,9 +111,35 @@ export class ListingEditorComponent {
             if (prop) {
                 this.existingPropertyId.set(prop.id);
                 this.listingTitle = prop.listing_title || prop.name || '';
-                this.listingDescription = prop.listing_description || '';
                 this.coverImageUrl = prop.cover_image_url || '';
                 this.selectedCoverPhoto.set(this.coverImageUrl);
+                
+                // Load multi-language descriptions (from localStorage or DB)
+                const currentLang = this.translationService.currentLang() || 'en';
+                let description = prop.listing_description || '';
+                
+                // First try localStorage
+                const storedDesc = localStorage.getItem(`listing_descriptions_${prop.id}`);
+                if (storedDesc) {
+                    try {
+                        const allDesc = JSON.parse(storedDesc);
+                        description = allDesc[currentLang] || allDesc['en'] || description;
+                        // Save to localStorage for future use
+                        localStorage.setItem(`listing_descriptions_${prop.id}`, JSON.stringify(allDesc));
+                    } catch {}
+                }
+                // Then try DB stored descriptions_all
+                else if (prop.marketing?.descriptions_all) {
+                    try {
+                        const allDesc = typeof prop.marketing.descriptions_all === 'string' 
+                            ? JSON.parse(prop.marketing.descriptions_all) 
+                            : prop.marketing.descriptions_all;
+                        description = allDesc[currentLang] || allDesc['en'] || description;
+                        localStorage.setItem(`listing_descriptions_${prop.id}`, JSON.stringify(allDesc));
+                    } catch {}
+                }
+                
+                this.listingDescription = description;
                 
                 // Update service for preview
                 this.bookletService.listingEditorTitle.set(this.listingTitle);
@@ -178,10 +204,25 @@ export class ListingEditorComponent {
         
         this.isSaving.set(true);
         try {
-            await this.repository.updatePropertyData(this.existingPropertyId()!, {
+            // Get all language descriptions from localStorage
+            const propertyId = this.existingPropertyId()!;
+            const storedDesc = localStorage.getItem(`listing_descriptions_${propertyId}`);
+            let allDescriptions = { en: '', fr: '', es: '' };
+            
+            if (storedDesc) {
+                allDescriptions = JSON.parse(storedDesc);
+            }
+            
+            // Update current language description
+            const currentLang = this.translationService.currentLang() || 'en';
+            allDescriptions[currentLang] = this.listingDescription;
+            
+            // Save to DB (use current language as main, store all in additional_data)
+            await this.repository.updatePropertyData(propertyId, {
                 marketing: {
                     title: this.listingTitle,
-                    description: this.listingDescription,
+                    description: this.listingDescription, // Current language
+                    descriptions_all: allDescriptions, // All languages
                     coverImageUrl: this.coverImageUrl
                 }
             });
@@ -209,19 +250,61 @@ export class ListingEditorComponent {
             const prop = await this.repository.getPropertyByName(this.propertyName());
             if (!prop) return;
 
-            const result = await this.geminiService.generateText(
-                `Generate a compelling, high-converting property listing description (2-3 paragraphs) for a rental property. Highlight unique features, location benefits, and create emotional appeal for potential guests. Just return the description text, no markdown.`
-            );
+            const basePrompt = `
+You are an expert copywriter specializing in high-converting vacation rental listings.
 
-            if (result) {
-                this.listingDescription = result;
-                this.onDescriptionChange(result);
-            }
+PROPERTY DETAILS:
+- Name: ${prop.name}
+- Location: ${prop.address || prop.city || prop.country || 'Not specified'}
+- Type: ${prop.property_type || 'Apartment'}
+- Bedrooms: ${prop.bedrooms || 'Studio'}
+- Bathrooms: ${prop.bathrooms || '1'}
+- Max Guests: ${prop.max_guests || '2'}
+- Size: ${prop.size || 'Not specified'} m²
+- Amenities: ${prop.amenities?.join(', ') || 'Not specified'}
+- Special Features: ${prop.additional_details || 'None'}
 
-            this.saveMessage.set('AI Description generated!');
+TASK: Write a compelling, high-converting property listing description (3-4 paragraphs) that:
+1. Creates an emotional hook in the first paragraph
+2. Highlights unique features and amenities
+3. Describes the location and nearby attractions
+4. Ends with a call-to-action for booking
+
+TONE: Warm, inviting, professional, and aspirational
+FORMAT: Plain text only, no markdown, no headings
+`;
+
+            // Generate in all 3 languages
+            const [descEn, descFr, descEs] = await Promise.all([
+                this.geminiService.generateText(basePrompt + 'LANGUAGE: English\n\nWrite the description now:'),
+                this.geminiService.generateText(basePrompt + 'LANGUAGE: French\n\nWrite the description now:'),
+                this.geminiService.generateText(basePrompt + 'LANGUAGE: Spanish\n\nWrite the description now:')
+            ]);
+
+            // Store all translations
+            const allDescriptions = {
+                en: descEn || '',
+                fr: descFr || '',
+                es: descEs || ''
+            };
+
+            // Use current language description
+            const currentLang = this.translationService.currentLang() || 'en';
+            this.listingDescription = allDescriptions[currentLang] || descEn;
+            this.onDescriptionChange(this.listingDescription);
+
+            // Store in localStorage for persistence (will be saved to DB on save)
+            localStorage.setItem(`listing_descriptions_${this.existingPropertyId()}`, JSON.stringify(allDescriptions));
+
+            this.saveMessage.set('✨ AI descriptions generated in EN, FR, ES!');
             setTimeout(() => this.saveMessage.set(null), 3000);
-        } catch (e) {
+        } catch (e: any) {
             console.error('Error generating:', e);
+            const message = e?.message?.includes('after multiple attempts') 
+                ? 'AI service temporarily unavailable. Please try again in a few moments.'
+                : 'Error generating description';
+            this.saveMessage.set(message);
+            setTimeout(() => this.saveMessage.set(null), 5000);
         } finally {
             this.isSaving.set(false);
         }

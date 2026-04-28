@@ -1,9 +1,10 @@
 
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { ContextData, ReportData, Scores } from '../types';
 import { SupabaseService } from './supabase.service';
 import { TranslationService } from './translation.service';
+import { AIService, AIProviderType } from './ai/ai.service';
 
 @Injectable({
   providedIn: 'root',
@@ -13,13 +14,26 @@ export class GeminiService {
   private model: GenerativeModel | null = null;
   private supabaseService = inject(SupabaseService);
   private translationService = inject(TranslationService);
+  private aiService = inject(AIService);
+  
+  private useNewProvider = signal(false);
+  private isNewInitialized = signal(false);
 
-  constructor() {
+constructor() {
     // Initialisation paresseuse (lazy load) lors de la première requête
   }
 
-  // ... (existing code omitted for brevity)
-
+  async enableNewProvider(provider: AIProviderType = 'gemini', apiKey?: string): Promise<void> {
+    if (this.isNewInitialized()) return;
+    try {
+      const key = apiKey || await this.supabaseService.supabase.rpc('get_decrypted_active_key').then(r => r.data);
+      await this.aiService.initialize(provider, key);
+      this.useNewProvider.set(true);
+      this.isNewInitialized.set(true);
+    } catch (e) {
+      console.error('[GeminiService] Failed to enable new provider:', e);
+    }
+  }
 
   private async ensureClient(): Promise<void> {
     if (this.genAI) return;
@@ -631,16 +645,31 @@ export class GeminiService {
     }
   }
 
-  async generateText(prompt: string): Promise<string> {
+  async generateText(prompt: string, retries = 3): Promise<string> {
     await this.ensureClient();
-    try {
-      const result = await this.model!.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Error generating text:', error);
-      throw error;
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const result = await this.model!.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+      } catch (error: any) {
+        const is503 = error?.message?.includes('503') || error?.status === 503;
+        const isRateLimit = error?.message?.includes('429');
+        
+        if ((is503 || isRateLimit) && attempt < retries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          console.warn(`[Gemini] ${is503 ? 'Server busy' : 'Rate limited'}, retrying in ${delay}ms (attempt ${attempt}/${retries})...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        
+        console.error('Error generating text:', error);
+        throw error;
+      }
     }
+    
+    throw new Error('Gemini API unavailable after multiple attempts');
   }
   async auditRenovationQuote(roomType: string, area: number, amount: number, finishLevel: string): Promise<{
     isReasonable: boolean;
