@@ -1,5 +1,5 @@
 
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { UserRole, View, Property } from '../types';
@@ -13,7 +13,11 @@ import { TranslatePipe } from '../pipes/translate.pipe';
     standalone: true,
     imports: [CommonModule, TranslatePipe],
     template: `
-    <aside class="w-64 flex-shrink-0 flex flex-col h-full bg-slate-900 border-r border-white/10 text-white transition-all duration-300 relative z-20">
+    <aside class="flex-shrink-0 flex flex-col h-full bg-slate-900 border-r border-white/10 text-white transition-all duration-300 relative z-20"
+           [class.w-64]="!isCollapsed()"
+           [class.w-0]="isCollapsed()"
+           [class.overflow-hidden]="isCollapsed()">
+      <div class="flex flex-col h-full" [class.opacity-0]="isCollapsed()" [class.pointer-events-none]="isCollapsed()" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()">
       <!-- Logo Header -->
       <div class="px-6 h-16 flex items-center border-b border-white/10 flex-shrink-0" data-debug-id="nav-logo">
         <h1 class="text-lg font-bold flex items-center space-x-3 leading-tight tracking-wide">
@@ -296,10 +300,29 @@ import { TranslatePipe } from '../pipes/translate.pipe';
             {{ 'SIDEBAR.Logout' | translate }}
         </button>
       </div>
+      </div>
+      
+      <!-- Hide Tab (right edge when visible) -->
+      @if (!isCollapsed()) {
+      <button (click)="toggleSidebar()"
+          class="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-12 bg-purple-600 hover:bg-purple-500 flex items-center justify-center z-30 cursor-pointer"
+          title="Hide Sidebar">
+          <span class="text-white font-bold text-xs">&lt;</span>
+      </button>
+      }
     </aside>
+    
+    <!-- Unhide Tab - always outside, positioned at left edge -->
+    @if (isCollapsed()) {
+    <button (click)="toggleSidebar()"
+        class="absolute -left-1 top-1/2 -translate-y-1/2 w-4 h-10 bg-purple-600 hover:bg-purple-500 flex items-center justify-center z-30 cursor-pointer"
+        title="Show Sidebar">
+        <span class="text-white font-bold text-xs">&gt;</span>
+    </button>
+    }
   `
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit, OnDestroy {
     activeView = input.required<View>();
     userPlan = input.required<string>();
     userName = input.required<string>();
@@ -310,9 +333,40 @@ export class SidebarComponent {
     logout = output<void>();
     openSettings = output<void>();
 
-    public store = inject(SessionStore); // Injected to resolve badges and phases
+    public store = inject(SessionStore);
     private sanitizer: DomSanitizer = inject(DomSanitizer);
     private translationService = inject(TranslationService);
+
+    // Auto-hide
+    isCollapsed = signal(false);
+    isHovering = signal(false);
+    private hideTimeout: any = null;
+    private readonly AUTO_HIDE_DELAY = 10000;
+
+    ngOnInit(): void { this.startAutoHideTimer(); }
+    ngOnDestroy(): void { this.clearHideTimer(); }
+
+    private startAutoHideTimer(): void {
+        this.clearHideTimer();
+        if (!this.isCollapsed()) {
+            this.hideTimeout = setTimeout(() => {
+                if (!this.isHovering()) this.isCollapsed.set(true);
+            }, this.AUTO_HIDE_DELAY);
+        }
+    }
+
+    private clearHideTimer(): void {
+        if (this.hideTimeout) { clearTimeout(this.hideTimeout); this.hideTimeout = null; }
+    }
+
+    toggleSidebar(): void {
+        const newState = !this.isCollapsed();
+        this.isCollapsed.set(newState);
+        newState ? this.clearHideTimer() : this.startAutoHideTimer();
+    }
+
+    onMouseEnter(): void { this.isHovering.set(true); this.clearHideTimer(); }
+    onMouseLeave(): void { this.isHovering.set(false); this.startAutoHideTimer(); }
 
     constructor() {
         console.log('[Sidebar] Component initialized');
