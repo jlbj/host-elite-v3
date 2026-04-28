@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal, effect, output } from '@angular/core';
+import { Component, computed, effect, inject, input, OnDestroy, OnInit, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WelcomeBookletListingComponent } from '../../../views/welcome-booklet/components/welcome-booklet-listing.component';
@@ -25,6 +25,39 @@ interface ListingStyle {
     headerStyle: string;
 }
 
+interface ListingLayout {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+}
+
+interface ListingTheme {
+    id: string;
+    name: string;
+    primaryColor: string;
+    backgroundColor: string;
+    textColor: string;
+    accentColor: string;
+    fontFamily: string;
+    fontHeading: string;
+}
+
+const LAYOUTS: ListingLayout[] = [
+    { id: 'classic', name: 'Classic Elegance', description: 'Traditional layout with hero image', icon: '📋' },
+    { id: 'modern', name: 'Modern Minimal', description: 'Clean design with white space', icon: '✨' },
+    { id: 'luxe', name: 'Luxe Premium', description: 'Gold accents, high-end feel', icon: '👑' },
+    { id: 'story', name: 'Storytelling', description: 'Narrative flow, guest journey', icon: '📖' },
+    { id: 'gallery', name: 'Gallery Focus', description: 'Photo-heavy grid layouts', icon: '🖼️' }
+];
+
+const THEMES: ListingTheme[] = [
+    { id: 'light', name: 'Light', primaryColor: '#1f2937', backgroundColor: '#ffffff', textColor: '#374151', accentColor: '#3b82f6', fontFamily: 'system-ui', fontHeading: 'Georgia' },
+    { id: 'dark', name: 'Dark', primaryColor: '#f5f5f4', backgroundColor: '#1c1917', textColor: '#e7e5e4', accentColor: '#d4af37', fontFamily: 'system-ui', fontHeading: 'Georgia' },
+    { id: 'warm', name: 'Warm', primaryColor: '#7c2d12', backgroundColor: '#fef3c7', textColor: '#431407', accentColor: '#c2410c', fontFamily: 'system-ui', fontHeading: 'Trebuchet MS' },
+    { id: 'ocean', name: 'Ocean', primaryColor: '#0c4a6e', backgroundColor: '#e0f2fe', textColor: '#082f49', accentColor: '#0ea5e9', fontFamily: 'system-ui', fontHeading: 'Verdana' }
+];
+
 @Component({
     selector: 'app-listing-editor',
     standalone: true,
@@ -39,7 +72,7 @@ interface ListingStyle {
         .drag-handle:active { cursor: grabbing; }
     `]
 })
-export class ListingEditorComponent {
+export class ListingEditorComponent implements OnInit, OnDestroy {
     propertyName = input.required<string>();
     close = output<void>();
 
@@ -48,6 +81,13 @@ export class ListingEditorComponent {
     private repository = inject(HostRepository);
     private store = inject(SessionStore);
     private translationService = inject(TranslationService);
+
+    // Layouts and themes
+    layouts = LAYOUTS;
+    themes = THEMES;
+    activeTab = signal<'layout' | 'theme' | 'content'>('layout');
+    selectedLayout = signal(LAYOUTS[0]);
+    selectedTheme = signal(THEMES[0]);
 
     isSaving = signal(false);
     saveMessage = signal<string | null>(null);
@@ -95,6 +135,9 @@ export class ListingEditorComponent {
     ];
 
     backgroundColors = ['#ffffff', '#f9fafb', '#f3f4f6', '#e5e7eb', '#1f2937', '#0f172a', '#7c3aed', '#059669'];
+
+    ngOnInit(): void {}
+    ngOnDestroy(): void {}
 
     constructor() {
         effect(() => {
