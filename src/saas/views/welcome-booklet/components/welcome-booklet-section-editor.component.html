@@ -26,18 +26,11 @@
                 <label class="block text-sm font-medium text-white">{{ getLabel(key) | translate }}</label>
             </div>
 
-            <!-- BACKUP: Original textarea field - kept for reference
+            <!-- Simple textarea -->
             <textarea [formControlName]="key" rows="3" [attr.aria-label]="getLabel(key) | translate"
                 [title]="getLabel(key) | translate" title="Editeur de contenu"
                 class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 [placeholder]="'BOOKLET.EnterDetails' | translate"></textarea>
-            -->
-            <!-- ngx-editor (WYSIWYG) -->
-            <app-rich-text-editor [fieldName]="key"
-                [label]="getLabel(key)"
-                [value]="group.get(key)?.value || ''"
-                (valueChange)="group.get(key)?.setValue($event)">
-            </app-rich-text-editor>
 
             <!-- Manual PDF Link Field (hidden unless filled by AI usually, but let's show it if value exists or just show it?) -->
             <!-- Simplified: show if value exists or always show small? -->

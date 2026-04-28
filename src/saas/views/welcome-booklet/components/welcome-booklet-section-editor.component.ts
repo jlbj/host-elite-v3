@@ -5,12 +5,11 @@ import { BookletSection, CONTROL_LABELS } from '../booklet-definitions';
 import { WelcomeBookletAiService } from '../welcome-booklet-ai.service';
 import { WelcomeBookletService } from '../welcome-booklet.service';
 import { TranslatePipe } from '../../../../pipes/translate.pipe';
-import { RichTextEditorComponent } from '../../../features/legacy/microsite/rich-text-editor.component';
 
 @Component({
     selector: 'app-welcome-booklet-section-editor',
     standalone: true,
-    imports: [CommonModule, ReactiveFormsModule, TranslatePipe, RichTextEditorComponent],
+    imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
     templateUrl: './welcome-booklet-section-editor.component.html',
 })
 export class WelcomeBookletSectionEditorComponent {
