@@ -26,6 +26,8 @@ export class WelcomeBookletService implements OnDestroy {
     activeTab = signal<'edit' | 'listing' | 'microsite' | 'booklet'>('edit');
     listingEditorTitle = signal<string>('');
     listingEditorStyle = signal<any>({});
+    listingEditorLayout = signal<any>(null);
+    listingEditorTheme = signal<any>(null);
     isLoading = signal(false);
     saveMessage = signal<string | null>(null);
 
@@ -196,15 +198,21 @@ export class WelcomeBookletService implements OnDestroy {
 
                 console.log('[WelcomeBookletService] Patching Booklet Data:', booklet.welcome);
 
-                // Load FAQ
+                // Load FAQ - handle both array and object forms
                 const faqArray = this.editorForm.get('faq') as FormArray;
                 faqArray.clear();
-                if (booklet.faq) {
-                    booklet.faq.forEach((f: FaqItem) => faqArray.push(this.fb.group(f)));
-                    this.faqItems.set(booklet.faq);
+                const faqData = booklet.faq || booklet.faqSection;
+                if (faqData) {
+                    const faqItems = Array.isArray(faqData) ? faqData : (faqData.items || []);
+                    faqItems.forEach((f: FaqItem) => faqArray.push(this.fb.group(f)));
+                    this.faqItems.set(faqItems);
                 }
 
-                this.editorForm.patchValue(this.removeEmpty(booklet));
+                // Patch scalar fields, exclude FormArray fields
+                const { photos: _p, faq: _f, systems: _s, arrival: _a, rules: _r, welcome: _w, ...scalarFields } = booklet;
+                if (Object.keys(scalarFields).length > 0) {
+                    this.editorForm.patchValue(this.removeEmpty(scalarFields));
+                }
                 if (booklet.gpsCoordinates) this.editorForm.patchValue({ gpsCoordinates: booklet.gpsCoordinates });
             }
 

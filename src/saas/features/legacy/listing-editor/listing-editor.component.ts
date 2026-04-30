@@ -44,18 +44,28 @@ interface ListingTheme {
 }
 
 const LAYOUTS: ListingLayout[] = [
-    { id: 'classic', name: 'Classic Elegance', description: 'Traditional layout with hero image', icon: '📋' },
-    { id: 'modern', name: 'Modern Minimal', description: 'Clean design with white space', icon: '✨' },
-    { id: 'luxe', name: 'Luxe Premium', description: 'Gold accents, high-end feel', icon: '👑' },
-    { id: 'story', name: 'Storytelling', description: 'Narrative flow, guest journey', icon: '📖' },
-    { id: 'gallery', name: 'Gallery Focus', description: 'Photo-heavy grid layouts', icon: '🖼️' }
+    { id: 'classic', name: 'Classic Elegance', description: 'Traditional layout with hero image', icon: 'dashboard' },
+    { id: 'modern', name: 'Modern Minimal', description: 'Clean design with white space', icon: 'blur_on' },
+    { id: 'luxe', name: 'Luxe Premium', description: 'Gold accents, high-end feel', icon: 'diamond' },
+    { id: 'story', name: 'Storytelling', description: 'Narrative flow, guest journey', icon: 'menu_book' },
+    { id: 'gallery', name: 'Gallery Focus', description: 'Photo-heavy grid layouts', icon: 'photo_library' },
+    { id: 'compact', name: 'Compact', description: 'Dense info, smaller photos', icon: 'view_agenda' },
+    { id: 'split', name: 'Split View', description: 'Photos left, details right', icon: 'view_column' },
+    { id: 'hero', name: 'Hero First', description: 'Large photo, minimal text', icon: 'photo_camera' },
+    { id: 'minimal', name: 'Minimalist', description: 'Text-focused, tiny photos', icon: 'subject' }
 ];
 
 const THEMES: ListingTheme[] = [
-    { id: 'light', name: 'Light', primaryColor: '#1f2937', backgroundColor: '#ffffff', textColor: '#374151', accentColor: '#3b82f6', fontFamily: 'system-ui', fontHeading: 'Georgia' },
-    { id: 'dark', name: 'Dark', primaryColor: '#f5f5f4', backgroundColor: '#1c1917', textColor: '#e7e5e4', accentColor: '#d4af37', fontFamily: 'system-ui', fontHeading: 'Georgia' },
-    { id: 'warm', name: 'Warm', primaryColor: '#7c2d12', backgroundColor: '#fef3c7', textColor: '#431407', accentColor: '#c2410c', fontFamily: 'system-ui', fontHeading: 'Trebuchet MS' },
-    { id: 'ocean', name: 'Ocean', primaryColor: '#0c4a6e', backgroundColor: '#e0f2fe', textColor: '#082f49', accentColor: '#0ea5e9', fontFamily: 'system-ui', fontHeading: 'Verdana' }
+    { id: 'light', name: 'Light', primaryColor: '#1f2937', backgroundColor: '#ffffff', textColor: '#374151', accentColor: '#3b82f6', fontFamily: 'system-ui', fontHeading: 'Georgia', icon: 'light_mode' },
+    { id: 'dark', name: 'Dark', primaryColor: '#f5f5f4', backgroundColor: '#1c1917', textColor: '#e7e5e4', accentColor: '#d4af37', fontFamily: 'system-ui', fontHeading: 'Georgia', icon: 'dark_mode' },
+    { id: 'warm', name: 'Warm', primaryColor: '#7c2d12', backgroundColor: '#fef3c7', textColor: '#431407', accentColor: '#c2410c', fontFamily: 'system-ui', fontHeading: 'Trebuchet MS', icon: 'wb_twilight' },
+    { id: 'ocean', name: 'Ocean', primaryColor: '#0c4a6e', backgroundColor: '#e0f2fe', textColor: '#082f49', accentColor: '#0ea5e9', fontFamily: 'system-ui', fontHeading: 'Verdana', icon: 'water' },
+    { id: 'forest', name: 'Forest', primaryColor: '#14532d', backgroundColor: '#f0fdf4', textColor: '#052e16', accentColor: '#22c55e', fontFamily: 'system-ui', fontHeading: 'Palatino', icon: 'forest' },
+    { id: 'rose', name: 'Rose', primaryColor: '#881337', backgroundColor: '#fdf2f8', textColor: '#500724', accentColor: '#fb7185', fontFamily: 'system-ui', fontHeading: 'Garamond', icon: 'local_florist' },
+    { id: 'midnight', name: 'Midnight', primaryColor: '#e2e8f0', backgroundColor: '#0f172a', textColor: '#94a3b8', accentColor: '#8b5cf6', fontFamily: 'system-ui', fontHeading: 'Courier New', icon: 'nightlight' },
+    { id: 'sunset', name: 'Sunset', primaryColor: '#7c2d12', backgroundColor: '#fff7ed', textColor: '#7c2d12', accentColor: '#f97316', fontFamily: 'system-ui', fontHeading: 'Georgia', icon: 'wb_sunny' },
+    { id: 'arctic', name: 'Arctic', primaryColor: '#0c4a6e', backgroundColor: '#f0f9ff', textColor: '#164e63', accentColor: '#06b6d4', fontFamily: 'system-ui', fontHeading: 'Arial', icon: 'ac_unit' },
+    { id: 'cocoa', name: 'Cocoa', primaryColor: '#3f2e26', backgroundColor: '#f5f0eb', textColor: '#2c1810', accentColor: '#a78b6b', fontFamily: 'Georgia', fontHeading: 'Georgia', icon: 'coffee' }
 ];
 
 @Component({
@@ -145,6 +155,24 @@ export class ListingEditorComponent implements OnInit, OnDestroy {
             if (prop) {
                 this.loadPropertyData(prop);
             }
+        });
+
+        // Sync layout to service
+        effect(() => {
+            const layout = this.selectedLayout();
+            this.bookletService.listingEditorLayout.set(layout);
+        });
+
+        // Sync theme to service
+        effect(() => {
+            const theme = this.selectedTheme();
+            this.bookletService.listingEditorTheme.set(theme);
+        });
+
+        // Sync photos to service
+        effect(() => {
+            const photos = this.propertyPhotos();
+            this.bookletService.propertyPhotos.set(photos);
         });
     }
 

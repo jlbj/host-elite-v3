@@ -26,6 +26,19 @@ export class WelcomeBookletListingComponent {
     // Get style from editor
     listingStyle = computed(() => this.service.listingEditorStyle() || {});
 
+    // Get layout from editor
+    listingLayout = computed(() => this.service.listingEditorLayout() || { id: 'classic' });
+
+    // Get theme from editor
+    listingTheme = computed(() => this.service.listingEditorTheme() || { 
+        backgroundColor: '#ffffff', 
+        textColor: '#374151',
+        primaryColor: '#1f2937',
+        accentColor: '#3b82f6',
+        fontFamily: 'system-ui',
+        fontHeading: 'Georgia'
+    });
+
     // Computed helper for photos
     visiblePhotos = this.service.propertyPhotos;
 

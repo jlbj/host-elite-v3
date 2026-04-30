@@ -1,114 +1,244 @@
-<div class="bg-white border-0 shadow-none rounded-none p-6 animate-fade-in font-sans text-slate-900 w-full max-w-5xl mx-auto">
+<div class="border-0 shadow-none rounded-none animate-fade-in w-full mx-auto"
+     [style.background-color]="listingTheme().backgroundColor"
+     [style.color]="listingTheme().textColor"
+     [style.font-family]="listingTheme().fontFamily"
+     [style.padding]="listingLayout().id === 'modern' ? '24px' : '32px'">
 
+    <!-- PHOTOS - Always visible, layout can change position -->
+    @if (listingLayout().id === 'story') {
+    <!-- Story layout: Description first, then photos -->
+    <div class="max-w-5xl mx-auto mb-8">
+        <h2 class="text-3xl font-bold mb-2" 
+            [style.color]="listingTheme().primaryColor"
+            [style.font-family]="listingTheme().fontHeading">{{ displayTitle() }}</h2>
+        <div class="flex items-center text-sm space-x-2" [style.opacity]="'0.7'">
+            <span>★ 4.98 · {{ editorForm.get('address')?.value || ('LISTING.HiddenAddress' | translate) }}</span>
+        </div>
+    </div>
+    
+    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="md:col-span-2 space-y-6">
+            <div class="py-4">
+                <h3 class="text-xl font-bold mb-4" [style.color]="listingTheme().primaryColor">{{ 'LISTING.AboutThisPlace' | translate }}</h3>
+                <div class="prose max-w-none text-base leading-relaxed whitespace-pre-line" [style.color]="listingTheme().textColor">{{ translatedDescription() }}</div>
+            </div>
+            <div class="py-6 border-t" [style.border-color]="listingTheme().accentColor + '40'">
+                <h3 class="text-xl font-bold mb-4" [style.color]="listingTheme().primaryColor">{{ 'LISTING.WhatOffers' | translate }}</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    @for(equip of propertyEquipments(); track equip) {
+                    <div class="flex items-center space-x-2" [style.color]="listingTheme().textColor"><span>•</span><span>{{ translateEquipment(equip) }}</span></div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="border rounded-xl p-6" [style.border-color]="listingTheme().accentColor">
+                <h3 class="text-lg font-bold mb-2" [style.color]="listingTheme().primaryColor">{{ 'LISTING.Interested' | translate }}</h3>
+                <button class="w-full py-3 rounded-lg font-bold" [style.background-color]="listingTheme().accentColor" [style.color]="listingTheme().backgroundColor">{{ 'LISTING.ContactHost' | translate }}</button>
+            </div>
+        </div>
+    </div>
+    } 
+
+    <!-- PHOTO GALLERY (all photos) -->
+    @let photos = visiblePhotos();
+    <div class="max-w-5xl mx-auto mb-8">
+        @if (listingLayout().id === 'modern') {
+        <!-- Modern: Horizontal scroll -->
+        <div class="flex gap-2 overflow-x-auto pb-2">
+            @for(photo of photos; track photo.url) {
+            <img [src]="photo.url || 'assets/placeholder.jpg'" class="h-48 w-64 object-cover rounded-lg flex-shrink-0">
+            }
+        </div>
+        } @else if (listingLayout().id === 'compact') {
+        <!-- Compact: Small photos, dense layout -->
+        <div class="grid grid-cols-6 gap-1 h-[180px] rounded-lg overflow-hidden">
+            @for(photo of photos.slice(0,6); track photo.url) {
+            <img [src]="photo.url || 'assets/placeholder.jpg'" class="w-full h-full object-cover">
+            }
+        </div>
+        } @else if (listingLayout().id === 'split') {
+        <!-- Split: Photos on left, content on right stacked -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-1 h-[250px] rounded-lg overflow-hidden">
+                @for(i of [0,1,2,3]; track i) {
+                <img [src]="photos[i]?.url || 'assets/placeholder.jpg'" class="w-full h-full object-cover">
+                }
+            </div>
+            <div>
+                <div class="text-sm" [style.color]="listingTheme().textColor">{{ translatedDescription() }}</div>
+            </div>
+        </div>
+        } @else if (listingLayout().id === 'hero') {
+        <!-- Hero: Full width giant photo -->
+        <div class="h-[300px] rounded-xl overflow-hidden mb-6">
+            <img [src]="photos[0]?.url || 'assets/placeholder.jpg'" class="w-full h-full object-cover">
+        </div>
+        } @else if (listingLayout().id === 'minimal') {
+        <!-- Minimal: Text only, tiny thumbnails -->
+        <div class="flex gap-1 mb-4">
+            @for(photo of photos.slice(0,4); track photo.url) {
+            <img [src]="photo.url || 'assets/placeholder.jpg'" class="w-12 h-12 object-cover rounded">
+            }
+        </div>
+        } @else if (listingLayout().id === 'luxe') {
+        <!-- Luxe: Large hero, smaller below -->
+        <div class="grid grid-cols-4 grid-rows-2 gap-1 h-[400px] rounded-xl overflow-hidden">
+            <div class="col-span-2 row-span-2">
+                <img [src]="photos[0]?.url || 'assets/placeholder.jpg'" class="w-full h-full object-cover">
+            </div>
+            @for(i of [1,2,3,4]; track i) {
+            <img [src]="photos[i]?.url || 'assets/placeholder.jpg'" class="w-full h-full object-cover">
+            }
+        </div>
+        } @else if (listingLayout().id === 'gallery') {
+        <!-- Gallery: All photos in grid, no hero -->
+        <div class="grid grid-cols-4 grid-rows-2 gap-2 rounded-xl overflow-hidden">
+            @for(photo of photos; track photo.url) {
+            <img [src]="photo.url || 'assets/placeholder.jpg'" class="w-full h-40 object-cover rounded-lg">
+            }
+        </div>
+        } @else {
+        <!-- Classic: Standard grid -->
+        <div class="grid grid-cols-4 grid-rows-2 gap-2 h-[350px] rounded-2xl overflow-hidden shadow-sm">
+            <div class="col-span-2 row-span-2">
+                <img [src]="photos[0]?.url || 'assets/placeholder.jpg'" class="w-full h-full object-cover">
+            </div>
+            @for(i of [1,2,3,4]; track i) {
+            <img [src]="photos[i]?.url || 'assets/placeholder.jpg'" class="w-full h-full object-cover">
+            }
+        </div>
+        }
+    </div>
+
+    @if (listingLayout().id !== 'story') {
+    <!-- CONTENT AREA -->
     <div class="max-w-5xl mx-auto">
-
-        <!-- 1. Header & Title -->
+        <!-- Header -->
         <div class="mb-6">
-            <h2 class="text-3xl font-bold text-slate-900 mb-2">{{ displayTitle() }}</h2>
-            <div class="flex items-center text-sm text-slate-600 space-x-2">
+            <h2 class="text-3xl font-bold mb-2" 
+                [style.color]="listingTheme().primaryColor"
+                [style.font-family]="listingTheme().fontHeading">{{ displayTitle() }}</h2>
+            <div class="flex items-center text-sm space-x-2" [style.opacity]="'0.7'">
                 <span>★ 4.98 · {{ editorForm.get('address')?.value || ('LISTING.HiddenAddress' | translate) }}</span>
             </div>
         </div>
 
-        <!-- 2. Photo Grid (First 5 photos) -->
-        @let photos = visiblePhotos();
-        <div class="grid grid-cols-4 grid-rows-2 gap-2 h-[350px] rounded-2xl overflow-hidden mb-8 shadow-sm">
-            <!-- Main Photo (Left) -->
-            <div class="col-span-2 row-span-2 relative group cursor-pointer">
-                <img [src]="photos[0]?.url || 'assets/placeholder.jpg'" [alt]="'LISTING.MainPhotoAlt' | translate"
-                    class="w-full h-full object-cover group-hover:brightness-90 transition-all">
-            </div>
-
-            <!-- Side Photos -->
-            @for (i of [1, 2, 3, 4]; track i) {
-            <div class="relative group cursor-pointer col-span-1 row-span-1">
-                <img [src]="photos[i]?.url || 'assets/placeholder.jpg'" [alt]="'LISTING.PhotoAlt' | translate"
-                    class="w-full h-full object-cover group-hover:brightness-90 transition-all">
-                @if(i === 4 && photos.length > 5) {
-                <div class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-lg">
-                    +{{ photos.length - 5 }} {{ 'LISTING.Photos' | translate }}
-                </div>
-                }
-            </div>
-            }
-        </div>
-
-        <!-- 3. Layout: Content (Left) + Sidebar (Right) -->
+        @if (listingLayout().id === 'luxe') {
+        <!-- Luxe: Sidebar on left -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
-
-            <!-- Left Column: Description -->
-            <div class="md:col-span-2 space-y-8">
-                <!-- Host Info -->
-                <div class="flex justify-between items-center pb-6 border-b border-gray-200">
-                    <div>
-                        <h3 class="text-xl font-semibold">{{ 'LISTING.EntirePlace' | translate }} {{ userEmail()?.email?.split('@')?.[0]
-                            || ('LISTING.Superhost' | translate) }}</h3>
-                        <p class="text-slate-500 text-sm">{{ propertyDetails().maxGuests || 2 }} {{ 'LISTING.Guests' | translate }} · {{ propertyDetails().bedrooms || 1 }} {{ 'LISTING.Bedrooms' | translate }} · {{ (propertyDetails().bedrooms || 1) }} {{ 'LISTING.Beds' | translate }} · {{ propertyDetails().bathrooms || 1 }} {{ 'LISTING.Bathrooms' | translate }}</p>
+            <div class="order-2 md:order-1">
+                <div class="sticky top-6 border rounded-xl p-6" [style.border-color]="listingTheme().accentColor">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-full" [style.background-color]="listingTheme().accentColor + '30'">
+                            <svg class="w-full h-full p-2" [style.color]="listingTheme().accentColor" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold" [style.color]="listingTheme().primaryColor">{{ 'LISTING.EntirePlace' | translate }} {{ userEmail()?.email?.split('@')?.[0] || 'Host' }}</h3>
+                            <p class="text-sm" [style.opacity]="'0.7'">{{ propertyDetails().maxGuests || 2 }} {{ 'LISTING.Guests' | translate }} · {{ propertyDetails().bedrooms || 1 }} {{ 'LISTING.Bedrooms' | translate }}</p>
+                        </div>
                     </div>
-                    <div class="w-12 h-12 bg-slate-200 rounded-full overflow-hidden">
-                        <svg class="w-full h-full text-slate-400" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- THE DESCRIPTION -->
-                <div class="py-4">
-                    <h3 class="text-xl font-bold mb-4">{{ 'LISTING.AboutThisPlace' | translate }}</h3>
-                    <div
-                        class="prose prose-slate max-w-none text-base leading-relaxed whitespace-pre-line text-slate-700">
-                        {{ translatedDescription() }}
-                    </div>
-                </div>
-
-                <!-- Amenities -->
-                <div class="py-6 border-t border-gray-200">
-                    <h3 class="text-xl font-bold mb-4">{{ 'LISTING.WhatOffers' | translate }}</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        @if (propertyEquipments().length > 0) {
-                        @for(equip of propertyEquipments(); track equip) {
-                        <div class="flex items-center space-x-3 text-slate-700">
-                            <span class="w-6 text-center text-xl">•</span>
-                            <span>{{ translateEquipment(equip) }}</span>
-                        </div>
-                        }
-                        } @else {
-                        <div class="flex items-center space-x-3 text-slate-700"><span class="w-6 text-center">📶</span>
-                            <span>{{ 'LISTING.Wifi' | translate }}</span>
-                        </div>
-                        <div class="flex items-center space-x-3 text-slate-700"><span class="w-6 text-center">🍳</span>
-                            <span>{{ 'LISTING.Kitchen' | translate }}</span>
-                        </div>
-                        <div class="flex items-center space-x-3 text-slate-700"><span class="w-6 text-center">🅿️</span>
-                            <span>{{ 'LISTING.Parking' | translate }}</span>
-                        </div>
-                        <div class="flex items-center space-x-3 text-slate-700"><span class="w-6 text-center">❄️</span>
-                            <span>{{ 'LISTING.AC' | translate }}</span>
-                        </div>
-                        }
-                    </div>
+                    <button class="w-full py-3 rounded-lg font-bold" [style.background-color]="listingTheme().accentColor" [style.color]="listingTheme().backgroundColor">{{ 'LISTING.ContactHost' | translate }}</button>
                 </div>
             </div>
-
-            <!-- Right Column: Contact Host (Independent Style) -->
-            <div class="hidden md:block">
-                <div class="sticky top-6 border border-gray-200 rounded-xl p-8 shadow-xl bg-white text-center">
-                    <h3 class="text-xl font-bold mb-2">{{ 'LISTING.Interested' | translate }}</h3>
-                    <p class="text-slate-500 text-sm mb-6">{{ 'LISTING.RatesUponRequest' | translate }}</p>
-
-                    <div class="space-y-4">
-                        <button
-                            class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-lg text-lg transition-colors">
-                            {{ 'LISTING.ContactHost' | translate }}
-                        </button>
-                        <button
-                            class="w-full bg-white border-2 border-slate-900 text-slate-900 font-bold py-3 rounded-lg text-lg hover:bg-slate-50 transition-colors">
-                            {{ 'LISTING.RequestQuote' | translate }}
-                        </button>
+            <div class="order-1 md:order-2 md:col-span-2 space-y-6">
+                <div>
+                    <h3 class="text-xl font-bold mb-4" [style.color]="listingTheme().primaryColor">{{ 'LISTING.AboutThisPlace' | translate }}</h3>
+                    <div class="prose max-w-none text-base leading-relaxed whitespace-pre-line" [style.color]="listingTheme().textColor">{{ translatedDescription() }}</div>
+                </div>
+                <div class="py-4 border-t" [style.border-color]="listingTheme().accentColor + '40'">
+                    <h3 class="text-xl font-bold mb-4" [style.color]="listingTheme().primaryColor">{{ 'LISTING.WhatOffers' | translate }}</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        @for(equip of propertyEquipments(); track equip) {
+                        <div class="flex items-center space-x-2" [style.color]="listingTheme().textColor"><span>•</span><span>{{ translateEquipment(equip) }}</span></div>
+                        }
                     </div>
                 </div>
             </div>
         </div>
+        } @else if (listingLayout().id === 'compact') {
+        <!-- Compact: Dense single column -->
+        <div class="max-w-3xl mx-auto space-y-4">
+            <div class="flex items-center gap-4 text-sm pb-4 border-b" [style.border-color]="listingTheme().accentColor + '40'">
+                <div class="w-10 h-10 rounded-full" [style.background-color]="listingTheme().accentColor + '30'">
+                    <svg class="w-full h-full p-2" [style.color]="listingTheme().accentColor" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                </div>
+                <div>
+                    <p class="font-semibold" [style.color]="listingTheme().primaryColor">{{ propertyDetails().maxGuests || 2 }} {{ 'LISTING.Guests' | translate }} · {{ propertyDetails().bedrooms || 1 }} {{ 'LISTING.Bedrooms' | translate }}</p>
+                </div>
+            </div>
+            <div class="text-sm" [style.color]="listingTheme().textColor">{{ translatedDescription() }}</div>
+            <div class="text-sm" [style.color]="listingTheme().textColor">
+                <strong>{{ 'LISTING.WhatOffers' | translate }}:</strong> {{ propertyEquipments().slice(0,5).join(', ') }}
+            </div>
+        </div>
+        } @else if (listingLayout().id === 'hero') {
+        <!-- Hero: Minimal text -->
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold mb-2" [style.color]="listingTheme().primaryColor">{{ displayTitle() }}</h1>
+                <p class="text-sm" [style.opacity]="'0.7'">{{ propertyDetails().maxGuests || 2 }} {{ 'LISTING.Guests' | translate }} · {{ propertyDetails().bedrooms || 1 }} {{ 'LISTING.Bedrooms' | translate }}</p>
+            </div>
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div class="p-4 border rounded-lg" [style.border-color]="listingTheme().accentColor">
+                    <h3 class="font-bold mb-1" [style.color]="listingTheme().primaryColor">{{ 'LISTING.AboutThisPlace' | translate }}</h3>
+                    <p class="text-sm" [style.color]="listingTheme().textColor">{{ translatedDescription()?.slice(0,100) }}...</p>
+                </div>
+                <div class="p-4 border rounded-lg" [style.border-color]="listingTheme().accentColor">
+                    <h3 class="font-bold mb-1" [style.color]="listingTheme().primaryColor">{{ 'LISTING.WhatOffers' | translate }}</h3>
+                    <p class="text-sm" [style.color]="listingTheme().textColor">{{ propertyEquipments().slice(0,3).join(', ') }}</p>
+                </div>
+                <div class="p-4 border rounded-lg" [style.border-color]="listingTheme().accentColor">
+                    <button class="py-2 px-4 rounded-lg font-bold" [style.background-color]="listingTheme().accentColor" [style.color]="listingTheme().backgroundColor">{{ 'LISTING.ContactHost' | translate }}</button>
+                </div>
+            </div>
+        </div>
+        } @else if (listingLayout().id === 'minimal') {
+        <!-- Minimal: List view -->
+        <div class="max-w-2xl mx-auto space-y-2 text-sm">
+            <div class="flex justify-between">
+                <span [style.color]="listingTheme().primaryColor">{{ displayTitle() }}</span>
+                <span [style.color]="listingTheme().textColor">{{ propertyDetails().maxGuests || 2 }} {{ 'LISTING.Guests' | translate }}</span>
+            </div>
+            <div [style.color]="listingTheme().textColor">{{ translatedDescription() }}</div>
+            <div [style.color]="listingTheme().textColor">{{ propertyEquipments().join(' · ') }}</div>
+        </div>
+        } @else {
+        <!-- Classic/Modern/Gallery: Sidebar on right -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div class="md:col-span-2 space-y-6">
+                <div class="flex justify-between items-center pb-4 border-b" [style.border-color]="listingTheme().accentColor + '40'">
+                    <div>
+                        <h3 class="text-xl font-semibold" [style.color]="listingTheme().primaryColor">{{ 'LISTING.EntirePlace' | translate }} {{ userEmail()?.email?.split('@')?.[0] || 'Host' }}</h3>
+                        <p class="text-sm" [style.opacity]="'0.7'">{{ propertyDetails().maxGuests || 2 }} {{ 'LISTING.Guests' | translate }} · {{ propertyDetails().bedrooms || 1 }} {{ 'LISTING.Bedrooms' | translate }} · {{ propertyDetails().bathrooms || 1 }} {{ 'LISTING.Bathrooms' | translate }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full" [style.background-color]="listingTheme().accentColor + '30'">
+                        <svg class="w-full h-full p-2" [style.color]="listingTheme().accentColor" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4" [style.color]="listingTheme().primaryColor">{{ 'LISTING.AboutThisPlace' | translate }}</h3>
+                    <div class="prose max-w-none text-base leading-relaxed whitespace-pre-line" [style.color]="listingTheme().textColor">{{ translatedDescription() }}</div>
+                </div>
+                <div class="py-4 border-t" [style.border-color]="listingTheme().accentColor + '40'">
+                    <h3 class="text-xl font-bold mb-4" [style.color]="listingTheme().primaryColor">{{ 'LISTING.WhatOffers' | translate }}</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        @for(equip of propertyEquipments(); track equip) {
+                        <div class="flex items-center space-x-2" [style.color]="listingTheme().textColor"><span>•</span><span>{{ translateEquipment(equip) }}</span></div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="hidden md:block">
+                <div class="sticky top-6 border rounded-xl p-6 text-center" [style.border-color]="listingTheme().accentColor">
+                    <h3 class="text-lg font-bold mb-2" [style.color]="listingTheme().primaryColor">{{ 'LISTING.Interested' | translate }}</h3>
+                    <p class="text-sm mb-4" [style.opacity]="'0.7'">{{ 'LISTING.RatesUponRequest' | translate }}</p>
+                    <button class="w-full py-3 rounded-lg font-bold mb-2" [style.background-color]="listingTheme().accentColor" [style.color]="listingTheme().backgroundColor">{{ 'LISTING.ContactHost' | translate }}</button>
+                    <button class="w-full py-3 rounded-lg font-bold border-2" [style.border-color]="listingTheme().accentColor" [style.color]="listingTheme().primaryColor">{{ 'LISTING.RequestQuote' | translate }}</button>
+                </div>
+            </div>
+        </div>
+        }
     </div>
+    }
 </div>

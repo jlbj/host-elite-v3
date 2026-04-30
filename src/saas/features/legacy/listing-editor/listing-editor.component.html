@@ -13,6 +13,10 @@
                 <span class="text-2xl">📝</span>
                 {{ 'LISTING.ListingEditor' | translate }}
             </h2>
+            <!-- Quick Layout/Theme Info -->
+            <span class="text-xs text-slate-400 hidden lg:inline">
+                {{ selectedLayout().icon }} {{ selectedLayout().name }} · {{ selectedTheme().name }}
+            </span>
         </div>
 
         <div class="flex items-center gap-3">
@@ -31,12 +35,79 @@
         </div>
     </div>
 
+    <!-- Tab Navigation -->
+    <div class="flex border-b border-white/10">
+        <button (click)="activeTab.set('layout')"
+            class="flex-1 py-2 px-3 text-xs font-medium transition-colors text-center"
+            [class.bg-white/10]="activeTab() === 'layout'"
+            [class.text-white]="activeTab() === 'layout'"
+            [class.text-slate-400]="activeTab() !== 'layout'">
+            {{ '📐' }} Layout
+        </button>
+        <button (click)="activeTab.set('theme')"
+            class="flex-1 py-2 px-3 text-xs font-medium transition-colors text-center"
+            [class.bg-white/10]="activeTab() === 'theme'"
+            [class.text-white]="activeTab() === 'theme'"
+            [class.text-slate-400]="activeTab() !== 'theme'">
+            {{ '🎨' }} Theme
+        </button>
+        <button (click)="activeTab.set('content')"
+            class="flex-1 py-2 px-3 text-xs font-medium transition-colors text-center"
+            [class.bg-white/10]="activeTab() === 'content'"
+            [class.text-white]="activeTab() === 'content'"
+            [class.text-slate-400]="activeTab() !== 'content'">
+            {{ '📝' }} Content
+        </button>
+    </div>
+
     <!-- Main Content - Split Screen -->
     <div class="flex-1 overflow-hidden flex flex-col lg:flex-row">
         
         <!-- LEFT PANEL: Editor -->
         <div class="w-full lg:w-[450px] h-full overflow-y-auto custom-scrollbar border-r border-white/10 bg-slate-900/50">
             <div class="p-4 space-y-4">
+
+                <!-- Layout Tab -->
+                @if (activeTab() === 'layout') {
+                    <div class="space-y-2">
+                        <p class="text-xs text-slate-400">Choose your listing layout</p>
+                        @for (layout of layouts; track layout.id) {
+                            <div (click)="selectedLayout.set(layout)"
+                                class="p-3 rounded-lg border-2 cursor-pointer transition-all"
+                                [class.border-purple-500]="selectedLayout().id === layout.id"
+                                [class.border-white/10]="selectedLayout().id !== layout.id">
+                                <span class="material-icons text-xl mr-2">{{ layout.icon }}</span>
+                                <span class="text-white font-medium">{{ layout.name }}</span>
+                                <p class="text-xs text-slate-400 mt-1">{{ layout.description }}</p>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- Theme Tab -->
+                @if (activeTab() === 'theme') {
+                    <div class="space-y-2">
+                        <p class="text-xs text-slate-400">Choose your listing theme</p>
+                        @for (theme of themes; track theme.id) {
+                            <div (click)="selectedTheme.set(theme)"
+                                class="p-3 rounded-lg border-2 cursor-pointer transition-all flex items-center gap-3"
+                                [class.border-purple-500]="selectedTheme().id === theme.id"
+                                [class.border-white/10]="selectedTheme().id !== theme.id">
+                                <div class="w-10 h-10 rounded-lg border border-white/20 flex items-center justify-center"
+                                    [style.background-color]="theme.backgroundColor">
+                                    <span class="material-icons text-sm" [style.color]="theme.primaryColor">{{ theme.icon }}</span>
+                                </div>
+                                <div>
+                                    <span class="text-white font-medium">{{ theme.name }}</span>
+                                    <p class="text-xs text-slate-400">{{ theme.primaryColor }} / {{ theme.backgroundColor }}</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- Content Tab -->
+                @if (activeTab() === 'content') {
 
                 <!-- Listing Title -->
                 <div class="bg-white/5 border border-white/10 rounded-xl p-4">
@@ -176,6 +247,7 @@
                         class="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-white text-sm resize-none"
                         placeholder="Write your listing description..."></textarea>
                 </div>
+                }
 
             </div>
         </div>
@@ -198,21 +270,21 @@
                 
                 <!-- Preview Content -->
                 <div class="w-full h-[calc(100vh-380px)] overflow-y-auto"
-                     [style.background-color]="style().backgroundColor"
+                     [style.background-color]="selectedTheme().backgroundColor"
                      [style.background-image]="style().backgroundImage ? 'url(' + style().backgroundImage + ')' : ''"
                      [style.background-size]="'cover'"
                      [style.background-position]="'center'">
                     
-                    <!-- Apply font styles -->
-                    <div [style.font-family]="style().fontFamily"
+                    <!-- Apply theme styles -->
+                    <div [style.font-family]="selectedTheme().fontFamily"
                          [style.font-size]="style().fontSize"
-                         [style.color]="style().textColor">
+                         [style.color]="selectedTheme().textColor">
                         <app-welcome-booklet-listing class="block" [style.opacity]="'1'"></app-welcome-booklet-listing>
                     </div>
                 </div>
             </div>
 
-            <p class="absolute bottom-4 text-slate-500 text-xs font-mono">Live Desktop Preview</p>
+            <p class="absolute bottom-4 text-slate-500 text-xs font-mono">Live Preview - {{ selectedLayout().name }} / {{ selectedTheme().name }}</p>
         </div>
 
     </div>
