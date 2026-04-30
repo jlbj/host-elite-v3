@@ -10,11 +10,11 @@ import { GeminiService } from '../../services/gemini.service';
 import { SessionStore } from '../../state/session.store';
 
 import { MicrositeConfig, BuilderPhoto, SectionDef, resolveMicrositeConfig } from './welcome-booklet/booklet-definitions';
-import { MicrositeContainerComponent } from '../features/legacy/microsite/microsite-container.component';
+import { MicrositeEditorWrapperComponent } from '../components/universal-editor/wrappers';
 import { AiPromptsComponent } from '../features/legacy/ai-prompts/ai-prompts.component';
 import { VisibilityAuditComponent } from '../features/legacy/visibility-audit/visibility-audit.component';
 import { BookletToolComponent } from '../features/legacy/booklet-tool/booklet-tool.component';
-import { ListingEditorComponent } from '../features/legacy/listing-editor/listing-editor.component';
+import { ListingEditorWrapperComponent } from '../components/universal-editor/wrappers';
 import { ListingOptimizationComponent } from '../features/marketing/listing-optimization/listing-optimization.component';
 import { AiMessageAssistantComponent } from '../features/legacy/ai-message-assistant/ai-message-assistant.component';
 import { ChecklistsToolComponent } from '../features/legacy/checklists/checklists-tool.component';
@@ -46,8 +46,8 @@ import { WelcomeBookletViewComponent } from './welcome-booklet-view.component';
         AiMessageAssistantComponent,
         ChecklistsToolComponent,
         ListingOptimizationComponent,
-        ListingEditorComponent,
-        MicrositeContainerComponent,
+        ListingEditorWrapperComponent,
+        MicrositeEditorWrapperComponent,
         DelegationSimulatorComponent,
         CalendarToolComponent,
         ProfitabilityCalculatorComponent,

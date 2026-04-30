@@ -2,12 +2,12 @@ import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WelcomeBookletService } from '../../../views/welcome-booklet/welcome-booklet.service';
 import { TranslatePipe } from '../../../../pipes/translate.pipe';
-import { WelcomeBookletEditorComponent } from '../../../views/welcome-booklet/components/welcome-booklet-editor.component';
+import { WelcomeBookletEditorWrapperComponent } from '../../../components/universal-editor/wrappers';
 
 @Component({
     selector: 'app-data-entry-feature',
     standalone: true,
-    imports: [CommonModule, WelcomeBookletEditorComponent, TranslatePipe],
+    imports: [CommonModule, WelcomeBookletEditorWrapperComponent, TranslatePipe],
     template: `
         <div class="h-full w-full flex flex-col bg-slate-900/50 backdrop-blur-xl rounded-xl border border-white/10 overflow-hidden">
             <div class="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-white/5">
@@ -24,7 +24,7 @@ import { WelcomeBookletEditorComponent } from '../../../views/welcome-booklet/co
                 </div>
             </div>
             <div class="flex-1 overflow-y-auto">
-                <app-welcome-booklet-editor></app-welcome-booklet-editor>
+                <app-welcome-booklet-editor-wrapper [propertyName]="propertyName"></app-welcome-booklet-editor-wrapper>
             </div>
         </div>
     `

@@ -1,7 +1,7 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { WelcomeBookletService } from './welcome-booklet/welcome-booklet.service';
-import { WelcomeBookletEditorComponent } from './welcome-booklet/components/welcome-booklet-editor.component';
+import { WelcomeBookletEditorWrapperComponent } from '../components/universal-editor/wrappers';
 import { WelcomeBookletListingComponent } from './welcome-booklet/components/welcome-booklet-listing.component';
 import { WelcomeBookletMicrositeComponent } from './welcome-booklet/components/welcome-booklet-microsite.component';
 import { WelcomeBookletPreviewComponent } from './welcome-booklet/components/welcome-booklet-preview.component';
@@ -13,7 +13,7 @@ import { TranslatePipe } from '../../pipes/translate.pipe';
     standalone: true,
     imports: [
         CommonModule,
-        WelcomeBookletEditorComponent,
+        WelcomeBookletEditorWrapperComponent,
         WelcomeBookletListingComponent,
         WelcomeBookletMicrositeComponent,
         WelcomeBookletPreviewComponent,

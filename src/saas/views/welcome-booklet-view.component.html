@@ -72,7 +72,7 @@
     <!-- Content -->
     <div class="flex-1 overflow-hidden relative">
         @switch (activeTab()) {
-        @case ('edit') { <app-welcome-booklet-editor class="h-full block overflow-hidden" /> }
+        @case ('edit') { <app-welcome-booklet-editor-wrapper class="h-full block overflow-hidden" /> }
         @case ('listing') { <app-welcome-booklet-listing class="h-full block overflow-y-auto" /> }
         @case ('booklet') { <app-welcome-booklet-preview class="h-full block overflow-y-auto" /> }
         @case ('microsite') { <app-welcome-booklet-microsite class="h-full block overflow-hidden" /> }

@@ -12,6 +12,7 @@ import { assistant } from './es/assistant';
 import { calendar } from './es/calendar';
 import { ph3 } from './es/ph3_features';
 import { roi } from './es/roi';
+import { editor } from './es/editor';
 
 export const es = {
     ...ui,
@@ -27,5 +28,6 @@ export const es = {
     ...assistant,
     ...calendar,
     ...ph3,
-    ...roi
+    ...roi,
+    ...editor
 };

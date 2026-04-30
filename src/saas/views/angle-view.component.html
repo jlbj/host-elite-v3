@@ -207,14 +207,14 @@
     } @else if (activeToolId() === 'listing-optimization') {
     <mkt-00-listing-audit class="h-full block"></mkt-00-listing-audit>
     } @else if (activeToolId() === 'microsite') {
-    <app-microsite-container [propertyName]="view().propertyName!" (close)="closeTool()">
-    </app-microsite-container>
+    <app-microsite-editor-wrapper [propertyName]="view().propertyName!" (close)="closeTool()">
+    </app-microsite-editor-wrapper>
     } @else if (activeToolId() === 'ai-prompts') {
     <app-ai-prompts [propertyName]="view().propertyName!" (close)="closeTool()"></app-ai-prompts>
     } @else if (activeToolId() === 'visibility-audit') {
     <app-visibility-audit [propertyName]="view().propertyName!" (close)="closeTool()"></app-visibility-audit>
     } @else if (activeToolId() === 'listing-editor') {
-    <app-listing-editor [propertyName]="view().propertyName!" (close)="closeTool()"></app-listing-editor>
+    <app-listing-editor-wrapper [propertyName]="view().propertyName!" (close)="closeTool()"></app-listing-editor-wrapper>
     } @else if (activeToolId() === 'listing-optimization') {
     <mkt-00-listing-audit class="h-full block"></mkt-00-listing-audit>
     } @else if (activeToolId() === 'booklet') {
