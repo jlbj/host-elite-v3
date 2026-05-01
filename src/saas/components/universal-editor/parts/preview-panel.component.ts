@@ -60,7 +60,7 @@ import { EditorLayout } from '../models/editor-layout';
                 </div>
             </div>
 
-            <div class="flex-1 overflow-auto p-4 flex items-start justify-center bg-slate-900/50" #previewContainer>
+            <div class="flex-1 overflow-auto p-2 sm:p-4 flex items-start justify-center bg-slate-900/50" #previewContainer>
                 @if (previewMode() === 'mobile' || forceMobileFrame()) {
                     <div class="relative" [style.transform]="'scale(' + (zoomLevel() / 100) + ')'" [style.transformOrigin]="'top center'" [style.transition]="'transform 0.2s ease'">
                         <div class="iphone-frame">
@@ -98,8 +98,22 @@ import { EditorLayout } from '../models/editor-layout';
         .browser-buttons { display: flex; gap: 6px; }
         .browser-url { flex: 1; background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 4px; }
         .preview-content { background: white; border-radius: 0 0 8px 8px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .preview-desktop { height: calc(100vh - 280px); min-height: 600px; }
-        .preview-tablet { height: calc(100vh - 280px); min-height: 600px; max-width: 768px; margin: 0 auto; }
+        .preview-desktop { height: calc(100vh - 280px); min-height: 400px; }
+        .preview-tablet { height: calc(100vh - 280px); min-height: 400px; max-width: 768px; margin: 0 auto; }
+        
+        /* Mobile responsive preview heights */
+        @media (max-width: 768px) {
+            .preview-desktop { height: calc(100vh - 200px); min-height: 300px; }
+            .preview-tablet { height: calc(100vh - 200px); min-height: 300px; }
+            .iphone-frame { width: 280px; height: 560px; transform: scale(0.75); transform-origin: top center; }
+        }
+        
+        @media (max-width: 480px) {
+            .preview-desktop { height: calc(100vh - 180px); min-height: 250px; }
+            .preview-tablet { height: calc(100vh - 180px); min-height: 250px; }
+            .iphone-frame { width: 260px; height: 520px; transform: scale(0.7); }
+        }
+        
         iframe { width: 100%; height: 100%; }
     `]
 })
@@ -177,22 +191,29 @@ export class PreviewPanelComponent implements OnInit {
         const container = this.previewContainer?.nativeElement;
         if (!container) return;
 
-        const containerWidth = container.clientWidth - 48;
-        const containerHeight = container.clientHeight - 48;
+        const containerWidth = container.clientWidth - 32;
+        const containerHeight = container.clientHeight - 32;
         
         const previewMode = this.previewMode();
         let targetWidth: number;
         
         if (previewMode === 'mobile') {
-            targetWidth = 375;
+            // On mobile, scale down the iPhone frame
+            if (containerWidth < 768) {
+                targetWidth = 280; // Scaled width
+            } else if (containerWidth < 480) {
+                targetWidth = 260; // Extra small
+            } else {
+                targetWidth = 375;
+            }
         } else if (previewMode === 'tablet') {
-            targetWidth = 768;
+            targetWidth = Math.min(768, containerWidth);
         } else {
             targetWidth = Math.min(containerWidth, 1200);
         }
         
         const widthZoom = (containerWidth / targetWidth) * 100;
-        const heightZoom = previewMode === 'desktop' ? 100 : (containerHeight / 600) * 100;
+        const heightZoom = previewMode === 'desktop' ? 100 : (containerHeight / 400) * 100;
         
         const fitZoom = Math.min(widthZoom, heightZoom, 100);
         const roundedZoom = Math.floor(fitZoom / 5) * 5;
