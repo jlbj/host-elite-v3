@@ -29,10 +29,6 @@ export class GeminiProvider implements AIProvider {
                 maxOutputTokens: options?.maxTokens ?? 2048,
             };
 
-            if (options?.responseFormat === 'json') {
-                generationConfig.responseMimeType = 'application/json';
-            }
-
             const result = await this.model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: prompt }] }],
                 generationConfig
