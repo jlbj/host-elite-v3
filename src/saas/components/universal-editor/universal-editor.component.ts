@@ -38,10 +38,10 @@ export interface EditorSaveData {
         PreviewPanelComponent
     ],
     template: `
-        <div class="h-[calc(100vh-6rem)] flex flex-col bg-slate-900/50 rounded-2xl overflow-hidden border border-white/10">
+        <div class="h-full flex flex-col bg-slate-900/50 rounded-2xl overflow-hidden border border-white/10">
             
             <!-- Header -->
-            <div class="flex items-center justify-between p-4 border-b border-white/10 bg-white/5 backdrop-blur-md">
+            <div class="flex items-center justify-between p-3 sm:p-4 border-b border-white/10 bg-white/5 backdrop-blur-md flex-shrink-0">
                 <div class="flex items-center gap-4">
                     <button 
                         (click)="closeRequested.emit()"
@@ -164,8 +164,8 @@ export interface EditorSaveData {
             <div class="flex-1 overflow-hidden flex flex-col lg:flex-row">
                 
                 <!-- LEFT PANEL: Editor Steps -->
-                <div class="w-full lg:w-[450px] h-full overflow-y-auto custom-scrollbar border-r border-white/10 bg-slate-900/50">
-                    <div class="p-4 space-y-4">
+                <div class="w-full lg:w-[450px] h-1/2 lg:h-full overflow-y-auto custom-scrollbar border-r border-white/10 bg-slate-900/50 lg:border-r-0 lg:border-b-0 border-b">
+                    <div class="p-3 sm:p-4 space-y-4">
 
                         <!-- Step 1: Layout Selector -->
                         @if (currentStepIndex() === 0) {
@@ -209,7 +209,7 @@ export interface EditorSaveData {
                 </div>
 
                 <!-- RIGHT PANEL: Preview -->
-                <div class="flex-1 bg-slate-800 overflow-hidden" [class.hidden]="isFullscreenPreview()">
+                <div class="flex-1 h-1/2 lg:h-full bg-slate-800 overflow-hidden" [class.hidden]="isFullscreenPreview()">
                     <app-preview-panel
                         [previewHtml]="previewHtml()"
                         [theme]="currentTheme()"
