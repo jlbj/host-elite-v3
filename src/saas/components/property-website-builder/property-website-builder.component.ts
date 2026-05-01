@@ -81,6 +81,12 @@ import grapesjsPresetWebpage from 'grapesjs-preset-webpage';
     styles: [`
         :host { display: block; height: 100%; }
         #gjs { height: 100%; min-height: 0; }
+        #gjs .gjs-cv-canvas { height: 100%; }
+        
+        /* Hide default GrapesJS panels - we use custom layout */
+        #gjs .gjs-pn-views-container { display: none !important; }
+        #gjs .gjs-pn-views { display: none !important; }
+        #gjs .gjs-pn-commands { display: none !important; }
         
         /* GrapesJS dark theme overrides */
         .gjs-one-bg { background-color: #1e293b !important; }
@@ -94,7 +100,7 @@ import grapesjsPresetWebpage from 'grapesjs-preset-webpage';
         .gjs-block { border: 1px solid #475569 !important; border-radius: 8px !important; padding: 12px !important; }
         .gjs-block:hover { border-color: #3b82f6 !important; box-shadow: 0 0 0 2px rgba(59,130,246,0.3) !important; }
         
-        /* Blocks panel custom styling */
+        /* Blocks panel styling */
         #gjs-blocks { padding: 12px; }
         #gjs-blocks .gjs-blocks-cs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0; }
         #gjs-blocks .gjs-block { margin: 0; width: auto; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: grab; }
@@ -162,9 +168,6 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
                     }
                 }
             },
-            blockManager: {
-                appendTo: '#gjs-blocks',
-            },
             deviceManager: {
                 devices: [
                     { name: 'Desktop', width: '' },
@@ -174,7 +177,6 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
                 ]
             },
             styleManager: {
-                appendTo: '#gjs-styles',
                 sectors: [
                     {
                         name: 'Dimension',
@@ -209,6 +211,25 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
 
         // Add custom blocks for property listings
         this.addPropertyBlocks();
+
+        // Move blocks/styles into our custom panels after editor fully loads
+        this.editor.on('load', () => {
+            const editorEl = this.editor.getContainer();
+
+            // Move blocks to left sidebar
+            const blocksEl = editorEl.querySelector('.gjs-blocks-c');
+            const blocksTarget = document.getElementById('gjs-blocks');
+            if (blocksEl && blocksTarget) {
+                blocksTarget.appendChild(blocksEl);
+            }
+
+            // Move style manager to right sidebar
+            const stylesEl = editorEl.querySelector('.gjs-sm-c');
+            const stylesTarget = document.getElementById('gjs-styles');
+            if (stylesEl && stylesTarget) {
+                stylesTarget.appendChild(stylesEl);
+            }
+        });
 
         // Load existing content if any
         this.loadExistingContent();
