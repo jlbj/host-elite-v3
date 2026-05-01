@@ -66,7 +66,12 @@ export class AIService {
 
     async generateText(prompt: string, options?: AIGenerateOptions): Promise<string> {
         await this.ensureInitialized();
-        return this.currentProvider!.generateText(prompt, options);
+        try {
+            return await this.currentProvider!.generateText(prompt, options);
+        } catch (error) {
+            console.error('[AIService] generateText failed:', error);
+            throw new Error(`AI text generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     }
 
     async generateJSON<T = Record<string, any>>(
@@ -75,12 +80,22 @@ export class AIService {
         options?: AIGenerateOptions
     ): Promise<T> {
         await this.ensureInitialized();
-        return this.currentProvider!.generateJSON(prompt, schema, options);
+        try {
+            return await this.currentProvider!.generateJSON(prompt, schema, options);
+        } catch (error) {
+            console.error('[AIService] generateJSON failed:', error);
+            throw new Error(`AI JSON generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     }
 
     async chat(messages: AIMessage[], options?: AIGenerateOptions): Promise<string> {
         await this.ensureInitialized();
-        return this.currentProvider!.chat(messages, options);
+        try {
+            return await this.currentProvider!.chat(messages, options);
+        } catch (error) {
+            console.error('[AIService] chat failed:', error);
+            throw new Error(`AI chat failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     }
 
     get providerType(): AIProviderType {
@@ -97,7 +112,12 @@ export class AIService {
 
     private async ensureInitialized(): Promise<void> {
         if (!this.isInitialized()) {
-            await this.initialize();
+            try {
+                await this.initialize();
+            } catch (error) {
+                console.error('[AIService] Auto-initialization failed:', error);
+                throw error;
+            }
         }
     }
 
@@ -123,7 +143,12 @@ export class AIService {
 
     async switchProvider(provider: AIProviderType, apiKey?: string): Promise<void> {
         this.isInitialized.set(false);
-        await this.initialize(provider, apiKey);
+        try {
+            await this.initialize(provider, apiKey);
+        } catch (error) {
+            console.error('[AIService] Provider switch failed:', error);
+            throw error;
+        }
     }
 
     getAvailableModels(provider: AIProviderType): string[] {

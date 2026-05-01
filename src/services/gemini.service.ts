@@ -1,6 +1,5 @@
 
 import { Injectable, inject, signal } from '@angular/core';
-import { GoogleGenerativeAI, GenerativeModel } from '@google/generative-ai';
 import { ContextData, ReportData, Scores } from '../types';
 import { SupabaseService } from './supabase.service';
 import { TranslationService } from './translation.service';
@@ -11,8 +10,6 @@ import { AIConfigService } from './ai/ai-config.service';
   providedIn: 'root',
 })
 export class GeminiService {
-  private genAI: GoogleGenerativeAI | null = null;
-  private model: GenerativeModel | null = null;
   private supabaseService = inject(SupabaseService);
   private translationService = inject(TranslationService);
   private aiService = inject(AIService);
@@ -39,26 +36,6 @@ constructor() {
     }
   }
 
-  private async ensureClient(): Promise<void> {
-    if (this.genAI) return;
-
-    try {
-      // Appel RPC pour récupérer la clé déchiffrée
-      const { data, error } = await this.supabaseService.supabase.rpc('get_decrypted_active_key');
-
-      if (error || !data) {
-        console.error("Erreur lors de la récupération de la clé API:", error);
-        throw new Error("Impossible de récupérer la clé API active depuis le serveur.");
-      }
-
-      this.genAI = new GoogleGenerativeAI(data);
-      this.model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    } catch (e) {
-      console.error("Failed to initialize Gemini Client", e);
-      throw new Error("Service IA non configuré. Veuillez contacter l'administrateur.");
-    }
-  }
-
   /**
    * Robust JSON cleaner that finds the first '{' and last '}' to extract valid JSON,
    * ignoring any markdown or explanatory text surrounding it.
@@ -82,7 +59,7 @@ constructor() {
 
 
   async generateReport(context: ContextData, scores: Scores): Promise<any> {
-    await this.ensureClient();
+    await this.enableNewProvider();
     const lang = this.translationService.currentLang();
 
     const prompt = `
@@ -110,11 +87,7 @@ constructor() {
     `;
 
     try {
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      return JSON.parse(this.cleanJson(response.text()));
+      return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Error generating report:', error);
       throw error;
@@ -123,10 +96,9 @@ constructor() {
 
   async getConciergeResponse(propertyName: string, context: string, question: string): Promise<string> {
     try {
-      await this.ensureClient();
+      await this.enableNewProvider();
       const lang = this.translationService.currentLang();
 
-      // Strict prompt engineering to restrict knowledge to the provided context
       const prompt = `
           Tu es le concierge virtuel IA dédié à la propriété nommée "${propertyName}".
           
@@ -146,16 +118,15 @@ constructor() {
           Question de l'invité : "${question}"
         `;
 
-      const result = await this.model!.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
+      return await this.aiService.generateText(prompt);
     } catch (error) {
+      console.error('[GeminiService] getConciergeResponse failed:', error);
       return "Désolé, je ne peux pas répondre pour le moment (Service IA indisponible).";
     }
   }
 
   async autoFillBooklet(address: string, emptyDataStructure: any): Promise<any> {
-    await this.ensureClient();
+    await this.enableNewProvider();
     const lang = this.translationService.currentLang();
 
     const prompt = `
@@ -184,11 +155,7 @@ constructor() {
       `;
 
     try {
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      return JSON.parse(this.cleanJson(response.text()));
+      return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Error auto-filling booklet:', error);
       throw error;
@@ -196,7 +163,7 @@ constructor() {
   }
 
   async findEquipmentManuals(equipmentList: string[]): Promise<Record<string, string>> {
-    await this.ensureClient();
+    await this.enableNewProvider();
 
     const prompt = `
         For each appliance description below, find the official user manual PDF URL.
@@ -205,11 +172,7 @@ constructor() {
       `;
 
     try {
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      return JSON.parse(this.cleanJson(response.text()));
+      return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Error finding manuals:', error);
       return {};
@@ -217,7 +180,7 @@ constructor() {
   }
 
   async generateMarketingDescription(propertyContext: string): Promise<string> {
-    await this.ensureClient();
+    await this.enableNewProvider();
     const lang = this.translationService.currentLang();
 
     const prompt = `
@@ -238,9 +201,7 @@ constructor() {
       `;
 
     try {
-      const result = await this.model!.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
+      return await this.aiService.generateText(prompt);
     } catch (error) {
       console.error('Error generating description:', error);
       return "Erreur lors de la génération de la description.";
@@ -248,7 +209,7 @@ constructor() {
   }
 
   async generateMicrositeDesign(propertyData: any): Promise<any> {
-    await this.ensureClient();
+    await this.enableNewProvider();
 
     const prompt = `
         You are a world-class Web Designer specialized in Hospitality.
@@ -276,11 +237,7 @@ constructor() {
       `;
 
     try {
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      return JSON.parse(this.cleanJson(response.text()));
+      return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Error generating design:', error);
       throw error;
@@ -288,7 +245,7 @@ constructor() {
   }
 
   async generateOptimizedListing(context: string, photos: { url: string; id: string }[], maxPhotos: number): Promise<{ description: string; selectedPhotoIds: string[] }> {
-    await this.ensureClient();
+    await this.enableNewProvider();
 
     // 1. Prepare Images
     const photosToAnalyze = photos.slice(0, 30);
@@ -354,15 +311,29 @@ constructor() {
     });
 
     try {
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: parts }]
-      });
-      const response = await result.response;
+      // Note: Image analysis not supported in agnostic service - use text-only fallback
+      const prompt = `
+        You are an expert Vacation Rental Copywriter and Photographer.
+        
+        TASK: Write an "Irresistible" Listing Description.
+        - Use the "Selling the Experience" methodology.
+        - Tone: Warm, professional, inviting.
+        - Language: ${this.translationService.currentLang()}.
 
-      const parsed = JSON.parse(this.cleanJson(response.text()));
+        CONTEXT PROPERTY DATA:
+        ${context}
+
+        RESPONSE FORMAT (JSON ONLY):
+        {
+          "description": "Your markdown formatted description...",
+          "selectedPhotoIds": []
+        }
+    `;
+
+      const result = await this.aiService.generateJSON(prompt);
       return {
-        description: parsed.description,
-        selectedPhotoIds: parsed.selectedPhotoIds || []
+        description: result.description || '',
+        selectedPhotoIds: result.selectedPhotoIds || []
       };
     } catch (error) {
       console.error('Error generating optimized listing:', error);
@@ -371,7 +342,7 @@ constructor() {
   }
 
   async generateVisibilityAudit(context: any, language: string): Promise<any> {
-    if (!this.genAI) await this.ensureClient();
+    await this.enableNewProvider();
 
     try {
       const prompt = `You are an expert SEO and Digital Marketing Auditor for Vacation Rentals.
@@ -418,11 +389,7 @@ constructor() {
             }
             Do not include markdown code blocks. Just the JSON string.`;
 
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      return JSON.parse(this.cleanJson(response.text()));
+      return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Gemini Audit Error:', error);
       // Fallback mock
@@ -446,7 +413,7 @@ constructor() {
   async generateFaqList(propertyName: string, propertyContext: string, address: string): Promise<{ question: string, answer: string }[]> {
     console.log('[GeminiService] generateFaqList called for:', propertyName);
     console.warn('[GeminiService] GENERATING FAQ FOR ADDRESS:', address); // CORRECT PLACEMENT
-    await this.ensureClient();
+    await this.enableNewProvider();
 
     const prompt = `
         You are an expert Host Assistant for a vacation rental.
@@ -473,15 +440,9 @@ constructor() {
 
     try {
       console.log('[GeminiService] Sending prompt to AI...');
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      const text = response.text();
-      console.log('[GeminiService] Raw AI response:', text);
-      const parsed = JSON.parse(this.cleanJson(text));
-      console.log('[GeminiService] Parsed FAQ:', parsed);
-      return parsed;
+      const result = await this.aiService.generateJSON<{ question: string, answer: string }[]>(prompt);
+      console.log('[GeminiService] Parsed FAQ:', result);
+      return result;
     } catch (error: any) {
       console.error('[GeminiService] Error generating FAQ list:', error);
       // Smart Offline Fallback WITH DEBUG INFO
@@ -585,7 +546,7 @@ constructor() {
     monthlySeasonality?: number[];
     monthlyNightlyPrices?: number[];
   }> {
-    await this.ensureClient();
+    await this.enableNewProvider();
 
     const contextPrompt = context ? `
         PROPERTY CHARACTERISTICS:
@@ -632,11 +593,7 @@ constructor() {
     `;
 
     try {
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      return JSON.parse(this.cleanJson(response.text()));
+      return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Error getting market analysis:', error);
       return {
@@ -650,20 +607,18 @@ constructor() {
   }
 
   async generateText(prompt: string, retries = 3): Promise<string> {
-    await this.ensureClient();
+    await this.enableNewProvider();
     
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        const result = await this.model!.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
+        return await this.aiService.generateText(prompt);
       } catch (error: any) {
         const is503 = error?.message?.includes('503') || error?.status === 503;
         const isRateLimit = error?.message?.includes('429');
         
         if ((is503 || isRateLimit) && attempt < retries) {
           const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
-          console.warn(`[Gemini] ${is503 ? 'Server busy' : 'Rate limited'}, retrying in ${delay}ms (attempt ${attempt}/${retries})...`);
+          console.warn(`[AI] ${is503 ? 'Server busy' : 'Rate limited'}, retrying in ${delay}ms (attempt ${attempt}/${retries})...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -673,7 +628,7 @@ constructor() {
       }
     }
     
-    throw new Error('Gemini API unavailable after multiple attempts');
+    throw new Error('AI Service unavailable after multiple attempts');
   }
   async auditRenovationQuote(roomType: string, area: number, amount: number, finishLevel: string): Promise<{
     isReasonable: boolean;
@@ -682,7 +637,7 @@ constructor() {
     observations: string;
     tips: string[];
   }> {
-    await this.ensureClient();
+    await this.enableNewProvider();
     const lang = this.translationService.currentLang();
 
     const prompt = `
@@ -711,11 +666,7 @@ constructor() {
     `;
 
     try {
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      return JSON.parse(this.cleanJson(response.text()));
+      return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Error auditing renovation quote:', error);
       return {
@@ -749,7 +700,7 @@ constructor() {
       marketTrends?: string;
     };
   }> {
-    await this.ensureClient();
+    await this.enableNewProvider();
     const lang = this.translationService.currentLang();
 
     const totalBudget = rooms.reduce((sum, r) => sum + r.budget_estimate, 0);
@@ -824,13 +775,24 @@ constructor() {
     `;
 
     try {
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      const analysis = JSON.parse(this.cleanJson(response.text()));
+      const analysis = await this.aiService.generateJSON<{
+        overallScore: number;
+        budgetVsQuotes: {
+          totalBudget: number;
+          totalQuotes: number;
+          variance: number;
+          variancePercent: number;
+        };
+        recommendations: string[];
+        risks: string[];
+        opportunities: string[];
+        propertyInsights?: {
+          location?: string;
+          estimatedValue?: number;
+          marketTrends?: string;
+        };
+      }>(prompt);
 
-      // Ensure budgetVsQuotes has correct calculated values
       analysis.budgetVsQuotes = {
         totalBudget,
         totalQuotes,
@@ -882,7 +844,7 @@ constructor() {
     description: string;
     recommendations: string[];
   }> {
-    await this.ensureClient();
+    await this.enableNewProvider();
     const lang = this.translationService.currentLang();
 
     const prompt = `
@@ -911,11 +873,7 @@ constructor() {
     `;
 
     try {
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      return JSON.parse(this.cleanJson(response.text()));
+      return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Error checking compliance:', error);
       return {
@@ -929,7 +887,7 @@ constructor() {
   }
 
   async generateTaxBriefing(hostCountry: string, propertyCountry: string): Promise<string> {
-    await this.ensureClient();
+    await this.enableNewProvider();
     const lang = this.translationService.currentLang();
 
     const prompt = `
@@ -949,9 +907,7 @@ constructor() {
     `;
 
     try {
-      const result = await this.model!.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
+      return await this.aiService.generateText(prompt);
     } catch (error) {
       console.error('Error generating tax briefing:', error);
       return "Tax briefing unavailable at the moment.";
@@ -959,7 +915,7 @@ constructor() {
   }
 
   async generateFinalRoiReport(data: any): Promise<any> {
-    await this.ensureClient();
+    await this.enableNewProvider();
     const lang = this.translationService.currentLang();
 
     const prompt = `
@@ -983,14 +939,9 @@ constructor() {
     `;
 
     try {
-      const result = await this.model!.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }]
-      });
-      const response = await result.response;
-      return JSON.parse(this.cleanJson(response.text()));
+      return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Error generating ROI report (Using Fallback):', error);
-      // Fallback Mock Data for Development/Quota Exceeded
       return {
         global_score: 85,
         risk_level: 'Low',

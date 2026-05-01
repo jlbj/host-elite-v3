@@ -427,10 +427,19 @@ export class UniversalEditorComponent {
     onContentUpdated(content: Record<string, any>) {
         this.currentContent.set(content);
         
-        // Extract photos from content for the photo picker
-        const photos = content['photos'] || content['photo-gallery']?.['photos'] || [];
+        // Extract photos from content for the photo picker (handle multiple possible structures)
+        const photos = content['photos'] || 
+                       content['photo-gallery']?.['photos'] || 
+                       content['photo-gallery']?.['selectedPhotos'] ||
+                       [];
         if (photos.length > 0) {
-            this.propertyPhotos.set(photos);
+            try {
+                // Parse if stringified
+                const parsedPhotos = typeof photos === 'string' ? JSON.parse(photos) : photos;
+                this.propertyPhotos.set(Array.isArray(parsedPhotos) ? parsedPhotos : []);
+            } catch {
+                this.propertyPhotos.set([]);
+            }
         }
         
         this.contentUpdated.emit(content);

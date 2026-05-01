@@ -12,14 +12,31 @@ export class AIConfigService {
     constructor(private supabaseService: SupabaseService) {}
 
     async initialize(): Promise<void> {
-        const { data } = await this.supabaseService.supabase.rpc('get_ai_config');
-        if (data) {
-            this.config.set({
-                activeProvider: (data.provider as AIProviderType) || 'gemini',
-                activeModel: data.model || DEFAULT_MODELS[data.provider as AIProviderType] || DEFAULT_MODELS['gemini'],
-                fallbackProvider: data.fallback_provider,
-                apiKeys: {} as Record<AIProviderType, string>
-            });
+        try {
+            const { data } = await this.supabaseService.supabase.rpc('get_ai_config');
+            if (data) {
+                const provider = data.provider as AIProviderType;
+                const validProviders: AIProviderType[] = ['gemini', 'openai', 'claude', 'openrouter', 'ollama'];
+                
+                if (!provider || !validProviders.includes(provider)) {
+                    console.warn('[AIConfig] Invalid provider from database, using default');
+                    this.config.set({
+                        activeProvider: 'gemini',
+                        activeModel: DEFAULT_MODELS['gemini']
+                    });
+                    return;
+                }
+
+                this.config.set({
+                    activeProvider: provider,
+                    activeModel: data.model || DEFAULT_MODELS[provider] || DEFAULT_MODELS['gemini'],
+                    fallbackProvider: data.fallback_provider,
+                    apiKeys: {} as Record<AIProviderType, string>
+                });
+            }
+        } catch (error) {
+            console.error('[AIConfig] Initialization failed:', error);
+            throw error;
         }
     }
 

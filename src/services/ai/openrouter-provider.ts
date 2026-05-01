@@ -31,6 +31,12 @@ export class OpenRouterProvider implements AIProvider {
             })
         });
 
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => 'Unknown error');
+            console.error('[OpenRouterProvider] HTTP error:', response.status, errorText);
+            throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+        }
+
         const data = await response.json();
         return data.choices?.[0]?.message?.content || '';
     }
@@ -61,6 +67,12 @@ export class OpenRouterProvider implements AIProvider {
             })
         });
 
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => 'Unknown error');
+            console.error('[OpenRouterProvider] HTTP error:', response.status, errorText);
+            throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+        }
+
         const data = await response.json();
         const content = data.choices?.[0]?.message?.content || '{}';
 
@@ -89,6 +101,12 @@ export class OpenRouterProvider implements AIProvider {
                 max_tokens: options?.maxTokens ?? 4096
             })
         });
+
+        if (!response.ok) {
+            const errorText = await response.text().catch(() => 'Unknown error');
+            console.error('[OpenRouterProvider] HTTP error:', response.status, errorText);
+            throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+        }
 
         const data = await response.json();
         return data.choices?.[0]?.message?.content || '';

@@ -32,9 +32,6 @@ interface ContentField {
                         <h4 class="text-sm font-bold text-purple-200 flex items-center gap-2">
                             <span>✨</span> {{ 'EDITOR.AiAssistant' | translate }}
                         </h4>
-                        @if (!hasAiAccess()) {
-                            <span class="text-[10px] px-2 py-0.5 rounded bg-white/10 text-slate-300">Silver+</span>
-                        }
                     </div>
                     <p class="text-xs text-purple-200 mb-3">{{ 'EDITOR.AiContentHelp' | translate }}</p>
                     <button 
@@ -210,15 +207,23 @@ export class ContentEditorComponent implements OnDestroy {
     }
 
     isPhotoSelected(field: ContentField, url: string): boolean {
-        const selected = field.value ? JSON.parse(field.value) : [];
-        return selected.includes(url);
+        if (!field.value) return false;
+        try {
+            const selected = typeof field.value === 'string' ? JSON.parse(field.value) : field.value;
+            return Array.isArray(selected) && selected.includes(url);
+        } catch {
+            return false;
+        }
     }
 
     togglePhoto(field: ContentField, url: string) {
         let selected: string[] = [];
         try {
-            selected = field.value ? JSON.parse(field.value) : [];
-        } catch { selected = []; }
+            selected = typeof field.value === 'string' ? JSON.parse(field.value) : field.value;
+            if (!Array.isArray(selected)) selected = [];
+        } catch {
+            selected = [];
+        }
         
         if (selected.includes(url)) {
             selected = selected.filter((u: string) => u !== url);
