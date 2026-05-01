@@ -34,9 +34,6 @@ export class SessionStore {
 
     // New Signal for Plan Features
     readonly userFeatures = signal<string[]>([]);
-    
-    // Check if user is authenticated
-    readonly isAuthenticated = computed(() => !!this.userProfile()?.id);
 
     // Global Config Signals
     readonly showPlanBadges = signal<boolean>(false);
@@ -481,7 +478,6 @@ export class SessionStore {
                 this.userProfile.update(u => u ? { ...u, plan: report.recommendedPlan } : null);
             }
 
-            // 3. Go to results (non-authenticated users will be redirected after viewing)
             this.currentStep.set('results');
         } catch (err: any) {
             console.error("Evaluation Error:", err);
@@ -491,14 +487,12 @@ export class SessionStore {
             if (err instanceof Error) {
                 msg = err.message;
             } else if (typeof err === 'object' && err !== null) {
-                // Supabase sometimes returns an error object with message or details
                 msg = err.message || err.details || JSON.stringify(err);
             } else if (typeof err === 'string') {
                 msg = err;
             }
 
             this.error.set(msg);
-            // Stay on evaluation step to allow retry
             this.currentStep.set('evaluation');
         } finally {
             this.isLoading.set(false);
@@ -506,18 +500,7 @@ export class SessionStore {
     }
 
     enterDashboard(): void {
-        // Only allow authenticated users to enter dashboard
-        if (!this.isAuthenticated()) {
-            // Non-authenticated users should register first
-            console.log('[SessionStore] User not authenticated, redirecting to landing');
-            return;
-        }
         this.currentStep.set('dashboard');
-    }
-    
-    // Redirect to landing page (for non-authenticated users after results)
-    redirectToLanding(): void {
-        this.currentStep.set('landing');
     }
 
     async resetSession(): Promise<void> {

@@ -1,9 +1,8 @@
 
-import { ChangeDetectionStrategy, Component, computed, input, output, SecurityContext, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, SecurityContext } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { ReportData, Scores } from '../types';
-import { SessionStore } from '../state/session.store';
 
 @Component({
   selector: 'app-results-step',
@@ -17,12 +16,6 @@ export class ResultsStepComponent {
   scores = input.required<Scores>();
   restart = output<void>();
   explorePlan = output<void>();
-  
-  // Inject store to check authentication
-  private store = inject(SessionStore);
-  
-  // Check if user is authenticated
-  isAuthenticated = computed(() => this.store.isAuthenticated());
 
   readonly angleLabels = ['Marketing', 'Expérience', 'Opérations', 'Pricing', 'Logement', 'Légal', 'Mindset'];
   readonly size = 300;
@@ -82,13 +75,6 @@ export class ResultsStepComponent {
   }
 
   onExplorePlanClick(): void {
-    // Check if user is authenticated
-    if (this.isAuthenticated()) {
-      // Authenticated - go to dashboard
-      this.explorePlan.emit();
-    } else {
-      // Non-authenticated - redirect to landing to register
-      this.store.redirectToLanding();
-    }
+    this.explorePlan.emit();
   }
 }
