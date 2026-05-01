@@ -287,6 +287,9 @@ export class SessionStore {
             if (msg.includes("Email not confirmed")) {
                 msg = "Email non confirmé. Si vous venez de vous inscrire, vérifiez vos spams ou demandez à l'admin de désactiver la confirmation obligatoire.";
             }
+            if (msg.includes("Invalid login credentials")) {
+                msg = "Email ou mot de passe incorrect";
+            }
             this.error.set(msg);
         } finally {
             this.isLoading.set(false);

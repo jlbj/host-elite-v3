@@ -97,16 +97,22 @@
 
                             <form [formGroup]="authForm" (ngSubmit)="onAuthSubmit()" class="space-y-5 text-left">
                                 <div class="space-y-1">
-                                    <label for="email" class="block text-xs font-bold text-slate-300 uppercase tracking-wide ml-1">Email</label>
+                                    <label for="email" class="block text-xs font-bold text-slate-300 uppercase tracking-wide ml-1">Email <span class="text-[#F9D976]">*</span></label>
                                     <input type="text" id="email" formControlName="email" 
                                         class="block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white placeholder-white/20 focus:bg-white/10 focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] sm:text-sm transition-all shadow-inner outline-none min-h-[48px]"
                                         placeholder="exemple@email.com">
+                                    @if (authForm.get('email')?.invalid && authForm.get('email')?.touched) {
+                                        <p class="text-red-300 text-xs mt-1 ml-1">Email requis</p>
+                                    }
                                 </div>
                                 <div class="space-y-1">
-                                    <label for="password" class="block text-xs font-bold text-slate-300 uppercase tracking-wide ml-1">Mot de passe</label>
+                                    <label for="password" class="block text-xs font-bold text-slate-300 uppercase tracking-wide ml-1">Mot de passe <span class="text-[#F9D976]">*</span></label>
                                     <input type="password" id="password" formControlName="password" 
                                         class="block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white placeholder-white/20 focus:bg-white/10 focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] sm:text-sm transition-all shadow-inner outline-none min-h-[48px]"
                                         placeholder="••••••••">
+                                    @if (authForm.get('password')?.invalid && authForm.get('password')?.touched) {
+                                        <p class="text-red-300 text-xs mt-1 ml-1">Mot de passe requis (min. 4 caractères)</p>
+                                    }
                                 </div>
 
                                 @if (authError()) {

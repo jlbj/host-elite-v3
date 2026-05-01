@@ -189,7 +189,11 @@ export class LandingPageComponent {
   }
 
   async onAuthSubmit(): Promise<void> {
-    if (this.authForm.invalid) return;
+    if (this.authForm.invalid) {
+        // Mark all fields as touched to show validation errors
+        this.authForm.markAllAsTouched();
+        return;
+    }
 
     const { email, password, fullName } = this.authForm.value;
     let success = false;
