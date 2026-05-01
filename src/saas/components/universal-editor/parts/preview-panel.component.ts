@@ -27,6 +27,27 @@ import { EditorLayout } from '../models/editor-layout';
                 </div>
                 <div class="flex items-center gap-3">
                     <span class="text-xs text-slate-400 font-mono">{{ layout()?.name }} · {{ theme()?.template }}</span>
+                    
+                    <!-- Zoom Controls -->
+                    <div class="flex items-center gap-1 bg-white/5 rounded-lg px-2 py-1">
+                        <button (click)="zoomOut()" class="p-1 rounded hover:bg-white/10" title="Zoom Out">
+                            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                            </svg>
+                        </button>
+                        <span class="text-xs text-white font-mono min-w-[45px] text-center">{{ zoomLevel() }}%</span>
+                        <button (click)="zoomIn()" class="p-1 rounded hover:bg-white/10" title="Zoom In">
+                            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </button>
+                        <button (click)="fitToScreen()" class="p-1 rounded hover:bg-white/10 ml-1" title="Fit to Screen">
+                            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                            </svg>
+                        </button>
+                    </div>
+                    
                     <button (click)="toggleFullscreen()" class="p-1.5 rounded hover:bg-white/10">
                         <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             @if (isFullscreen()) {
@@ -39,9 +60,9 @@ import { EditorLayout } from '../models/editor-layout';
                 </div>
             </div>
 
-            <div class="flex-1 overflow-auto p-4 flex items-start justify-center bg-slate-900/50">
+            <div class="flex-1 overflow-auto p-4 flex items-start justify-center bg-slate-900/50" #previewContainer>
                 @if (previewMode() === 'mobile' || forceMobileFrame()) {
-                    <div class="relative">
+                    <div class="relative" [style.transform]="'scale(' + (zoomLevel() / 100) + ')'" [style.transformOrigin]="'top center'" [style.transition]="'transform 0.2s ease'">
                         <div class="iphone-frame">
                             <div class="iphone-notch"></div>
                             <div class="iphone-screen" [style.font-family]="theme()?.fontFamily">
@@ -51,7 +72,7 @@ import { EditorLayout } from '../models/editor-layout';
                         <p class="text-center text-xs text-slate-500 mt-3">{{ 'EDITOR.MobilePreview' | translate }}</p>
                     </div>
                 } @else {
-                    <div class="w-full max-w-6xl">
+                    <div class="w-full max-w-6xl" [style.transform]="'scale(' + (zoomLevel() / 100) + ')'" [style.transformOrigin]="'top center'" [style.transition]="'transform 0.2s ease'">
                         <div class="browser-chrome">
                             <div class="browser-buttons">
                                 <div class="w-3 h-3 rounded-full bg-red-500"></div>
@@ -92,10 +113,15 @@ export class PreviewPanelComponent implements OnInit {
 
     @ViewChild('desktopIframe') desktopIframe?: ElementRef<HTMLIFrameElement>;
     @ViewChild('mobileIframe') mobileIframe?: ElementRef<HTMLIFrameElement>;
+    @ViewChild('previewContainer') previewContainer?: ElementRef;
 
     previewMode = signal<'desktop' | 'tablet' | 'mobile'>('desktop');
     isFullscreen = signal(false);
+    zoomLevel = signal(100);
     private lastHtml = '';
+    private readonly ZOOM_STEP = 10;
+    private readonly MIN_ZOOM = 25;
+    private readonly MAX_ZOOM = 200;
 
     constructor() {
         effect(() => {
@@ -109,10 +135,11 @@ export class PreviewPanelComponent implements OnInit {
 
     ngOnInit() {
         this.previewMode.set(this.previewModeInput());
+        this.fitToScreen();
     }
 
     onIframeLoad() {
-        // Iframe loaded
+        setTimeout(() => this.fitToScreen(), 100);
     }
 
     private updateIframeContent(html?: string) {
@@ -130,11 +157,53 @@ export class PreviewPanelComponent implements OnInit {
 
     setPreviewMode(mode: 'desktop' | 'tablet' | 'mobile') {
         this.previewMode.set(mode);
-        setTimeout(() => this.updateIframeContent(), 100);
+        setTimeout(() => {
+            this.updateIframeContent();
+            this.fitToScreen();
+        }, 100);
+    }
+
+    zoomIn() {
+        const newZoom = Math.min(this.zoomLevel() + this.ZOOM_STEP, this.MAX_ZOOM);
+        this.zoomLevel.set(newZoom);
+    }
+
+    zoomOut() {
+        const newZoom = Math.max(this.zoomLevel() - this.ZOOM_STEP, this.MIN_ZOOM);
+        this.zoomLevel.set(newZoom);
+    }
+
+    fitToScreen() {
+        const container = this.previewContainer?.nativeElement;
+        if (!container) return;
+
+        const containerWidth = container.clientWidth - 48;
+        const containerHeight = container.clientHeight - 48;
+        
+        const previewMode = this.previewMode();
+        let targetWidth: number;
+        
+        if (previewMode === 'mobile') {
+            targetWidth = 375;
+        } else if (previewMode === 'tablet') {
+            targetWidth = 768;
+        } else {
+            targetWidth = Math.min(containerWidth, 1200);
+        }
+        
+        const widthZoom = (containerWidth / targetWidth) * 100;
+        const heightZoom = previewMode === 'desktop' ? 100 : (containerHeight / 600) * 100;
+        
+        const fitZoom = Math.min(widthZoom, heightZoom, 100);
+        const roundedZoom = Math.floor(fitZoom / 5) * 5;
+        const finalZoom = Math.max(this.MIN_ZOOM, Math.min(this.MAX_ZOOM, roundedZoom));
+        
+        this.zoomLevel.set(finalZoom);
     }
 
     toggleFullscreen() {
         this.isFullscreen.update(v => !v);
         this.fullscreenChanged.emit(this.isFullscreen());
+        setTimeout(() => this.fitToScreen(), 100);
     }
 }
