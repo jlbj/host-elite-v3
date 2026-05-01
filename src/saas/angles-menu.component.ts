@@ -13,28 +13,31 @@ import { TranslatePipe } from '../pipes/translate.pipe';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- Floating Glass Panel Container (Soft Rounded Rectangle) -->
-    <nav class="inline-flex items-center p-1.5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl ring-1 ring-black/5">
-      @for (phase of phases(); track phase.id) {
-        <a (click)="selectPhase(phase)"
-           class="group relative flex flex-col items-center justify-center px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 min-w-[80px]"
-           [class]="activePhaseId() === phase.id
-             ? 'bg-white text-slate-900 shadow-md transform scale-105' 
-             : 'text-slate-300 hover:bg-white/10 hover:text-white'"
-           [attr.data-debug-id]="'phase-menu-' + phase.id">
-           
-           <!-- Icon (Generic for now based on sort order or ID) -->
-           <span class="w-5 h-5 mb-1 transition-transform duration-300" 
-                 [class.group-hover:-translate-y-0.5]="activePhaseId() !== phase.id"
-                 [innerHTML]="getPhaseIcon(phase)">
-           </span>
-           
-           <!-- Title -->
-           <span class="text-[10px] font-bold uppercase tracking-wider leading-none text-center">
-             {{ ('PHASE.' + phase.id) | translate }}
-           </span>
-        </a>
-      }
-    </nav>
+    <!-- Mobile: Horizontal scroll | Desktop: Centered flex -->
+    <div class="w-full overflow-x-auto scrollbar-hide pb-2">
+      <nav class="inline-flex items-center p-1.5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl ring-1 ring-black/5 mx-auto">
+        @for (phase of phases(); track phase.id) {
+          <a (click)="selectPhase(phase)"
+             class="group relative flex flex-col items-center justify-center px-3 sm:px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 min-w-[70px] sm:min-w-[80px] whitespace-nowrap"
+             [class]="activePhaseId() === phase.id
+               ? 'bg-white text-slate-900 shadow-md transform scale-105' 
+               : 'text-slate-300 hover:bg-white/10 hover:text-white'"
+             [attr.data-debug-id]="'phase-menu-' + phase.id">
+             
+             <!-- Icon (Generic for now based on sort order or ID) -->
+             <span class="w-4 h-4 sm:w-5 sm:h-5 mb-1 transition-transform duration-300" 
+                   [class.group-hover:-translate-y-0.5]="activePhaseId() !== phase.id"
+                   [innerHTML]="getPhaseIcon(phase)">
+             </span>
+             
+             <!-- Title -->
+             <span class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider leading-none text-center">
+               {{ ('PHASE.' + phase.id) | translate }}
+             </span>
+          </a>
+        }
+      </nav>
+    </div>
   `
 })
 export class PhasesMenuComponent {

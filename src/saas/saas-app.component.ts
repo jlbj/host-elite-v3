@@ -193,6 +193,12 @@ export class SaaSAppComponent implements OnInit {
       this.activeView.set(view);
     }
   }
+  
+  toggleSidebar(): void {
+    // This will be handled by the sidebar component via a service or event
+    // For now, dispatch a custom event
+    window.dispatchEvent(new CustomEvent('toggle-sidebar'));
+  }
 
   goToPropertyHome(): void {
     const propertyName = this.activeView().propertyName;

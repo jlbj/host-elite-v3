@@ -46,6 +46,9 @@ export class LandingPageComponent {
   authMode = signal<'login' | 'register'>('login');
   authForm: FormGroup;
   authError = signal<string | null>(null);
+  
+  // Mobile Menu State
+  isMobileMenuOpen = signal(false);
 
   // DB Config Modal State
   isDbConfigOpen = signal(false);
@@ -137,6 +140,9 @@ export class LandingPageComponent {
       key: ['', Validators.required]
     });
   }
+  
+  // For template mobile detection
+  protected window = typeof window !== 'undefined' ? window : { innerWidth: 768 };
 
   selectSituation(situationId: string): void {
     this.contextForm.get('situation')?.setValue(situationId);
@@ -230,5 +236,10 @@ export class LandingPageComponent {
     if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
     }
+    this.isMobileMenuOpen.set(false);
+  }
+  
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen.update(v => !v);
   }
 }

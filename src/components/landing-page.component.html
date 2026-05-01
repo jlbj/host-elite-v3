@@ -6,25 +6,52 @@
 
   <!-- Header (Dark Glass) -->
   <header class="sticky top-0 z-50 border-b border-white/10 bg-slate-900/70 backdrop-blur-xl transition-all duration-300">
-    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-      <h1 class="text-xl font-bold text-white flex items-center space-x-2 tracking-wide">
+    <nav class="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+      <h1 class="text-base sm:text-xl font-bold text-white flex items-center space-x-2 tracking-wide">
         <div class="p-1.5 bg-white/10 rounded-lg border border-white/10">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-[#D4AF37]"><path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" /></svg>
         </div>
-        <span>Hôte d'Exception</span>
+        <span class="truncate">Hôte d'Exception</span>
       </h1>
-      <div class="flex items-center space-x-4">
-        <a href="#pricing" class="hidden lg:inline-block text-sm font-medium text-slate-300 hover:text-white transition-colors">Tarifs</a>
-        <a href="#faq" class="hidden lg:inline-block text-sm font-medium text-slate-300 hover:text-white transition-colors">FAQ</a>
+      
+      <!-- Desktop Navigation -->
+      <div class="hidden md:flex items-center space-x-4">
+        <a href="#pricing" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">Tarifs</a>
+        <a href="#faq" class="text-sm font-medium text-slate-300 hover:text-white transition-colors">FAQ</a>
         
         <button (click)="onOpenAuthModal()" class="px-4 py-2 text-sm font-bold text-white border-2 border-white/30 rounded-lg hover:bg-white/10 hover:border-white/50 transition-all">
           Login
         </button>
-        <a href="#diagnostic-form" (click)="scrollToDiagnostic($event)" class="hidden sm:inline-block px-5 py-2 text-sm font-bold text-slate-900 bg-gradient-to-r from-[#D4AF37] to-amber-300 rounded-lg hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all transform hover:-translate-y-0.5">
+        <a href="#diagnostic-form" (click)="scrollToDiagnostic($event)" class="px-5 py-2 text-sm font-bold text-slate-900 bg-gradient-to-r from-[#D4AF37] to-amber-300 rounded-lg hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all transform hover:-translate-y-0.5">
           Commencer
         </a>
       </div>
+      
+      <!-- Mobile Menu Button -->
+      <button (click)="toggleMobileMenu()" class="md:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors" aria-label="Menu">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+          @if (!isMobileMenuOpen()) {
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          } @else {
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          }
+        </svg>
+      </button>
     </nav>
+    
+    <!-- Mobile Menu Dropdown -->
+    @if (isMobileMenuOpen()) {
+      <div class="md:hidden absolute top-full left-0 right-0 bg-slate-900/95 backdrop-blur-xl border-b border-white/10 p-4 space-y-3 shadow-2xl">
+        <a href="#pricing" (click)="toggleMobileMenu()" class="block py-3 text-slate-300 hover:text-white transition-colors border-b border-white/5">Tarifs</a>
+        <a href="#faq" (click)="toggleMobileMenu()" class="block py-3 text-slate-300 hover:text-white transition-colors border-b border-white/5">FAQ</a>
+        <button (click)="onOpenAuthModal(); toggleMobileMenu()" class="w-full py-3 text-white border-2 border-white/30 rounded-lg font-bold hover:bg-white/10 transition-all">
+          Login
+        </button>
+        <a href="#diagnostic-form" (click)="scrollToDiagnostic()" class="block w-full py-3 text-center font-bold text-slate-900 bg-gradient-to-r from-[#D4AF37] to-amber-300 rounded-lg hover:shadow-lg transition-all">
+          Commencer
+        </a>
+      </div>
+    }
   </header>
 
   <!-- Auth Modal (Ultra-Clear Glass Redesign) -->
@@ -33,15 +60,17 @@
         <!-- Darker Backdrop for contrast -->
         <div class="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity" (click)="onCloseAuthModal()"></div>
 
-        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div class="flex min-h-full items-center justify-center p-3 sm:p-4 text-center">
             <!-- Modal Panel: Dark Glass Style -->
-            <div class="relative transform overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md">
-                <div class="p-8 h-full w-full relative">
+            <div class="relative w-full max-w-md transform overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl transition-all sm:my-8"
+                 [class.h-full]="window.innerWidth < 640"
+                 [class.rounded-none]="window.innerWidth < 640">
+                <div class="p-4 sm:p-8 h-full w-full relative">
                     <!-- Close Button -->
-                    <div class="absolute top-4 right-4 z-10">
-                        <button type="button" (click)="onCloseAuthModal()" class="rounded-full p-2 text-white/50 hover:text-white hover:bg-white/10 transition-colors focus:outline-none">
+                    <div class="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
+                        <button type="button" (click)="onCloseAuthModal()" class="rounded-full p-2.5 sm:p-2 text-white/50 hover:text-white hover:bg-white/10 transition-colors focus:outline-none min-w-[44px] min-h-[44px] flex items-center justify-center">
                             <span class="sr-only">Fermer</span>
-                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </button>
@@ -70,13 +99,13 @@
                                 <div class="space-y-1">
                                     <label for="email" class="block text-xs font-bold text-slate-300 uppercase tracking-wide ml-1">Email</label>
                                     <input type="text" id="email" formControlName="email" 
-                                        class="block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 focus:bg-white/10 focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] sm:text-sm transition-all shadow-inner outline-none"
+                                        class="block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white placeholder-white/20 focus:bg-white/10 focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] sm:text-sm transition-all shadow-inner outline-none min-h-[48px]"
                                         placeholder="exemple@email.com">
                                 </div>
                                 <div class="space-y-1">
                                     <label for="password" class="block text-xs font-bold text-slate-300 uppercase tracking-wide ml-1">Mot de passe</label>
                                     <input type="password" id="password" formControlName="password" 
-                                        class="block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 focus:bg-white/10 focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] sm:text-sm transition-all shadow-inner outline-none"
+                                        class="block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-white placeholder-white/20 focus:bg-white/10 focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] sm:text-sm transition-all shadow-inner outline-none min-h-[48px]"
                                         placeholder="••••••••">
                                 </div>
 
@@ -88,7 +117,7 @@
 
                                 <div class="pt-4">
                                     <button type="submit" [disabled]="authForm.invalid" 
-                                        class="group relative flex w-full justify-center rounded-xl bg-gradient-to-r from-[#F9D976] to-[#F39C12] px-4 py-3.5 text-sm font-bold text-slate-900 shadow-[0_0_20px_rgba(243,156,18,0.3)] hover:shadow-[0_0_30px_rgba(243,156,18,0.5)] focus:outline-none focus:ring-2 focus:ring-[#F39C12] focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95">
+                                        class="group relative flex w-full justify-center rounded-xl bg-gradient-to-r from-[#F9D976] to-[#F39C12] px-4 py-4 text-sm font-bold text-slate-900 shadow-[0_0_20px_rgba(243,156,18,0.3)] hover:shadow-[0_0_30px_rgba(243,156,18,0.5)] focus:outline-none focus:ring-2 focus:ring-[#F39C12] focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95 min-h-[48px]">
                                         Se connecter
                                     </button>
                                 </div>
@@ -130,99 +159,99 @@
   }
 
   <main>
-    <!-- 1. Hero Section (Immersive Beach) -->
-    <section class="relative pt-40 pb-32 flex items-center min-h-[85vh] overflow-hidden">
-      <!-- Background Image -->
-      <div class="absolute inset-0 z-0">
-          <img src="https://filedn.eu/ly7XXkiJCqgYRqPEHDEShdQ/Pascal/host/background_app_hostweb.jpg" class="w-full h-full object-cover" alt="Luxury Home Background">
-          <!-- Dark Overlay -->
-          <div class="absolute inset-0 bg-black/40 backdrop-blur-[1px]"></div>
-          <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-black/30"></div>
-      </div>
+  <!-- 1. Hero Section (Immersive Beach) -->
+  <section class="relative pt-32 pb-20 sm:pt-40 sm:pb-32 flex items-center min-h-[80vh] sm:min-h-[85vh] overflow-hidden">
+    <!-- Background Image -->
+    <div class="absolute inset-0 z-0">
+        <img src="https://filedn.eu/ly7XXkiJCqgYRqPEHDEShdQ/Pascal/host/background_app_hostweb.jpg" class="w-full h-full object-cover" alt="Luxury Home Background">
+        <!-- Dark Overlay -->
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-[1px]"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-black/30"></div>
+    </div>
 
-      <div class="container relative z-10 mx-auto px-6 text-center">
-        <h2 class="text-5xl md:text-7xl font-extrabold text-white leading-tight drop-shadow-2xl tracking-tight mb-6">
-          Devenez un <br class="hidden md:block" />Hôte d'Exception
-        </h2>
-        <p class="max-w-2xl mx-auto text-xl md:text-2xl text-slate-100 font-light drop-shadow-lg mb-10">
-          La plateforme tout-en-un pour lancer, automatiser et maximiser les revenus de votre location saisonnière.
-        </p>
-        
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <!-- Modified button shape: rounded-xl instead of rounded-full -->
-            <a href="#diagnostic-form" (click)="scrollToDiagnostic($event)" class="group relative px-8 py-4 text-lg font-bold text-slate-900 rounded-xl overflow-hidden bg-gradient-to-r from-[#F9D976] to-[#F39C12] shadow-[0_0_20px_rgba(243,156,18,0.4)] hover:shadow-[0_0_30px_rgba(243,156,18,0.6)] transition-all transform hover:scale-105">
-                <span class="relative z-10 flex items-center">
-                    Faire mon diagnostic gratuit
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                </span>
-            </a>
-        </div>
-        <p class="mt-4 text-sm text-slate-300/80 font-medium">(Répondez à 2 questions, sans engagement)</p>
+    <div class="container relative z-10 mx-auto px-4 sm:px-6 text-center">
+      <h2 class="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight drop-shadow-2xl tracking-tight mb-6">
+        Devenez un <br class="hidden md:block" />Hôte d'Exception
+      </h2>
+      <p class="max-w-2xl mx-auto text-lg sm:text-xl md:text-2xl text-slate-100 font-light drop-shadow-lg mb-8 sm:mb-10 px-2">
+        La plateforme tout-en-un pour lancer, automatiser et maximiser les revenus de votre location saisonnière.
+      </p>
+      
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto">
+          <!-- Modified button shape: rounded-xl instead of rounded-full -->
+          <a href="#diagnostic-form" (click)="scrollToDiagnostic($event)" class="group relative w-full sm:w-auto px-6 sm:px-8 py-4 text-base sm:text-lg font-bold text-slate-900 rounded-xl overflow-hidden bg-gradient-to-r from-[#F9D976] to-[#F39C12] shadow-[0_0_20px_rgba(243,156,18,0.4)] hover:shadow-[0_0_30px_rgba(243,156,18,0.6)] transition-all transform hover:scale-105 min-h-[48px]">
+              <span class="relative z-10 flex items-center justify-center">
+                  Faire mon diagnostic gratuit
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+              </span>
+          </a>
       </div>
-    </section>
+      <p class="mt-4 text-xs sm:text-sm text-slate-300/80 font-medium">(Répondez à 2 questions, sans engagement)</p>
+    </div>
+  </section>
     
-    <!-- 2. Problem & Solution Section (Deep Blue Gradient & Glass Cards) -->
-    <section id="solution" class="py-24 bg-gradient-to-br from-slate-900 via-[#0f172a] to-slate-900 relative border-t border-white/5">
-      <!-- Decorator blobs -->
-      <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div class="absolute top-20 left-10 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]"></div>
-          <div class="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px]"></div>
+  <!-- 2. Problem & Solution Section (Deep Blue Gradient & Glass Cards) -->
+  <section id="solution" class="py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-[#0f172a] to-slate-900 relative border-t border-white/5">
+    <!-- Decorator blobs -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div class="absolute top-20 left-10 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px]"></div>
+    </div>
+
+    <div class="container relative z-10 mx-auto px-4 sm:px-6">
+      <div class="text-center mb-16 sm:mb-20">
+        <h3 class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-4 sm:mb-6 tracking-tight px-2">Sortez du chaos. Adoptez une stratégie.</h3>
+        <p class="text-base sm:text-lg text-slate-300 max-w-3xl mx-auto font-light leading-relaxed px-4">
+          Gérer une location est un puzzle complexe. Nous l'avons simplifié en 7 angles stratégiques pour une vision claire et des actions efficaces.
+        </p>
       </div>
 
-      <div class="container relative z-10 mx-auto px-6">
-        <div class="text-center mb-20">
-          <h3 class="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight">Sortez du chaos. Adoptez une stratégie.</h3>
-          <p class="text-lg text-slate-300 max-w-3xl mx-auto font-light leading-relaxed">
-            Gérer une location est un puzzle complexe. Nous l'avons simplifié en 7 angles stratégiques pour une vision claire et des actions efficaces.
-          </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <!-- Card 1 -->
+        <div class="group bg-white/5 backdrop-blur-lg p-6 sm:p-8 sm:p-10 rounded-2xl sm:rounded-3xl border border-white/10 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 sm:hover:-translate-y-2 transition-all duration-300 shadow-2xl">
+           <div class="flex items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-[#D4AF37] mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300 border border-white/5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+           </div>
+            <h4 class="text-lg sm:text-xl font-bold text-white mt-3 sm:mt-4 mb-2 sm:mb-3">Maîtrisez les 7 piliers</h4>
+            <p class="text-sm sm:text-base text-slate-400 font-light leading-relaxed group-hover:text-slate-200 transition-colors">D'une stratégie d'hôte complète, du marketing à l'optimisation de votre logement.</p>
         </div>
 
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <!-- Card 1 -->
-          <div class="group bg-white/5 backdrop-blur-lg p-10 rounded-3xl border border-white/10 hover:bg-white/10 hover:border-white/20 hover:-translate-y-2 transition-all duration-300 shadow-2xl">
-             <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-[#D4AF37] mb-6 group-hover:scale-110 transition-transform duration-300 border border-white/5">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
-             </div>
-              <h4 class="text-xl font-bold text-white mt-4 mb-3">Maîtrisez les 7 piliers</h4>
-              <p class="text-slate-400 font-light leading-relaxed group-hover:text-slate-200 transition-colors">D'une stratégie d'hôte complète, du marketing à l'optimisation de votre logement.</p>
-          </div>
+        <!-- Card 2 -->
+        <div class="group bg-white/5 backdrop-blur-lg p-6 sm:p-8 sm:p-10 rounded-2xl sm:rounded-3xl border border-white/10 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 sm:hover:-translate-y-2 transition-all duration-300 shadow-2xl">
+            <div class="flex items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-[#D4AF37] mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300 border border-white/5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+            </div>
+            <h4 class="text-lg sm:text-xl font-bold text-white mt-3 sm:mt-4 mb-2 sm:mb-3">Offrez une hospitalité 5★</h4>
+            <p class="text-sm sm:text-base text-slate-400 font-light leading-relaxed group-hover:text-slate-200 transition-colors">Grâce à des outils digitaux comme le livret d'accueil et l'assistant IA.</p>
+        </div>
 
-          <!-- Card 2 -->
-          <div class="group bg-white/5 backdrop-blur-lg p-10 rounded-3xl border border-white/10 hover:bg-white/10 hover:border-white/20 hover:-translate-y-2 transition-all duration-300 shadow-2xl">
-              <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-[#D4AF37] mb-6 group-hover:scale-110 transition-transform duration-300 border border-white/5">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
-              </div>
-              <h4 class="text-xl font-bold text-white mt-4 mb-3">Offrez une hospitalité 5★</h4>
-              <p class="text-slate-400 font-light leading-relaxed group-hover:text-slate-200 transition-colors">Grâce à des outils digitaux comme le livret d'accueil et l'assistant IA.</p>
-          </div>
-
-          <!-- Card 3 -->
-          <div class="group bg-white/5 backdrop-blur-lg p-10 rounded-3xl border border-white/10 hover:bg-white/10 hover:border-white/20 hover:-translate-y-2 transition-all duration-300 shadow-2xl">
-               <div class="flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-[#D4AF37] mb-6 group-hover:scale-110 transition-transform duration-300 border border-white/5">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-              </div>
-              <h4 class="text-xl font-bold text-white mt-4 mb-3">Maximisez votre visibilité</h4>
-              <p class="text-slate-400 font-light leading-relaxed group-hover:text-slate-200 transition-colors">Et votre taux d'occupation avec nos outils de marketing et de réservation directe.</p>
-          </div>
+        <!-- Card 3 -->
+        <div class="group bg-white/5 backdrop-blur-lg p-6 sm:p-8 sm:p-10 rounded-2xl sm:rounded-3xl border border-white/10 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1 sm:hover:-translate-y-2 transition-all duration-300 shadow-2xl">
+             <div class="flex items-center justify-center h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 text-[#D4AF37] mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300 border border-white/5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+            </div>
+            <h4 class="text-lg sm:text-xl font-bold text-white mt-3 sm:mt-4 mb-2 sm:mb-3">Maximisez votre visibilité</h4>
+            <p class="text-sm sm:text-base text-slate-400 font-light leading-relaxed group-hover:text-slate-200 transition-colors">Et votre taux d'occupation avec nos outils de marketing et de réservation directe.</p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
     <!-- 3. Diagnostic Form Section (Immersive Widget) -->
-    <section id="diagnostic-form" class="relative py-28 overflow-hidden">
+    <section id="diagnostic-form" class="relative py-16 sm:py-28 overflow-hidden">
       <!-- Background Image Reuse for Parallax Continuity -->
       <div class="absolute inset-0 z-0">
           <img src="https://filedn.eu/ly7XXkiJCqgYRqPEHDEShdQ/Pascal/host/background_app_hostweb.jpg" class="w-full h-full object-cover scale-110 blur-sm" alt="Blurred Background">
           <div class="absolute inset-0 bg-slate-900/60"></div>
       </div>
 
-      <div class="container relative z-10 mx-auto px-6 max-w-3xl">
+      <div class="container relative z-10 mx-auto px-4 sm:px-6 max-w-3xl">
           <!-- Glass Widget Container -->
-          <div class="bg-white/20 backdrop-blur-2xl border border-white/30 rounded-[32px] p-8 md:p-12 shadow-2xl">
+          <div class="bg-white/20 backdrop-blur-2xl border border-white/30 rounded-2xl sm:rounded-[32px] p-4 sm:p-6 md:p-8 lg:p-12 shadow-2xl">
             
-            <div class="text-center mb-10">
-                <h2 class="text-3xl font-bold text-white mb-2 drop-shadow-md">Commencez votre diagnostic</h2>
-                <p class="text-slate-200 text-lg">Ces informations nous aideront à personnaliser votre analyse.</p>
+            <div class="text-center mb-8 sm:mb-10">
+                <h2 class="text-2xl sm:text-3xl font-bold text-white mb-2 drop-shadow-md">Commencez votre diagnostic</h2>
+                <p class="text-slate-200 text-base sm:text-lg">Ces informations nous aideront à personnaliser votre analyse.</p>
                 <p class="text-slate-300 text-sm mt-3">
                     Déjà un compte ? 
                     <button (click)="onOpenAuthModal()" class="text-[#D4AF37] hover:text-amber-300 font-semibold underline underline-offset-2 cursor-pointer">
@@ -231,34 +260,34 @@
                 </p>
             </div>
             
-            <form [formGroup]="contextForm" (ngSubmit)="onSubmit()" class="space-y-8">
+            <form [formGroup]="contextForm" (ngSubmit)="onSubmit()" class="space-y-6 sm:space-y-8">
               <div>
-                  <label class="block text-lg font-bold text-white mb-4">Quelle est votre situation actuelle ?</label>
-                  <div class="grid sm:grid-cols-3 gap-4">
+                  <label class="block text-base sm:text-lg font-bold text-white mb-4">Quelle est votre situation actuelle ?</label>
+                  <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                       @for(situation of situations; track situation.id) {
                           <div 
                               (click)="selectSituation(situation.id)"
-                              class="p-5 rounded-2xl border-2 text-center cursor-pointer transition-all duration-200 group relative overflow-hidden"
+                              class="p-4 sm:p-5 rounded-2xl border-2 text-center cursor-pointer transition-all duration-200 group relative overflow-hidden min-h-[140px] sm:min-h-[160px] flex flex-col justify-center"
                               [class]="contextForm.get('situation')?.value === situation.id 
-                                ? 'bg-white border-white text-slate-900 shadow-xl scale-105' 
+                                ? 'bg-white border-white text-slate-900 shadow-xl scale-[1.02]' 
                                 : 'bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/40'">
                               
-                              <div class="text-4xl mb-3 relative z-10 filter drop-shadow-sm transition-transform group-hover:scale-110" role="img" [attr.aria-label]="situation.title">{{ situation.icon }}</div>
-                              <h4 class="font-bold text-base mb-1 relative z-10">{{ situation.title }}</h4>
-                              <p class="text-xs relative z-10 opacity-80">{{ situation.description }}</p>
+                              <div class="text-3xl sm:text-4xl mb-2 sm:mb-3 relative z-10 filter drop-shadow-sm transition-transform group-hover:scale-110" role="img" [attr.aria-label]="situation.title">{{ situation.icon }}</div>
+                              <h4 class="font-bold text-sm sm:text-base mb-1 relative z-10">{{ situation.title }}</h4>
+                              <p class="text-xs sm:text-sm relative z-10 opacity-80 leading-tight">{{ situation.description }}</p>
                           </div>
                       }
                   </div>
               </div>
 
               <div>
-                  <label for="challenge" class="block text-lg font-bold text-white mb-3">Quel est votre plus grand défi ou votre principal objectif avec Airbnb aujourd'hui ?</label>
-                  <textarea id="challenge" formControlName="challenge" rows="3" class="w-full px-5 py-4 bg-white/80 backdrop-blur-md border border-white/50 rounded-2xl shadow-inner focus:outline-none focus:ring-4 focus:ring-[#D4AF37]/50 focus:bg-white text-slate-800 placeholder:text-slate-500 transition-all text-base" placeholder="Ex: Je veux automatiser mes messages et augmenter mes prix..."></textarea>
-                  <p class="mt-2 text-xs text-slate-300 font-medium text-right">Soyez précis, cela rendra l'analyse plus pertinente. (min. 10 caractères)</p>
+                  <label for="challenge" class="block text-base sm:text-lg font-bold text-white mb-3">Quel est votre plus grand défi ou votre principal objectif avec Airbnb aujourd'hui ?</label>
+                  <textarea id="challenge" formControlName="challenge" rows="3" class="w-full px-4 sm:px-5 py-3 sm:py-4 bg-white/80 backdrop-blur-md border border-white/50 rounded-2xl shadow-inner focus:outline-none focus:ring-4 focus:ring-[#D4AF37]/50 focus:bg-white text-slate-800 placeholder:text-slate-500 transition-all text-sm sm:text-base min-h-[100px]" placeholder="Ex: Je veux automatiser mes messages et augmenter mes prix..."></textarea>
+                  <p class="mt-2 text-xs sm:text-sm text-slate-300 font-medium text-right">Soyez précis, cela rendra l'analyse plus pertinente. (min. 10 caractères)</p>
               </div>
 
               <div class="pt-4">
-                  <button type="submit" [disabled]="contextForm.invalid" class="w-full py-4 px-6 rounded-xl text-lg font-bold text-slate-900 bg-gradient-to-r from-[#F9D976] to-[#F39C12] hover:shadow-[0_0_20px_rgba(243,156,18,0.5)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F39C12] disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg">
+                  <button type="submit" [disabled]="contextForm.invalid" class="w-full py-4 px-6 rounded-xl text-base sm:text-lg font-bold text-slate-900 bg-gradient-to-r from-[#F9D976] to-[#F39C12] hover:shadow-[0_0_20px_rgba(243,156,18,0.5)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#F39C12] disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg min-h-[48px]">
                       Continuer vers l'Étape 2
                   </button>
               </div>
@@ -268,53 +297,53 @@
     </section>
 
     <!-- 4. Pricing Section (Clean & Premium) -->
-    <section id="pricing" class="py-24 bg-slate-50 relative">
-      <div class="container mx-auto px-6 relative z-10">
-        <div class="text-center mb-16">
-          <h3 class="text-4xl font-extrabold text-slate-900">Des offres adaptées à chaque étape.</h3>
-          <p class="mt-4 text-slate-600 text-lg max-w-2xl mx-auto">Commencez gratuitement, puis choisissez le plan qui évolue avec vous.</p>
+    <section id="pricing" class="py-16 sm:py-24 bg-slate-50 relative">
+      <div class="container mx-auto px-4 sm:px-6 relative z-10">
+        <div class="text-center mb-12 sm:mb-16">
+          <h3 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 px-2">Des offres adaptées à chaque étape.</h3>
+          <p class="mt-3 sm:mt-4 text-slate-600 text-base sm:text-lg max-w-2xl mx-auto px-4">Commencez gratuitement, puis choisissez le plan qui évolue avec vous.</p>
         </div>
         
-        <div class="grid lg:grid-cols-4 gap-6 items-start">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 items-start">
           @for (plan of plans(); track plan.name) {
             <div 
-              class="rounded-3xl p-8 flex flex-col h-full transition-all duration-300 relative"
+              class="rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col h-full transition-all duration-300 relative"
               [class]="plan.highlight 
-                ? 'bg-white border-2 border-yellow-400 shadow-2xl scale-105 z-10' 
+                ? 'bg-white border-2 border-yellow-400 shadow-2xl scale-[1.02] sm:scale-105 z-10' 
                 : 'bg-white border border-slate-200 shadow-md hover:shadow-xl hover:-translate-y-1'">
               
               @if(plan.highlight) {
-                  <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-lg uppercase tracking-wider">
+                  <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1 sm:py-1.5 rounded-full shadow-lg uppercase tracking-wider">
                       Recommandé
                   </div>
               }
 
               <div class="flex-grow">
-                <div class="flex justify-between items-center mb-4">
-                  <h4 class="font-bold text-xl text-slate-900">{{ plan.name }}</h4>
+                <div class="flex justify-between items-center mb-3 sm:mb-4">
+                  <h4 class="font-bold text-lg sm:text-xl text-slate-900">{{ plan.name }}</h4>
                 </div>
                 <div class="flex items-baseline mb-2">
-                    <span class="text-4xl font-extrabold text-slate-900 tracking-tight">{{ plan.price }}</span>
-                    <span class="text-sm font-medium text-slate-500 ml-1">{{ plan.priceDetails }}</span>
+                    <span class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">{{ plan.price }}</span>
+                    <span class="text-xs sm:text-sm font-medium text-slate-500 ml-1">{{ plan.priceDetails }}</span>
                 </div>
-                <p class="text-sm text-slate-500 min-h-[40px] mb-6 leading-relaxed">{{ plan.description }}</p>
+                <p class="text-xs sm:text-sm text-slate-500 min-h-[40px] sm:min-h-[48px] mb-4 sm:mb-6 leading-relaxed">{{ plan.description }}</p>
                 
-                <hr class="border-slate-100 mb-6">
+                <hr class="border-slate-100 mb-4 sm:mb-6">
 
-                <ul class="space-y-4 text-sm text-slate-600 mb-8">
+                <ul class="space-y-3 sm:space-y-4 text-xs sm:text-sm text-slate-600 mb-6 sm:mb-8">
                   @for (feature of plan.features; track $index) {
                     <li class="flex items-start">
-                      <div class="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3 mt-0.5">
-                          <svg class="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                      <div class="flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-green-100 flex items-center justify-center mr-2 sm:mr-3 mt-0.5">
+                          <svg class="w-2 h-2 sm:w-3 sm:h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                       </div>
-                      <span class="font-medium">{{ feature }}</span>
+                      <span class="font-medium leading-tight">{{ feature }}</span>
                     </li>
                   }
                 </ul>
               </div>
               <!-- Pricing Button already rounded-xl, keeping it consistent -->
               <a href="#diagnostic-form" (click)="scrollToDiagnostic($event)"
-                class="block w-full py-3.5 px-4 rounded-xl font-bold text-center transition-all cursor-pointer transform active:scale-95"
+                class="block w-full py-3 sm:py-3.5 px-4 rounded-xl font-bold text-center transition-all cursor-pointer transform active:scale-95 min-h-[44px]"
                 [class]="plan.highlight 
                     ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-lg' 
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'">
@@ -327,19 +356,19 @@
     </section>
 
     <!-- 5. FAQ Section (Dark Luxe) -->
-    <section id="faq" class="py-24 bg-[#0B1120] relative border-t border-white/5">
-      <div class="container mx-auto px-6 max-w-3xl relative z-10">
-        <div class="text-center mb-16">
-          <h3 class="text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-md">Questions fréquentes</h3>
-          <p class="mt-4 text-slate-400">Tout ce que vous devez savoir pour démarrer.</p>
+    <section id="faq" class="py-16 sm:py-24 bg-[#0B1120] relative border-t border-white/5">
+      <div class="container mx-auto px-4 sm:px-6 max-w-3xl relative z-10">
+        <div class="text-center mb-12 sm:mb-16">
+          <h3 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight drop-shadow-md px-2">Questions fréquentes</h3>
+          <p class="mt-3 sm:mt-4 text-slate-400 text-sm sm:text-base">Tout ce que vous devez savoir pour démarrer.</p>
         </div>
         
         <div class="space-y-1">
           @for (faq of faqs(); track $index) {
             <div class="border-b border-white/10 last:border-0 transition-all duration-300 group">
-              <button (click)="toggleFaq(faq)" class="w-full flex justify-between items-center text-left py-6 text-white font-bold focus:outline-none group-hover:text-[#D4AF37] transition-colors cursor-pointer">
-                <span class="text-lg pr-8">{{ faq.question }}</span>
-                <span class="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full border border-white/20 group-hover:border-[#D4AF37] transition-all duration-300" 
+              <button (click)="toggleFaq(faq)" class="w-full flex justify-between items-center text-left py-4 sm:py-6 text-white font-bold focus:outline-none group-hover:text-[#D4AF37] transition-colors cursor-pointer min-h-[44px]">
+                <span class="text-sm sm:text-lg pr-4 sm:pr-8 leading-tight text-left">{{ faq.question }}</span>
+                <span class="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full border border-white/20 group-hover:border-[#D4AF37] transition-all duration-300 ml-2 sm:ml-0" 
                       [class.rotate-45]="faq.open"
                       [class.border-[#D4AF37]]="faq.open"
                       [class.bg-[#D4AF37]]="faq.open"
@@ -351,7 +380,7 @@
                 </span>
               </button>
               @if (faq.open) {
-                <div class="pb-8 text-slate-300 leading-relaxed text-base font-light animate-fade-in-down">
+                <div class="pb-4 sm:pb-8 text-slate-300 leading-relaxed text-sm sm:text-base font-light animate-fade-in-down px-2 sm:px-0">
                   <div [innerHTML]="faq.answer"></div>
                 </div>
               }
@@ -363,30 +392,30 @@
   </main>
 
   <!-- Footer (Dark Luxe Theme) -->
-  <footer class="bg-[#050912] text-slate-400 py-12 border-t border-white/5">
-    <div class="container mx-auto px-6 flex flex-col items-center justify-center text-sm">
+  <footer class="bg-[#050912] text-slate-400 py-8 sm:py-12 border-t border-white/5">
+    <div class="container mx-auto px-4 sm:px-6 flex flex-col items-center justify-center text-xs sm:text-sm">
       
-      <div class="mb-8 flex items-center space-x-2">
+      <div class="mb-6 sm:mb-8 flex items-center space-x-2">
          <div class="p-1.5 bg-white/5 rounded-lg border border-white/10">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 text-[#D4AF37]"><path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" /></svg>
         </div>
-        <span class="font-bold text-white text-lg tracking-wide">Hôte d'Exception</span>
+        <span class="font-bold text-white text-base sm:text-lg tracking-wide">Hôte d'Exception</span>
       </div>
 
-      <div class="flex space-x-6 mb-8">
+      <div class="flex flex-wrap justify-center gap-4 sm:gap-6 mb-6 sm:mb-8">
           <a href="#" class="hover:text-white transition-colors">À propos</a>
           <a href="#" class="hover:text-white transition-colors">Blog</a>
           <a href="#pricing" class="hover:text-white transition-colors">Tarifs</a>
           <a href="#" class="hover:text-white transition-colors">Contact</a>
       </div>
 
-      <p>&copy; {{ currentYear }} Hôte d'Exception. Tous droits réservés.</p>
-      <div class="mt-4 flex space-x-4 text-xs opacity-60">
+      <p class="text-center">&copy; {{ currentYear }} Hôte d'Exception. Tous droits réservés.</p>
+      <div class="mt-3 sm:mt-4 flex flex-wrap justify-center gap-3 sm:gap-4 text-[10px] sm:text-xs opacity-60">
         <a href="#" class="hover:underline hover:text-white">Politique de Confidentialité</a>
         <a href="#" class="hover:underline hover:text-white">Conditions d'Utilisation</a>
       </div>
       
-      <button (click)="onOpenDbConfig()" class="mt-8 text-[10px] text-slate-700 hover:text-slate-500 transition-colors uppercase tracking-widest">
+      <button (click)="onOpenDbConfig()" class="mt-6 sm:mt-8 text-[10px] text-slate-700 hover:text-slate-500 transition-colors uppercase tracking-widest">
           Admin DB
       </button>
     </div>

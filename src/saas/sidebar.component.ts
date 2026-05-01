@@ -340,15 +340,45 @@ export class SidebarComponent implements OnInit, OnDestroy {
     // Auto-hide
     isCollapsed = signal(false);
     isHovering = signal(false);
+    isMobile = signal(false);
     private hideTimeout: any = null;
     private readonly AUTO_HIDE_DELAY = 10000;
 
+    constructor() {
+        // Detect mobile on init
+        if (typeof window !== 'undefined') {
+            this.isMobile.set(window.innerWidth < 768);
+            if (this.isMobile()) {
+                this.isCollapsed.set(true);
+            }
+            
+            // Listen for toggle events from SaaS app
+            window.addEventListener('toggle-sidebar', () => {
+                this.toggleSidebar();
+            });
+            
+            // Update mobile state on resize
+            window.addEventListener('resize', () => {
+                this.isMobile.set(window.innerWidth < 768);
+                if (!this.isMobile()) {
+                    this.isCollapsed.set(false);
+                }
+            });
+        }
+    }
+    
     ngOnInit(): void { this.startAutoHideTimer(); }
-    ngOnDestroy(): void { this.clearHideTimer(); }
+    ngOnDestroy(): void { 
+        this.clearHideTimer();
+        if (typeof window !== 'undefined') {
+            window.removeEventListener('toggle-sidebar', () => {});
+            window.removeEventListener('resize', () => {});
+        }
+    }
 
     private startAutoHideTimer(): void {
         this.clearHideTimer();
-        if (!this.isCollapsed()) {
+        if (!this.isCollapsed() && !this.isMobile()) {
             this.hideTimeout = setTimeout(() => {
                 if (!this.isHovering()) this.isCollapsed.set(true);
             }, this.AUTO_HIDE_DELAY);
@@ -362,15 +392,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
     toggleSidebar(): void {
         const newState = !this.isCollapsed();
         this.isCollapsed.set(newState);
-        newState ? this.clearHideTimer() : this.startAutoHideTimer();
+        if (!this.isMobile()) {
+            newState ? this.clearHideTimer() : this.startAutoHideTimer();
+        }
     }
 
     onMouseEnter(): void { this.isHovering.set(true); this.clearHideTimer(); }
     onMouseLeave(): void { this.isHovering.set(false); this.startAutoHideTimer(); }
-
-    constructor() {
-        console.log('[Sidebar] Component initialized');
-    }
 
     isPropertyDropdownOpen = signal<boolean>(false);
 

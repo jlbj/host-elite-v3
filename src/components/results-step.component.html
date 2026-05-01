@@ -1,18 +1,18 @@
-<div class="space-y-8 animate-fade-in">
+<div class="space-y-6 sm:space-y-8 animate-fade-in px-2 sm:px-0">
   <div>
-    <h2 class="text-2xl font-semibold text-center text-slate-800">Étape 3: Votre Bilan</h2>
-    <p class="text-center text-slate-600">Voici votre analyse personnalisée et votre plan d'action.</p>
+    <h2 class="text-xl sm:text-2xl font-semibold text-center text-slate-800">Étape 3: Votre Bilan</h2>
+    <p class="text-center text-slate-600 text-sm sm:text-base">Voici votre analyse personnalisée et votre plan d'action.</p>
   </div>
 
   <!-- Radar Chart -->
   <div class="flex justify-center">
-    <svg [attr.width]="size" [attr.height]="size" [attr.viewBox]="'-35 -35 ' + (size + 70) + ' ' + (size + 70)">
+    <svg [attr.width]="size" [attr.height]="size" [attr.viewBox]="'-35 -35 ' + (size + 70) + ' ' + (size + 70)" class="max-w-full h-auto">
       <g class="radar-grid">
         @for (polygon of radarChartPolygons().grid; track $index) {
           <polygon [attr.points]="polygon" class="fill-slate-100 stroke-slate-200" />
         }
         @for (label of radarChartLabels(); track $index) {
-           <text [attr.x]="label.x" [attr.y]="label.y" dominant-baseline="middle" text-anchor="middle" class="text-xs fill-slate-500 font-medium">{{ label.text }}</text>
+           <text [attr.x]="label.x" [attr.y]="label.y" dominant-baseline="middle" text-anchor="middle" class="text-[10px] sm:text-xs fill-slate-500 font-medium">{{ label.text }}</text>
         }
       </g>
       <g class="radar-data">
@@ -22,21 +22,21 @@
   </div>
 
   <!-- AI Analysis -->
-  <div class="space-y-6">
+  <div class="space-y-4 sm:space-y-6">
     <!-- Recommended Plan -->
-    <div class="bg-slate-100 border border-slate-200 rounded-lg p-6 text-center">
-        <h3 class="text-lg font-bold text-slate-800">Votre Plan Recommandé</h3>
-        <div class="my-3 inline-block" [ngClass]="getPlanClasses(report().recommendedPlan)">
+    <div class="bg-slate-100 border border-slate-200 rounded-lg p-4 sm:p-6 text-center">
+        <h3 class="text-base sm:text-lg font-bold text-slate-800">Votre Plan Recommandé</h3>
+        <div class="my-2 sm:my-3 inline-block" [ngClass]="getPlanClasses(report().recommendedPlan)">
             Plan {{ report().recommendedPlan }}
         </div>
-        <p class="text-slate-700">{{ report().planJustification }}</p>
+        <p class="text-sm sm:text-base text-slate-700 px-2">{{ report().planJustification }}</p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
       <!-- Strengths -->
-      <div class="bg-green-50/50 p-6 rounded-lg border border-green-200">
-        <h3 class="text-lg font-bold text-green-800 mb-3">Points Forts</h3>
-        <ul class="space-y-2 list-disc list-inside text-green-700">
+      <div class="bg-green-50/50 p-4 sm:p-6 rounded-lg border border-green-200">
+        <h3 class="text-base sm:text-lg font-bold text-green-800 mb-2 sm:mb-3">Points Forts</h3>
+        <ul class="space-y-1.5 sm:space-y-2 list-disc list-inside text-green-700 text-sm sm:text-base">
           @for (strength of report().strengths; track $index) {
             <li>{{ strength }}</li>
           }
@@ -44,9 +44,9 @@
       </div>
 
       <!-- Opportunities -->
-      <div class="bg-yellow-50/50 p-6 rounded-lg border border-yellow-200">
-        <h3 class="text-lg font-bold text-yellow-800 mb-3">Opportunités</h3>
-        <ul class="space-y-2 list-disc list-inside text-yellow-700">
+      <div class="bg-yellow-50/50 p-4 sm:p-6 rounded-lg border border-yellow-200">
+        <h3 class="text-base sm:text-lg font-bold text-yellow-800 mb-2 sm:mb-3">Opportunités</h3>
+        <ul class="space-y-1.5 sm:space-y-2 list-disc list-inside text-yellow-700 text-sm sm:text-base">
           @for (opportunity of report().opportunities; track $index) {
             <li>{{ opportunity }}</li>
           }
@@ -56,24 +56,11 @@
   </div>
 
   <!-- Final CTA -->
-  <div class="text-center pt-6 space-y-4">
-    @if (isAuthenticated()) {
-      <!-- Authenticated user - go to dashboard -->
-      <button (click)="onExplorePlanClick()" class="w-full md:w-auto flex justify-center py-3 px-8 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500">
-        Explorer le Plan {{ report().recommendedPlan }}
-      </button>
-    } @else {
-      <!-- Non-authenticated user - prompt to register -->
-      <div class="bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-lg p-6">
-        <h4 class="text-lg font-bold text-amber-900 mb-2">🎉 Créez votre compte pour sauvegarder vos résultats</h4>
-        <p class="text-amber-800 text-sm mb-4">Votre diagnostic est complet ! Créez un compte gratuit pour accéder à votre tableau de bord et vos outils personnalisés.</p>
-        <button (click)="onExplorePlanClick()" class="w-full md:w-auto flex justify-center py-3 px-8 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gradient-to-r from-[#F9D976] to-[#F39C12] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500">
-          Créer mon compte gratuit
-        </button>
-        <p class="text-xs text-amber-700 mt-2">Sans engagement · 48h d'essai gratuit</p>
-      </div>
-    }
-    <button (click)="onRestartClick()" class="text-sm text-slate-500 hover:text-slate-700">
+  <div class="text-center pt-4 sm:pt-6 space-y-3 sm:space-y-4">
+    <button (click)="onExplorePlanClick()" class="w-full flex justify-center py-3.5 px-6 sm:px-8 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 min-h-[44px]">
+      Explorer le Plan {{ report().recommendedPlan }}
+    </button>
+    <button (click)="onRestartClick()" class="text-sm text-slate-500 hover:text-slate-700 min-h-[44px]">
       Recommencer le diagnostic
     </button>
   </div>
