@@ -201,6 +201,7 @@ export interface EditorSaveData {
                                 [hasAiAccess]="hasAiAccess()"
                                 [isAiLoading]="isAiLoading()"
                                 [availablePhotos]="propertyPhotos()"
+                                [propertyEquipments]="propertyEquipments()"
                                 (contentUpdated)="onContentUpdated($event)"
                                 (generateAI)="generateAIRequested.emit()">
                             </app-content-editor>
@@ -247,6 +248,7 @@ export class UniversalEditorComponent {
     // Configuration Inputs
     editorType = input<'listing' | 'welcome-booklet' | 'microsite'>('listing');
     propertyName = input<string>('');
+    propertyEquipmentsInput = input<string[]>([]);
     layouts = input.required<EditorLayout[]>();
     sections = input.required<EditorSection[]>();
     themeDefaults = input.required<EditorTheme>();
@@ -288,6 +290,7 @@ export class UniversalEditorComponent {
     selectedSectionIds = signal<string[]>([]);
     currentContent = signal<Record<string, any>>({});
     propertyPhotos = signal<{url: string, category: string}[]>([]);
+    propertyEquipments = signal<string[]>([]);
     previewHtml = signal<string>('');
     isFullscreenPreview = signal(false);
 
@@ -373,6 +376,14 @@ export class UniversalEditorComponent {
             }
         });
 
+        // Initialize property equipments
+        effect(() => {
+            const equipments = this.propertyEquipmentsInput();
+            if (equipments && equipments.length > 0) {
+                this.propertyEquipments.set(equipments);
+            }
+        });
+
         // Initialize content
         effect(() => {
             const content = this.contentData();
@@ -439,6 +450,17 @@ export class UniversalEditorComponent {
                 this.propertyPhotos.set(Array.isArray(parsedPhotos) ? parsedPhotos : []);
             } catch {
                 this.propertyPhotos.set([]);
+            }
+        }
+        
+        // Extract amenities from content
+        const amenities = content['amenities']?.['amenities'] || [];
+        if (amenities.length > 0) {
+            try {
+                const parsedAmenities = typeof amenities === 'string' ? JSON.parse(amenities) : amenities;
+                this.propertyEquipments.set(Array.isArray(parsedAmenities) ? parsedAmenities : []);
+            } catch {
+                this.propertyEquipments.set([]);
             }
         }
         

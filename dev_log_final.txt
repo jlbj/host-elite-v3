@@ -1,0 +1,165 @@
+
+Warning: This is a simple server for use in testing or debugging Angular applications
+locally. It hasn't been reviewed for security issues.
+
+Binding this server to an open connection can result in compromising your application or
+computer. Using a different host than the one passed to the "--host" flag might result in
+websocket connection issues.
+    
+❯ Building...
+✔ Building...
+Initial chunk files | Names         |  Raw size
+main.js             | main          |   4.27 MB | 
+styles.css          | styles        | 172.18 kB | 
+
+                    | Initial total |   4.44 MB
+
+Application bundle generation complete. [16.197 seconds] - 2026-03-20T08:59:15.939Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: NotificationCenterComponent is not used within the template of NotificationBellComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/components/notification-bell.component.ts:10:28:
+[37m      10 │     imports: [CommonModule, [32mNotificationCenterComponent[37m],
+         ╵                             [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: FeatureGatingComponent is not used within the template of RoiSimulatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/finance/roi-simulator/roi-simulator.component.ts:17:77:
+[37m      17 │ ...eFormsModule, FormsModule, TranslatePipe, [32mFeatureGatingComponent[37m],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of ProfitabilityCalculatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/legacy/profitability/profitability-calculator.component.ts:16:47:
+[37m      16 │   imports: [CommonModule, ReactiveFormsModule, [32mTranslatePipe[37m],
+         ╵                                                [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of WelcomeBookletListingComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/views/welcome-booklet/components/welcome-booklet-listing.component.ts:9:28:
+[37m      9 │     imports: [CommonModule, [32mTranslatePipe[37m],
+        ╵                             [32m~~~~~~~~~~~~~[0m
+
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  ➜  Local:   http://localhost:4201/
+  ➜  Network: http://192.168.100.149:4201/
+  ➜  Network: http://192.168.100.30:4201/
+  ➜  Network: http://100.71.196.47:4201/
+  ➜  press h + enter to show help
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names | Raw size
+main.js             | main  |  4.27 MB | 
+
+Application bundle generation complete. [8.667 seconds] - 2026-03-20T09:02:28.725Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: NotificationCenterComponent is not used within the template of NotificationBellComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/components/notification-bell.component.ts:10:28:
+[37m      10 │     imports: [CommonModule, [32mNotificationCenterComponent[37m],
+         ╵                             [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: FeatureGatingComponent is not used within the template of RoiSimulatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/finance/roi-simulator/roi-simulator.component.ts:17:77:
+[37m      17 │ ...eFormsModule, FormsModule, TranslatePipe, [32mFeatureGatingComponent[37m],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of ProfitabilityCalculatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/legacy/profitability/profitability-calculator.component.ts:16:47:
+[37m      16 │   imports: [CommonModule, ReactiveFormsModule, [32mTranslatePipe[37m],
+         ╵                                                [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of WelcomeBookletListingComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/views/welcome-booklet/components/welcome-booklet-listing.component.ts:9:28:
+[37m      9 │     imports: [CommonModule, [32mTranslatePipe[37m],
+        ╵                             [32m~~~~~~~~~~~~~[0m
+
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names | Raw size
+main.js             | main  |  4.27 MB | 
+
+Application bundle generation complete. [1.511 seconds] - 2026-03-20T09:02:30.249Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: NotificationCenterComponent is not used within the template of NotificationBellComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/components/notification-bell.component.ts:10:28:
+[37m      10 │     imports: [CommonModule, [32mNotificationCenterComponent[37m],
+         ╵                             [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: FeatureGatingComponent is not used within the template of RoiSimulatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/finance/roi-simulator/roi-simulator.component.ts:17:77:
+[37m      17 │ ...eFormsModule, FormsModule, TranslatePipe, [32mFeatureGatingComponent[37m],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of ProfitabilityCalculatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/legacy/profitability/profitability-calculator.component.ts:16:47:
+[37m      16 │   imports: [CommonModule, ReactiveFormsModule, [32mTranslatePipe[37m],
+         ╵                                                [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of WelcomeBookletListingComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/views/welcome-booklet/components/welcome-booklet-listing.component.ts:9:28:
+[37m      9 │     imports: [CommonModule, [32mTranslatePipe[37m],
+        ╵                             [32m~~~~~~~~~~~~~[0m
+
+
+Page reload sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names         |  Raw size
+main.js             | main          |   4.27 MB | 
+styles.css          | styles        | 172.22 kB | 
+
+                    | Initial total |   4.45 MB
+
+Application bundle generation complete. [0.958 seconds] - 2026-03-20T09:02:35.190Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: NotificationCenterComponent is not used within the template of NotificationBellComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/components/notification-bell.component.ts:10:28:
+[37m      10 │     imports: [CommonModule, [32mNotificationCenterComponent[37m],
+         ╵                             [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: FeatureGatingComponent is not used within the template of RoiSimulatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/finance/roi-simulator/roi-simulator.component.ts:17:77:
+[37m      17 │ ...eFormsModule, FormsModule, TranslatePipe, [32mFeatureGatingComponent[37m],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of ProfitabilityCalculatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/legacy/profitability/profitability-calculator.component.ts:16:47:
+[37m      16 │   imports: [CommonModule, ReactiveFormsModule, [32mTranslatePipe[37m],
+         ╵                                                [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of WelcomeBookletListingComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/views/welcome-booklet/components/welcome-booklet-listing.component.ts:9:28:
+[37m      9 │     imports: [CommonModule, [32mTranslatePipe[37m],
+        ╵                             [32m~~~~~~~~~~~~~[0m
+
+
+Stylesheet update sent to client(s).
+Component update sent to client(s).

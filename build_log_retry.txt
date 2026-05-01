@@ -1,0 +1,153 @@
+
+> hote-exception-v2@0.0.0 build
+> ng build
+
+❯ Building...
+✔ Building...
+Initial chunk files | Names         |  Raw size | Estimated transfer size
+main-TSTAWVZ2.js    | main          |   3.33 MB |               731.38 kB
+styles-4556I2PD.css | styles        | 146.86 kB |                15.57 kB
+chunk-C6Q5SG76.js   | -             |   1.07 kB |               468 bytes
+chunk-FK6H3RFT.js   | -             | 272 bytes |               272 bytes
+
+                    | Initial total |   3.48 MB |               747.69 kB
+
+Lazy chunk files    | Names         |  Raw size | Estimated transfer size
+chunk-GPXMSDNG.js   | html2canvas   | 203.21 kB |                38.58 kB
+chunk-MLMD4BUA.js   | index-es      | 158.67 kB |                46.86 kB
+chunk-LFZHQARY.js   | purify-es     |  22.37 kB |                 7.75 kB
+
+Application bundle generation complete. [27.594 seconds] - 2026-03-19T21:11:39.770Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: NotificationCenterComponent is not used within the template of NotificationBellComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/components/notification-bell.component.ts:10:28:
+[37m      10 │     imports: [CommonModule, [32mNotificationCenterComponent[37m],
+         ╵                             [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: FeatureGatingComponent is not used within the template of RoiSimulatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/finance/roi-simulator/roi-simulator.component.ts:17:77:
+[37m      17 │ ...eFormsModule, FormsModule, TranslatePipe, [32mFeatureGatingComponent[37m],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of ProfitabilityCalculatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/legacy/profitability/profitability-calculator.component.ts:16:47:
+[37m      16 │   imports: [CommonModule, ReactiveFormsModule, [32mTranslatePipe[37m],
+         ╵                                                [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of WelcomeBookletListingComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/views/welcome-booklet/components/welcome-booklet-listing.component.ts:9:28:
+[37m      9 │     imports: [CommonModule, [32mTranslatePipe[37m],
+        ╵                             [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.promise.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.string.match.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.string.replace.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.string.starts-with.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.array.iterator.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/web.dom-collections.iterator.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.array.reduce.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.string.ends-with.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.string.split.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'raf' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.string.trim.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'rgbcolor' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.array.index-of.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.string.includes.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.array.reverse.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'core-js/modules/es.regexp.to-string.js' used by 'node_modules/canvg/lib/index.es.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mModule 'html2canvas' used by 'node_modules/jspdf/dist/jspdf.es.min.js' is not ESM[0m
+
+  CommonJS or AMD dependencies can cause optimization bailouts.
+  For more information see: [4mhttps://angular.dev/tools/cli/build#configuring-commonjs-dependencies[0m
+
+
+Output location: /home/jose/dev/host-elite-v3/dist
+

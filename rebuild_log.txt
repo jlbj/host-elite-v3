@@ -1,0 +1,81 @@
+
+> hote-exception-v2@0.0.0 build
+> ng build
+
+❯ Building...
+✔ Building...
+Application bundle generation failed. [15.533 seconds] - 2026-03-19T21:29:32.196Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: NotificationCenterComponent is not used within the template of NotificationBellComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/components/notification-bell.component.ts:10:28:
+[37m      10 │     imports: [CommonModule, [32mNotificationCenterComponent[37m],
+         ╵                             [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: FeatureGatingComponent is not used within the template of RoiSimulatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/finance/roi-simulator/roi-simulator.component.ts:17:77:
+[37m      17 │ ...eFormsModule, FormsModule, TranslatePipe, [32mFeatureGatingComponent[37m],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of ProfitabilityCalculatorComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/features/legacy/profitability/profitability-calculator.component.ts:16:47:
+[37m      16 │   imports: [CommonModule, ReactiveFormsModule, [32mTranslatePipe[37m],
+         ╵                                                [32m~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: TranslatePipe is not used within the template of WelcomeBookletListingComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/saas/views/welcome-booklet/components/welcome-booklet-listing.component.ts:9:28:
+[37m      9 │     imports: [CommonModule, [32mTranslatePipe[37m],
+        ╵                             [32m~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found "'TRAINING.accomodation_q10_Title'"[0m
+
+    src/services/translations/en.ts:33:4:
+[37m      33 │     [32m'TRAINING.accomodation_q10_Title'[37m: 'Do you plan an annual "ref...
+         │     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[37m
+         ╵     [32m}[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/services/translations/en.ts:33:4:
+[37m      33 │     [32m'TRAINING.accomodation_q10_Title'[37m: 'Do you plan an annual "ref...
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found "'TRAINING.accomodation_q10_Title'"[0m
+
+    src/services/translations/es.ts:33:4:
+[37m      33 │     [32m'TRAINING.accomodation_q10_Title'[37m: '¿Planifica un presupuesto...
+         │     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[37m
+         ╵     [32m}[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/services/translations/es.ts:33:4:
+[37m      33 │     [32m'TRAINING.accomodation_q10_Title'[37m: '¿Planifica un presupuesto...
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mExpected "}" but found "'TRAINING.accomodation_q10_Title'"[0m
+
+    src/services/translations/fr.ts:33:4:
+[37m      33 │     [32m'TRAINING.accomodation_q10_Title'[37m: 'Planifiez-vous un budget a...
+         │     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[37m
+         ╵     [32m}[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS1005: ',' expected.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/services/translations/fr.ts:33:4:
+[37m      33 │     [32m'TRAINING.accomodation_q10_Title'[37m: 'Planifiez-vous un budget a...
+         ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+

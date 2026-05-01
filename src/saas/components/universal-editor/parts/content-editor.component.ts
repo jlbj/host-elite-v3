@@ -99,6 +99,22 @@ interface ContentField {
                                 <option [value]="opt.value" class="bg-slate-800 text-white">{{ opt.label }}</option>
                             }
                         </select>
+                    } @else if (field.type === 'multi-select' && field.options) {
+                        <div class="space-y-2">
+                            <p class="text-xs text-slate-400">Sélectionnez les équipements à afficher :</p>
+                            <div class="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto p-2 bg-white/5 rounded-lg">
+                                @for (opt of field.options; track opt.value) {
+                                    <label class="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-1 rounded">
+                                        <input 
+                                            type="checkbox" 
+                                            [checked]="isOptionSelected(field, opt.value)"
+                                            (change)="toggleOption(field, opt.value)"
+                                            class="w-4 h-4 rounded border-white/20 bg-white/10 text-purple-500 focus:ring-purple-500">
+                                        <span class="text-xs text-white">{{ opt.label }}</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
                     } @else {
                         <input 
                             type="text"
@@ -156,6 +172,7 @@ export class ContentEditorComponent implements OnDestroy {
     contentData = input.required<Record<string, any>>();
     hasAiAccess = input<boolean>(false);
     availablePhotos = input<{url: string, category: string}[]>([]);
+    propertyEquipments = input<string[]>([]);
     contentUpdated = output<Record<string, any>>();
     generateAI = output<void>();
     isAiLoading = input<boolean>(false);
@@ -167,11 +184,28 @@ export class ContentEditorComponent implements OnDestroy {
     fields = computed(() => {
         const sectionList = this.sections();
         const content = this.contentData();
+        const equipments = this.propertyEquipments();
         const result: ContentField[] = [];
 
         for (const section of sectionList) {
             for (const field of section.fields) {
-                const value = content[section.id]?.[field.key] || content[field.key] || '';
+                let value = content[section.id]?.[field.key] || content[field.key] || '';
+                
+                // Special handling for amenities multi-select
+                if (field.type === 'multi-select' && field.key === 'amenities') {
+                    const options = equipments.map(e => ({ value: e, label: e }));
+                    result.push({
+                        sectionId: section.id,
+                        fieldKey: field.key,
+                        label: field.label,
+                        type: field.type,
+                        value: typeof value === 'string' ? value : JSON.stringify(value),
+                        placeholder: field.placeholder,
+                        options: options
+                    });
+                    continue;
+                }
+                
                 result.push({
                     sectionId: section.id,
                     fieldKey: field.key,
@@ -214,6 +248,34 @@ export class ContentEditorComponent implements OnDestroy {
         } catch {
             return false;
         }
+    }
+
+    isOptionSelected(field: ContentField, optionValue: string): boolean {
+        if (!field.value) return false;
+        try {
+            const selected = typeof field.value === 'string' ? JSON.parse(field.value) : field.value;
+            return Array.isArray(selected) && selected.includes(optionValue);
+        } catch {
+            return false;
+        }
+    }
+
+    toggleOption(field: ContentField, optionValue: string) {
+        let selected: string[] = [];
+        try {
+            selected = typeof field.value === 'string' ? JSON.parse(field.value) : field.value;
+            if (!Array.isArray(selected)) selected = [];
+        } catch {
+            selected = [];
+        }
+        
+        if (selected.includes(optionValue)) {
+            selected = selected.filter((v: string) => v !== optionValue);
+        } else {
+            selected = [...selected, optionValue];
+        }
+        
+        this.updateContent(field.sectionId, field.fieldKey, JSON.stringify(selected));
     }
 
     togglePhoto(field: ContentField, url: string) {

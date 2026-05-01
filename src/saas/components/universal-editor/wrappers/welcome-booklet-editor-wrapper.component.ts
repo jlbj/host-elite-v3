@@ -28,6 +28,7 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
             [hasAiAccess]="hasAiAccess()"
             [configTitle]="WELCOME_BOOKLET_EDITOR_CONFIG.title"
             [configIcon]="WELCOME_BOOKLET_EDITOR_CONFIG.icon"
+            [propertyEquipmentsInput]="propertyEquipments()"
             [isSavingInput]="isSaving()"
             [saveMessageInput]="saveMessage()"
             (layoutSelected)="onLayoutSelected($event)"
@@ -55,6 +56,7 @@ export class WelcomeBookletEditorWrapperComponent {
     saveMessage = signal<string | null>(null);
     selectedLayout = signal<any>(null);
     currentTheme = signal<any>(null);
+    propertyEquipments = signal<string[]>([]);
 
     constructor() {
         // Load booklet data when propertyName changes
@@ -74,8 +76,12 @@ export class WelcomeBookletEditorWrapperComponent {
             const photosArray = form.get('photos') as any;
             const photos = photosArray && photosArray.value ? photosArray.value : [];
             const propPhotos = this.bookletService.propertyPhotos ? this.bookletService.propertyPhotos() : [];
+            const propEquipments = this.bookletService.propertyEquipments ? this.bookletService.propertyEquipments() : [];
             
-            console.log('[Wrapper] Form photos:', photos.length, 'Property photos:', propPhotos.length);
+            console.log('[Wrapper] Form photos:', photos.length, 'Property photos:', propPhotos.length, 'Equipments:', propEquipments.length);
+            
+            // Set property equipments
+            this.propertyEquipments.set(propEquipments);
             
             // Normalize to {url, category} format
             const normalizedPhotos = [...photos, ...propPhotos].map((p: any) => ({
