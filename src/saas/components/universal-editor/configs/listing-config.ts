@@ -20,7 +20,7 @@ export const LISTING_EDITOR_CONFIG: EditorTypeConfig = {
     sections: LISTING_SECTIONS,
     themeDefaults: LISTING_THEME_DEFAULTS,
     previewMode: 'desktop',
-    showSectionManager: false,
+    showSectionManager: true,
     showPhotoManager: true,
     title: 'LISTING.ListingEditor',
     icon: '📝'

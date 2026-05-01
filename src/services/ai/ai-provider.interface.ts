@@ -14,6 +14,7 @@ export interface AIGenerateOptions {
     maxTokens?: number;
     stopSequences?: string[];
     responseFormat?: 'text' | 'json';
+    model?: string;
 }
 
 export interface AIMessage {

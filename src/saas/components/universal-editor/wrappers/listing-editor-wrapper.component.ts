@@ -100,6 +100,12 @@ export class ListingEditorWrapperComponent {
                     'description': {
                         'description': prop.listing_description || 'Welcome to our wonderful property. Enjoy your stay!'
                     },
+                    'propertyDetails': {
+                        'property_type': prop.property_type || 'Entire Home',
+                        'bedrooms': prop.bedrooms?.toString() || '',
+                        'bathrooms': prop.bathrooms?.toString() || '',
+                        'max_guests': prop.max_guests?.toString() || '',
+                    },
                     'cover-image': {
                         'coverImageUrl': prop.cover_image_url || ''
                     },
@@ -164,6 +170,12 @@ export class ListingEditorWrapperComponent {
             },
             'description': {
                 'description': 'Welcome to our property. Start editing to create your perfect listing!'
+            },
+            'propertyDetails': {
+                'property_type': 'Entire Home',
+                'bedrooms': '2',
+                'bathrooms': '1',
+                'max_guests': '4',
             },
             'cover-image': {
                 'coverImageUrl': ''

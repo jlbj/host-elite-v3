@@ -799,11 +799,8 @@ export class PreviewGenerationService {
         
         for (const section of sortedSections) {
             if (!section.visible) continue;
-            
-            // Skip duplicate hero sections in certain layouts
-            if (section.type === 'hero' && layoutType !== 'classic' && layoutType !== 'fullscreen') {
-                continue;
-            }
+            // Filter by user-selected sections (from Section Manager step)
+            if (data.sections && data.sections.length > 0 && !data.sections.includes(section.type)) continue;
             
             switch (section.type) {
                 case 'hero':

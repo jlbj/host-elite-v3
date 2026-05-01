@@ -12,6 +12,7 @@ interface ContentField {
     type: 'text' | 'richtext' | 'image' | 'select' | 'multi-select' | 'boolean' | 'photo-picker';
     value: string;
     placeholder?: string;
+    options?: { value: string; label: string }[];
 }
 
 @Component({
@@ -92,6 +93,15 @@ interface ContentField {
                             </div>
                             <p class="text-xs text-slate-400">Click photos to select/deselect. Drag to reorder.</p>
                         </div>
+                    } @else if (field.type === 'select' && field.options) {
+                        <select
+                            [ngModel]="field.value"
+                            (ngModelChange)="updateContent(field.sectionId, field.fieldKey, $event)"
+                            class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white text-sm appearance-none cursor-pointer">
+                            @for (opt of field.options; track opt.value) {
+                                <option [value]="opt.value" class="bg-slate-800 text-white">{{ opt.label }}</option>
+                            }
+                        </select>
                     } @else {
                         <input 
                             type="text"
@@ -171,7 +181,8 @@ export class ContentEditorComponent implements OnDestroy {
                     label: field.label,
                     type: field.type,
                     value: typeof value === 'string' ? value : JSON.stringify(value),
-                    placeholder: field.placeholder
+                    placeholder: field.placeholder,
+                    options: field.options
                 });
             }
         }

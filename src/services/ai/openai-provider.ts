@@ -19,7 +19,7 @@ export class OpenAIProvider implements AIProvider {
     async generateText(prompt: string, options?: AIGenerateOptions): Promise<string> {
         if (!this.client) throw new Error('OpenAIProvider not initialized');
 
-        const model = this.defaultModel;
+        const model = options?.model || this.defaultModel;
         const response = await this.client.chat.completions.create({
             model,
             messages: [{ role: 'user', content: prompt }],
@@ -42,7 +42,7 @@ export class OpenAIProvider implements AIProvider {
         if (!this.client) throw new Error('OpenAIProvider not initialized');
 
         const response = await this.client.chat.completions.create({
-            model: this.defaultModel,
+            model: options?.model || this.defaultModel,
             messages: [{ role: 'user', content: jsonPrompt }],
             temperature: options?.temperature ?? 0.3,
             max_tokens: options?.maxTokens ?? 4096,
@@ -63,7 +63,7 @@ export class OpenAIProvider implements AIProvider {
         if (!this.client) throw new Error('OpenAIProvider not initialized');
 
         const response = await this.client.chat.completions.create({
-            model: this.defaultModel,
+            model: options?.model || this.defaultModel,
             messages: messages.map(m => ({ role: m.role, content: m.content })),
             temperature: options?.temperature ?? 0.7,
             max_tokens: options?.maxTokens ?? 2048

@@ -6,6 +6,17 @@ import { EditorLayout, EditorTheme, DEFAULT_THEME, EditorSection, EditorStep, DE
 import { PreviewGenerationService, PreviewData } from './services';
 import { LayoutSelectorComponent, ThemeCustomizerComponent, SectionManagerComponent, ContentEditorComponent, PreviewPanelComponent } from './parts';
 
+// Metadata for mapping layout templateSection types to user-friendly labels/icons
+const TEMPLATE_SECTION_META: Record<string, { label: string; icon: string }> = {
+    'hero': { label: 'EDITOR.SectionHero', icon: '🖼️' },
+    'headline': { label: 'EDITOR.SectionHeadline', icon: '✏️' },
+    'property-info': { label: 'EDITOR.SectionPropertyInfo', icon: '🏠' },
+    'description': { label: 'EDITOR.SectionDescription', icon: '📄' },
+    'amenities': { label: 'EDITOR.SectionAmenities', icon: '✨' },
+    'contact': { label: 'EDITOR.SectionContact', icon: '📧' },
+    'gallery': { label: 'EDITOR.SectionGallery', icon: '📸' },
+};
+
 export interface EditorSaveData {
     layout: EditorLayout;
     theme: EditorTheme;
@@ -173,10 +184,10 @@ export interface EditorSaveData {
                             </app-theme-customizer>
                         }
 
-                        <!-- Step 3: Section Manager -->
+                        <!-- Step 3: Section Manager (shows layout template sections, NOT content fields) -->
                         @if (currentStepIndex() === 2 && showSectionManager()) {
                             <app-section-manager
-                                [sections]="sections()"
+                                [sections]="displaySections()"
                                 [selectedSectionIds]="selectedSectionIds()"
                                 (sectionsUpdated)="onSectionsUpdated($event)">
                             </app-section-manager>
@@ -280,6 +291,29 @@ export class UniversalEditorComponent {
     previewHtml = signal<string>('');
     isFullscreenPreview = signal(false);
 
+    // Computed: convert layout templateSections into EditorSection[] format for the SectionManager
+    displaySections = computed<EditorSection[]>(() => {
+        const layout = this.selectedLayout();
+        if (!layout || !layout.templateSections) return [];
+
+        // Deduplicate by type (some layouts may have duplicate types)
+        const seen = new Set<string>();
+        return layout.templateSections
+            .filter(ts => {
+                if (seen.has(ts.type)) return false;
+                seen.add(ts.type);
+                return true;
+            })
+            .map(ts => ({
+                id: ts.type,
+                label: TEMPLATE_SECTION_META[ts.type]?.label || ts.type,
+                icon: TEMPLATE_SECTION_META[ts.type]?.icon || '📋',
+                category: 'content' as const,
+                required: false,
+                fields: []
+            }));
+    });
+
     private previewService = inject(PreviewGenerationService) as any;
 
     // Wizard State
@@ -347,15 +381,15 @@ export class UniversalEditorComponent {
             }
         });
 
-        // Initialize sections
+        // Initialize selected sections from layout's templateSections (all visible ones)
         effect(() => {
-            const sectionList = this.sections();
-            if (sectionList && sectionList.length > 0) {
-                // Select all non-required sections by default
-                const selected = sectionList
-                    .filter(s => s.required || s.category !== 'settings')
-                    .map(s => s.id);
-                this.selectedSectionIds.set(selected);
+            const layout = this.selectedLayout();
+            if (layout && layout.templateSections) {
+                const selected = layout.templateSections
+                    .filter(s => s.visible)
+                    .map(s => s.type);
+                // Deduplicate
+                this.selectedSectionIds.set([...new Set(selected)]);
             }
         });
 

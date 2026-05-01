@@ -20,10 +20,10 @@ export class ClaudeProvider implements AIProvider {
         if (!this.client) throw new Error('ClaudeProvider not initialized');
 
         const response = await this.client.messages.create({
-            model: config.model || this.defaultModel,
+            model: options?.model || this.defaultModel,
             max_tokens: options?.maxTokens ?? 4096,
             temperature: options?.temperature ?? 0.7,
-            messages: [{ role: 'user', content: prompt }]
+            messages: [{ role: 'user' as const, content: prompt }]
         });
 
         return response.content[0].type === 'text' ? response.content[0].text : '';
@@ -39,11 +39,10 @@ export class ClaudeProvider implements AIProvider {
             : `${prompt}\n\nRespond ONLY with valid JSON.`;
 
         const response = await this.client!.messages.create({
-            model: this.defaultModel,
+            model: options?.model || this.defaultModel,
             max_tokens: options?.maxTokens ?? 4096,
             temperature: options?.temperature ?? 0.3,
-            messages: [{ role: 'user', content: jsonPrompt }],
-            extra_headers: { 'anthropic-version': '2023-06-01' }
+            messages: [{ role: 'user' as const, content: jsonPrompt }]
         });
 
         const content = response.content[0].type === 'text' ? response.content[0].text : '{}';
@@ -60,11 +59,16 @@ export class ClaudeProvider implements AIProvider {
     async chat(messages: AIMessage[], options?: AIGenerateOptions): Promise<string> {
         if (!this.client) throw new Error('ClaudeProvider not initialized');
 
+        const formattedMessages = messages.map(m => ({ 
+            role: m.role as 'user' | 'assistant', 
+            content: m.content 
+        }));
+
         const response = await this.client.messages.create({
-            model: this.defaultModel,
+            model: options?.model || this.defaultModel,
             max_tokens: options?.maxTokens ?? 4096,
             temperature: options?.temperature ?? 0.7,
-            messages: messages.map(m => ({ role: m.role, content: m.content }))
+            messages: formattedMessages
         });
 
         return response.content[0].type === 'text' ? response.content[0].text : '';

@@ -14,11 +14,12 @@ export class OllamaProvider implements AIProvider {
 
     async generateText(prompt: string, options?: AIGenerateOptions): Promise<string> {
         try {
+            const model = options?.model || this.defaultModel;
             const response = await fetch(this.baseUrl + '/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: options?.maxTokens ? this.defaultModel : this.defaultModel,
+                    model: model,
                     prompt: prompt,
                     temperature: options?.temperature ?? 0.7,
                     stream: false
@@ -59,12 +60,13 @@ export class OllamaProvider implements AIProvider {
 
     async chat(messages: AIMessage[], options?: AIGenerateOptions): Promise<string> {
         const ollamaMessages = messages.map(m => ({ role: m.role, content: m.content }));
+        const model = options?.model || this.defaultModel;
 
         const response = await fetch(this.baseUrl + '/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: this.defaultModel,
+                model: model,
                 messages: ollamaMessages,
                 temperature: options?.temperature ?? 0.7,
                 stream: false

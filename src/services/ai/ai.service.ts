@@ -1,6 +1,10 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { AIProvider, AIProviderType, AIProviderConfig, AIGenerateOptions, AIMessage, DEFAULT_MODELS, PROVIDER_MODELS } from './ai-provider.interface';
 import { GeminiProvider } from './gemini-provider';
+import { OpenAIProvider } from './openai-provider';
+import { ClaudeProvider } from './claude-provider';
+import { OpenRouterProvider } from './openrouter-provider';
+import { OllamaProvider } from './ollama-provider';
 
 export type { AIProvider, AIProviderType, AIProviderConfig, AIGenerateOptions, AIMessage };
 export { DEFAULT_MODELS, PROVIDER_MODELS };
@@ -13,13 +17,17 @@ export class AIService {
     private isLoading = signal(false);
 
     private gemini = inject(GeminiProvider);
+    private openai = inject(OpenAIProvider);
+    private claude = inject(ClaudeProvider);
+    private openrouter = inject(OpenRouterProvider);
+    private ollama = inject(OllamaProvider);
 
     private providers: Record<AIProviderType, AIProvider> = {
         'gemini': this.gemini,
-        'openai': this.gemini, // Fallback to gemini until SDK is fixed
-        'claude': this.gemini, // Fallback to gemini until SDK is fixed
-        'openrouter': this.gemini, // Fallback to gemini until SDK is fixed
-        'ollama': this.gemini, // Fallback to gemini until SDK is fixed
+        'openai': this.openai,
+        'claude': this.claude,
+        'openrouter': this.openrouter,
+        'ollama': this.ollama,
     };
 
     async initialize(provider: AIProviderType = 'gemini', apiKey?: string): Promise<void> {

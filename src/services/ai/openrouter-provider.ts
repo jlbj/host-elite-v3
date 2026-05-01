@@ -14,6 +14,7 @@ export class OpenRouterProvider implements AIProvider {
     }
 
     async generateText(prompt: string, options?: AIGenerateOptions): Promise<string> {
+        const model = options?.model || this.defaultModel;
         const response = await fetch(this.baseUrl + '/chat/completions', {
             method: 'POST',
             headers: {
@@ -23,7 +24,7 @@ export class OpenRouterProvider implements AIProvider {
                 'X-Title': 'HoteException'
             },
             body: JSON.stringify({
-                model: options?.maxTokens ? this.defaultModel : this.defaultModel,
+                model: model,
                 messages: [{ role: 'user', content: prompt }],
                 temperature: options?.temperature ?? 0.7,
                 max_tokens: options?.maxTokens ?? 4096
@@ -43,6 +44,7 @@ export class OpenRouterProvider implements AIProvider {
             ? `${prompt}\n\nRespond ONLY with valid JSON matching this schema: ${JSON.stringify(schema)}`
             : `${prompt}\n\nRespond ONLY with valid JSON.`;
 
+        const model = options?.model || this.defaultModel;
         const response = await fetch(this.baseUrl + '/chat/completions', {
             method: 'POST',
             headers: {
@@ -52,7 +54,7 @@ export class OpenRouterProvider implements AIProvider {
                 'X-Title': 'HoteException'
             },
             body: JSON.stringify({
-                model: this.defaultModel,
+                model: model,
                 messages: [{ role: 'user', content: jsonPrompt }],
                 temperature: options?.temperature ?? 0.3,
                 max_tokens: options?.maxTokens ?? 4096
@@ -71,6 +73,7 @@ export class OpenRouterProvider implements AIProvider {
     }
 
     async chat(messages: AIMessage[], options?: AIGenerateOptions): Promise<string> {
+        const model = options?.model || this.defaultModel;
         const response = await fetch(this.baseUrl + '/chat/completions', {
             method: 'POST',
             headers: {
@@ -80,7 +83,7 @@ export class OpenRouterProvider implements AIProvider {
                 'X-Title': 'HoteException'
             },
             body: JSON.stringify({
-                model: this.defaultModel,
+                model: model,
                 messages: messages.map(m => ({ role: m.role, content: m.content })),
                 temperature: options?.temperature ?? 0.7,
                 max_tokens: options?.maxTokens ?? 4096

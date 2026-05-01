@@ -5,6 +5,7 @@ import { ContextData, ReportData, Scores } from '../types';
 import { SupabaseService } from './supabase.service';
 import { TranslationService } from './translation.service';
 import { AIService, AIProviderType } from './ai/ai.service';
+import { AIConfigService } from './ai/ai-config.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,21 +16,24 @@ export class GeminiService {
   private supabaseService = inject(SupabaseService);
   private translationService = inject(TranslationService);
   private aiService = inject(AIService);
+  private aiConfigService = inject(AIConfigService);
   
   private useNewProvider = signal(false);
   private isNewInitialized = signal(false);
 
 constructor() {
-    // Initialisation paresseuse (lazy load) lors de la première requête
   }
 
-  async enableNewProvider(provider: AIProviderType = 'gemini', apiKey?: string): Promise<void> {
+  async enableNewProvider(provider?: AIProviderType, apiKey?: string): Promise<void> {
     if (this.isNewInitialized()) return;
     try {
-      const key = apiKey || await this.supabaseService.supabase.rpc('get_decrypted_active_key').then(r => r.data);
-      await this.aiService.initialize(provider, key);
+      await this.aiConfigService.initialize();
+      const activeProvider = provider || this.aiConfigService.activeProvider as AIProviderType;
+      const key = apiKey || await this.aiConfigService.fetchApiKey();
+      await this.aiService.initialize(activeProvider, key || undefined);
       this.useNewProvider.set(true);
       this.isNewInitialized.set(true);
+      console.log(`[GeminiService] Using global AI provider: ${activeProvider}`);
     } catch (e) {
       console.error('[GeminiService] Failed to enable new provider:', e);
     }

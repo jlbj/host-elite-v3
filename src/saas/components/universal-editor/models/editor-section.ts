@@ -33,6 +33,30 @@ export const LISTING_SECTIONS: EditorSection[] = [
         fields: [{ key: 'description', label: 'LISTING.Description', type: 'richtext', placeholder: 'Describe your property...' }]
     },
     {
+        id: 'propertyDetails',
+        label: 'LISTING.PropertyDetails',
+        icon: '🏠',
+        category: 'info',
+        required: true,
+        fields: [
+            { key: 'property_type', label: 'BOOKLET.fields.property_type', type: 'select', options: [
+                { value: 'Entire Home', label: 'Entire Home' },
+                { value: 'Apartment', label: 'Apartment' },
+                { value: 'Private Room', label: 'Private Room' },
+                { value: 'Shared Room', label: 'Shared Room' },
+                { value: 'Villa', label: 'Villa' },
+                { value: 'Cabin', label: 'Cabin' },
+                { value: 'Chalet', label: 'Chalet' },
+                { value: 'Cottage', label: 'Cottage' },
+                { value: 'Loft', label: 'Loft' },
+                { value: 'Studio', label: 'Studio' },
+            ]},
+            { key: 'bedrooms', label: 'BOOKLET.fields.bedrooms', type: 'text', placeholder: '2' },
+            { key: 'bathrooms', label: 'BOOKLET.fields.bathrooms', type: 'text', placeholder: '1' },
+            { key: 'max_guests', label: 'BOOKLET.fields.max_guests', type: 'text', placeholder: '4' },
+        ]
+    },
+    {
         id: 'cover-image',
         label: 'LISTING.CoverImage',
         icon: '🖼️',
