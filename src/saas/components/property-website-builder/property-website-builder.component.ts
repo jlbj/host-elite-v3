@@ -76,8 +76,8 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
     private editor: any;
 
     async ngOnInit() {
-        // Initialize GrapesJS after view init
-        setTimeout(() => this.initEditor(), 100);
+        // Initialize GrapesJS after view init with longer delay
+        setTimeout(() => this.initEditor(), 500);
     }
 
     ngOnDestroy() {
@@ -87,12 +87,22 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
     }
 
     private initEditor() {
+        console.log('[PropertyWebsiteBuilder] Initializing GrapesJS...');
+        
+        const container = document.getElementById('gjs');
+        if (!container) {
+            console.error('[PropertyWebsiteBuilder] Container #gjs not found!');
+            return;
+        }
+
+        console.log('[PropertyWebsiteBuilder] Container found, initializing...');
+
         this.editor = grapesjs.init({
             container: '#gjs',
             height: '100%',
             width: 'auto',
             fromElement: false,
-            storageManager: false, // We'll handle saving ourselves
+            storageManager: false,
             panels: {
                 defaults: [
                     {
@@ -159,6 +169,8 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
                 ]
             }
         });
+
+        console.log('[PropertyWebsiteBuilder] GrapesJS initialized successfully');
 
         // Add custom blocks for property listings
         this.addPropertyBlocks();

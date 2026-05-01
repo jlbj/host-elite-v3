@@ -45,7 +45,7 @@ import { WelcomeBookletService } from '../../../views/welcome-booklet/welcome-bo
             </div>
             
             <!-- Editor Content -->
-            <div class="flex-1 overflow-hidden">
+            <div class="flex-1 overflow-hidden" style="min-height: 600px;">
                 @if (editorType() === 'universal') {
                     <app-universal-editor
                         [editorType]="'listing'"
@@ -76,7 +76,8 @@ import { WelcomeBookletService } from '../../../views/welcome-booklet/welcome-bo
                 } @else {
                     <app-property-website-builder
                         [propertyName]="propertyName()"
-                        (close)="close.emit()">
+                        (close)="close.emit()"
+                        class="w-full h-full">
                     </app-property-website-builder>
                 }
             </div>
