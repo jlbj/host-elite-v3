@@ -162,6 +162,9 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
                     }
                 }
             },
+            blockManager: {
+                appendTo: '#gjs-blocks',
+            },
             deviceManager: {
                 devices: [
                     { name: 'Desktop', width: '' },
@@ -171,6 +174,7 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
                 ]
             },
             styleManager: {
+                appendTo: '#gjs-styles',
                 sectors: [
                     {
                         name: 'Dimension',
@@ -205,12 +209,6 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
 
         // Add custom blocks for property listings
         this.addPropertyBlocks();
-
-        // Re-render blocks into left sidebar
-        this.editor.BlockManager.appendTo('#gjs-blocks');
-
-        // Re-render style manager into right sidebar
-        this.editor.StyleManager.appendTo('#gjs-styles');
 
         // Load existing content if any
         this.loadExistingContent();
