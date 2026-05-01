@@ -136,6 +136,7 @@ export class PreviewPanelComponent implements OnInit {
     private readonly ZOOM_STEP = 10;
     private readonly MIN_ZOOM = 25;
     private readonly MAX_ZOOM = 200;
+    private userAdjustedZoom = false;
 
     constructor() {
         effect(() => {
@@ -171,6 +172,7 @@ export class PreviewPanelComponent implements OnInit {
 
     setPreviewMode(mode: 'desktop' | 'tablet' | 'mobile') {
         this.previewMode.set(mode);
+        this.userAdjustedZoom = false; // Reset when mode changes
         setTimeout(() => {
             this.updateIframeContent();
             this.fitToScreen();
@@ -178,16 +180,21 @@ export class PreviewPanelComponent implements OnInit {
     }
 
     zoomIn() {
+        this.userAdjustedZoom = true;
         const newZoom = Math.min(this.zoomLevel() + this.ZOOM_STEP, this.MAX_ZOOM);
         this.zoomLevel.set(newZoom);
     }
 
     zoomOut() {
+        this.userAdjustedZoom = true;
         const newZoom = Math.max(this.zoomLevel() - this.ZOOM_STEP, this.MIN_ZOOM);
         this.zoomLevel.set(newZoom);
     }
 
     fitToScreen() {
+        // Don't auto-fit if user has manually adjusted zoom
+        if (this.userAdjustedZoom) return;
+        
         const container = this.previewContainer?.nativeElement;
         if (!container) return;
 
