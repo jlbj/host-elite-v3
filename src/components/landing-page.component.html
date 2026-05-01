@@ -14,13 +14,13 @@
         <span>Hôte d'Exception</span>
       </h1>
       <div class="flex items-center space-x-4">
-        <a href="#pricing" class="hidden md:inline-block text-sm font-medium text-slate-300 hover:text-white transition-colors">Tarifs</a>
-        <a href="#faq" class="hidden md:inline-block text-sm font-medium text-slate-300 hover:text-white transition-colors">FAQ</a>
+        <a href="#pricing" class="hidden lg:inline-block text-sm font-medium text-slate-300 hover:text-white transition-colors">Tarifs</a>
+        <a href="#faq" class="hidden lg:inline-block text-sm font-medium text-slate-300 hover:text-white transition-colors">FAQ</a>
         
-        <button (click)="onOpenAuthModal()" class="hidden md:inline-block px-5 py-2 text-sm font-bold text-white border-2 border-white/30 rounded-lg hover:bg-white/10 hover:border-white/50 transition-all">
+        <button (click)="onOpenAuthModal()" class="px-4 py-2 text-sm font-bold text-white border-2 border-white/30 rounded-lg hover:bg-white/10 hover:border-white/50 transition-all">
           Login
         </button>
-        <a href="#diagnostic-form" (click)="scrollToDiagnostic($event)" class="px-5 py-2 text-sm font-bold text-slate-900 bg-gradient-to-r from-[#D4AF37] to-amber-300 rounded-lg hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all transform hover:-translate-y-0.5">
+        <a href="#diagnostic-form" (click)="scrollToDiagnostic($event)" class="hidden sm:inline-block px-5 py-2 text-sm font-bold text-slate-900 bg-gradient-to-r from-[#D4AF37] to-amber-300 rounded-lg hover:shadow-[0_0_15px_rgba(212,175,55,0.5)] transition-all transform hover:-translate-y-0.5">
           Commencer
         </a>
       </div>
@@ -50,25 +50,11 @@
                     <div class="w-full">
                         <div class="text-center">
                             <h3 class="text-3xl font-bold leading-6 text-white mb-2 tracking-tight drop-shadow-md" id="modal-title">
-                                {{ authMode() === 'login' ? 'Espace Hôte' : 'Rejoignez l\'élite' }}
+                                Espace Hôte
                             </h3>
                             <p class="text-slate-300 text-sm mb-8 font-light">
-                                {{ authMode() === 'login' ? 'Accédez à votre tableau de bord et vos outils.' : 'Commencez votre voyage vers l\'hospitalité 6 étoiles.' }}
+                                Accédez à votre tableau de bord et vos outils.
                             </p>
-                            
-                            <!-- Tabs (Dark Pill Style) -->
-                            <div class="flex justify-center space-x-1 bg-black/30 p-1 rounded-xl mb-8 border border-white/5">
-                                <button class="flex-1 py-2 text-sm font-bold rounded-lg transition-all"
-                                    [class]="authMode() === 'login' ? 'bg-[#D4AF37] text-slate-900 shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'"
-                                    (click)="toggleAuthMode('login')">
-                                    Connexion
-                                </button>
-                                <button class="flex-1 py-2 text-sm font-bold rounded-lg transition-all"
-                                    [class]="authMode() === 'register' ? 'bg-[#D4AF37] text-slate-900 shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'"
-                                    (click)="toggleAuthMode('register')">
-                                    Inscription
-                                </button>
-                            </div>
                             
                             <!-- Guest Checkout Link -->
                             <div class="mb-6 p-3 bg-white/5 rounded-lg border border-white/10">
@@ -81,14 +67,6 @@
                             </div>
 
                             <form [formGroup]="authForm" (ngSubmit)="onAuthSubmit()" class="space-y-5 text-left">
-                                @if (authMode() === 'register') {
-                                    <div class="space-y-1">
-                                        <label for="fullName" class="block text-xs font-bold text-slate-300 uppercase tracking-wide ml-1">Nom complet</label>
-                                        <input type="text" id="fullName" formControlName="fullName" 
-                                            class="block w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder-white/20 focus:bg-white/10 focus:ring-1 focus:ring-[#D4AF37] focus:border-[#D4AF37] sm:text-sm transition-all shadow-inner outline-none"
-                                            placeholder="Jean Dupont">
-                                    </div>
-                                }
                                 <div class="space-y-1">
                                     <label for="email" class="block text-xs font-bold text-slate-300 uppercase tracking-wide ml-1">Email</label>
                                     <input type="text" id="email" formControlName="email" 
@@ -111,7 +89,7 @@
                                 <div class="pt-4">
                                     <button type="submit" [disabled]="authForm.invalid" 
                                         class="group relative flex w-full justify-center rounded-xl bg-gradient-to-r from-[#F9D976] to-[#F39C12] px-4 py-3.5 text-sm font-bold text-slate-900 shadow-[0_0_20px_rgba(243,156,18,0.3)] hover:shadow-[0_0_30px_rgba(243,156,18,0.5)] focus:outline-none focus:ring-2 focus:ring-[#F39C12] focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform active:scale-95">
-                                        {{ authMode() === 'login' ? 'Se connecter' : 'Créer mon compte' }}
+                                        Se connecter
                                     </button>
                                 </div>
                             </form>
