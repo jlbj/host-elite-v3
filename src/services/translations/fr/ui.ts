@@ -1595,5 +1595,11 @@ export const ui = {
     'DASHBOARD.NoRevenueData': 'Pas de données de revenus',
     'DASHBOARD.NoExpenseData': 'Pas de données de dépenses',
     'DASHBOARD.NoPropertiesData': 'Aucune propriété trouvée',
-    'DASHBOARD.PropertyOverview': 'Performance de la propriété et métriques clés'
+    'DASHBOARD.PropertyOverview': 'Performance de la propriété et métriques clés',
+
+    // Property Website Builder
+    'PROPERTY.Builder': 'Créateur de Site Web',
+    'PROPERTY.ExportHTML': 'Exporter HTML',
+    'FEATURE.MKT_05.Title': 'Créateur de Site Web',
+    'FEATURE.MKT_05.Desc': 'Créez un site web d\'une page magnifique pour votre propriété'
 };

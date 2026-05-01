@@ -48,6 +48,7 @@ import { ListingOptimizationComponent } from './marketing/listing-optimization/l
 import { PhotoGuideComponent } from './marketing/photo-guide/photo-guide.component';
 import { AiListingWriterComponent } from './marketing/ai-listing-writer/ai-listing-writer.component';
 import { DirectBookingComponent } from './marketing/direct-booking/direct-booking.component';
+import { PropertyWebsiteBuilderWrapperComponent } from '../components/property-website-builder/property-website-builder-wrapper.component';
 
 // Pricing
 import { YieldSetupComponent } from './pricing/yield-setup/yield-setup.component';
@@ -115,6 +116,7 @@ export const FEATURE_COMPONENTS: Record<string, Type<any>> = {
     // Marketing (4) - MKT_00 handled via legacyToolMapping for WYSIWYG editor
     'MKT_03': DirectBookingComponent,
     'MKT_04': ListingOptimizationComponent, // Placeholder
+    'MKT_05': PropertyWebsiteBuilderWrapperComponent, // Property Website Builder (Wix-like)
 
     // Pricing (3)
     'PRI_01': YieldSetupComponent,

@@ -1649,5 +1649,11 @@ export const ui = {
     'DASHBOARD.NoRevenueData': 'No revenue data available',
     'DASHBOARD.NoExpenseData': 'No expense data available',
     'DASHBOARD.NoPropertiesData': 'No properties found',
-    'DASHBOARD.PropertyOverview': 'Property performance and key metrics'
+    'DASHBOARD.PropertyOverview': 'Property performance and key metrics',
+
+    // Property Website Builder
+    'PROPERTY.Builder': 'Property Website Builder',
+    'PROPERTY.ExportHTML': 'Export HTML',
+    'FEATURE.MKT_05.Title': 'Property Website Builder',
+    'FEATURE.MKT_05.Desc': 'Create a beautiful single-page website for your property'
 };

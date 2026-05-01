@@ -32,6 +32,8 @@
     "autoprefixer": "^10.4.23",
     "chart.js": "^4.5.1",
     "csv-parse": "^6.1.0",
+    "grapesjs": "^0.22.16",
+    "grapesjs-preset-webpage": "^1.0.3",
     "jspdf": "^4.0.0",
     "marked": "^17.0.1",
     "ng2-charts": "^8.0.0",
