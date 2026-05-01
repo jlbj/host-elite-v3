@@ -28,6 +28,7 @@ import { WelcomeBookletService } from '../../../views/welcome-booklet/welcome-bo
             [hasAiAccess]="hasAiAccess()"
             [configTitle]="LISTING_EDITOR_CONFIG.title"
             [configIcon]="LISTING_EDITOR_CONFIG.icon"
+            [propertyEquipmentsInput]="propertyEquipments()"
             [isSavingInput]="isSaving()"
             [saveMessageInput]="saveMessage()"
             (layoutSelected)="onLayoutSelected($event)"
@@ -56,6 +57,7 @@ export class ListingEditorWrapperComponent {
     currentTheme = signal<any>(null);
     saveMessage = signal<string | null>(null);
     isSaving = signal(false);
+    propertyEquipments = signal<string[]>([]);
 
     constructor() {
         // Load property data when propertyName changes
@@ -92,6 +94,11 @@ export class ListingEditorWrapperComponent {
         try {
             const prop = await this.repository.getPropertyByName(propertyName);
             if (prop) {
+                // Load all available equipments for the amenities multi-select
+                if (prop.property_equipments) {
+                    this.propertyEquipments.set(prop.property_equipments.map((e: any) => e.name));
+                }
+                
                 // Structure content according to section format
                 this.contentData.set({
                     'title': {
