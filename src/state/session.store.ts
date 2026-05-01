@@ -34,6 +34,9 @@ export class SessionStore {
 
     // New Signal for Plan Features
     readonly userFeatures = signal<string[]>([]);
+    
+    // Check if user is authenticated
+    readonly isAuthenticated = computed(() => !!this.userProfile()?.id);
 
     // Global Config Signals
     readonly showPlanBadges = signal<boolean>(false);
@@ -468,14 +471,17 @@ export class SessionStore {
             const report = await this.geminiService.generateReport(context, scores);
             this.reportData.set(report);
 
-            // 2. Persist Data via Repository
-            await this.repository.saveDiagnosticResult(context, scores, report);
-
-            // 3. Update profile Plan recommendation locally
-            if (this.userProfile()) {
+            // 2. Persist Data via Repository ONLY if authenticated
+            const profile = this.userProfile();
+            if (profile?.id) {
+                // User is authenticated - save to database
+                await this.repository.saveDiagnosticResult(context, scores, report);
+                
+                // Update profile Plan recommendation locally
                 this.userProfile.update(u => u ? { ...u, plan: report.recommendedPlan } : null);
             }
 
+            // 3. Go to results (non-authenticated users will be redirected after viewing)
             this.currentStep.set('results');
         } catch (err: any) {
             console.error("Evaluation Error:", err);
@@ -500,7 +506,18 @@ export class SessionStore {
     }
 
     enterDashboard(): void {
+        // Only allow authenticated users to enter dashboard
+        if (!this.isAuthenticated()) {
+            // Non-authenticated users should register first
+            console.log('[SessionStore] User not authenticated, redirecting to landing');
+            return;
+        }
         this.currentStep.set('dashboard');
+    }
+    
+    // Redirect to landing page (for non-authenticated users after results)
+    redirectToLanding(): void {
+        this.currentStep.set('landing');
     }
 
     async resetSession(): Promise<void> {
