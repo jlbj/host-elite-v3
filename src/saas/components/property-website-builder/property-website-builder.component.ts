@@ -51,23 +51,60 @@ import grapesjsPresetWebpage from 'grapesjs-preset-webpage';
                 </div>
             </div>
 
-            <!-- GrapesJS Container -->
-            <div id="gjs" class="flex-1 overflow-hidden"></div>
+            <!-- Three-panel layout -->
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Left sidebar: Blocks -->
+                <div id="gjs-blocks" class="w-72 bg-slate-800 border-r border-white/10 overflow-y-auto flex-shrink-0"></div>
+
+                <!-- Center: Device switcher + Canvas -->
+                <div class="flex-1 flex flex-col min-w-0">
+                    <!-- Device switcher bar -->
+                    <div class="flex items-center gap-2 px-4 py-2 bg-slate-800 border-b border-white/10">
+                        <button 
+                            *ngFor="let device of devices"
+                            (click)="setDevice(device.name)"
+                            [class.bg-blue-600]="currentDevice === device.name"
+                            [class.bg-slate-700]="currentDevice !== device.name"
+                            class="px-3 py-1.5 text-sm text-white rounded-md hover:bg-slate-600 transition">
+                            {{ device.label }}
+                        </button>
+                    </div>
+                    <!-- Canvas -->
+                    <div id="gjs" class="flex-1 overflow-hidden"></div>
+                </div>
+
+                <!-- Right sidebar: Styles -->
+                <div id="gjs-styles" class="w-80 bg-slate-800 border-l border-white/10 overflow-y-auto flex-shrink-0"></div>
+            </div>
         </div>
     `,
     styles: [`
         :host { display: block; height: 100%; }
-        #gjs { height: 100%; }
+        #gjs { height: 100%; min-height: 0; }
         
-        /* Custom GrapesJS Styles to match app theme */
+        /* GrapesJS dark theme overrides */
         .gjs-one-bg { background-color: #1e293b !important; }
         .gjs-two-bg { background-color: #334155 !important; }
         .gjs-four-color, .gjs-four-color-h:hover { color: #f1f5f9 !important; }
         .gjs-field { background-color: #475569 !important; border-color: #64748b !important; color: #f1f5f9 !important; }
         .gjs-sm-sector { background-color: #1e293b !important; }
-        .gjs-block { color: #f1f5f9 !important; }
         .gjs-category-title, .gjs-layer-title, .gjs-sm-sector-title { color: #f1f5f9 !important; }
         .gjs-sm-field { color: #f1f5f9 !important; }
+        .gjs-block-label { color: #f1f5f9 !important; }
+        .gjs-block { border: 1px solid #475569 !important; border-radius: 8px !important; padding: 12px !important; }
+        .gjs-block:hover { border-color: #3b82f6 !important; box-shadow: 0 0 0 2px rgba(59,130,246,0.3) !important; }
+        
+        /* Blocks panel custom styling */
+        #gjs-blocks { padding: 12px; }
+        #gjs-blocks .gjs-blocks-cs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0; }
+        #gjs-blocks .gjs-block { margin: 0; width: auto; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: grab; }
+        #gjs-blocks .gjs-block:hover { transform: translateY(-1px); }
+        #gjs-blocks .gjs-block-label { font-size: 12px; margin-top: 4px; }
+        #gjs-blocks .gjs-block__media { font-size: 24px; }
+        #gjs-blocks .gjs-title { display: none; }
+        
+        /* Styles panel */
+        #gjs-styles { padding: 0; }
     `]
 })
 export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
@@ -77,8 +114,14 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
     isSaving = signal(false);
     private editor: any;
 
+    devices = [
+        { name: 'Desktop', label: '🖥️ Desktop' },
+        { name: 'Tablet', label: '📱 Tablet' },
+        { name: 'Mobile portrait', label: '📱 Mobile' },
+    ];
+    currentDevice = 'Desktop';
+
     async ngOnInit() {
-        // Initialize GrapesJS after view init with longer delay
         setTimeout(() => this.initEditor(), 500);
     }
 
@@ -163,8 +206,21 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
         // Add custom blocks for property listings
         this.addPropertyBlocks();
 
+        // Re-render blocks into left sidebar
+        this.editor.BlockManager.appendTo('#gjs-blocks');
+
+        // Re-render style manager into right sidebar
+        this.editor.StyleManager.appendTo('#gjs-styles');
+
         // Load existing content if any
         this.loadExistingContent();
+    }
+
+    setDevice(name: string) {
+        this.currentDevice = name;
+        if (this.editor) {
+            this.editor.setDevice(name);
+        }
     }
 
     private addPropertyBlocks() {
