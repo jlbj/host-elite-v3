@@ -2,7 +2,9 @@ import { Component, OnInit, OnDestroy, inject, input, output, signal } from '@an
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import grapesjs from 'grapesjs';
-import 'grapesjs-preset-webpage';
+
+// Import the preset plugin
+import grapesjsPresetWebpage from 'grapesjs-preset-webpage';
 
 @Component({
     selector: 'app-property-website-builder',
@@ -97,29 +99,15 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
 
         console.log('[PropertyWebsiteBuilder] Container found, initializing...');
 
+        // Register the preset plugin
+        grapesjs.plugins.add('gjs-preset-webpage', grapesjsPresetWebpage as any);
+
         this.editor = grapesjs.init({
             container: '#gjs',
             height: '100%',
             width: 'auto',
             fromElement: false,
             storageManager: false,
-            panels: {
-                defaults: [
-                    {
-                        id: 'commands',
-                        el: '.panel__commands',
-                        buttons: [
-                            {
-                                id: 'visibility',
-                                active: false,
-                                className: 'fa fa-eye',
-                                command: 'preview',
-                                attributes: { title: 'Preview' }
-                            }
-                        ]
-                    }
-                ]
-            },
             plugins: ['gjs-preset-webpage'],
             pluginsOpts: {
                 'gjs-preset-webpage': {
