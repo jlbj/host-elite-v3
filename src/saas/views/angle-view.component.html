@@ -215,6 +215,8 @@
     <app-visibility-audit [propertyName]="view().propertyName!" (close)="closeTool()"></app-visibility-audit>
     } @else if (activeToolId() === 'listing-editor') {
     <app-listing-editor-wrapper [propertyName]="view().propertyName!" (close)="closeTool()"></app-listing-editor-wrapper>
+    } @else if (activeToolId() === 'website-builder') {
+    <app-property-website-builder-wrapper [propertyName]="view().propertyName!" (close)="closeTool()"></app-property-website-builder-wrapper>
     } @else if (activeToolId() === 'listing-optimization') {
     <mkt-00-listing-audit class="h-full block"></mkt-00-listing-audit>
     } @else if (activeToolId() === 'booklet') {

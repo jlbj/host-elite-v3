@@ -1,6 +1,7 @@
 import { Component, inject, input, output, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UniversalEditorComponent } from '../../../components/universal-editor/universal-editor.component';
+import { PropertyWebsiteBuilderComponent } from '../../../components/property-website-builder/property-website-builder.component';
 import { LISTING_EDITOR_CONFIG } from '../../../components/universal-editor/configs/listing-config';
 import { EditorSaveData } from '../../../components/universal-editor/universal-editor.component';
 import { HostRepository } from '../../../../services/host-repository.service';
@@ -11,34 +12,75 @@ import { WelcomeBookletService } from '../../../views/welcome-booklet/welcome-bo
 @Component({
     selector: 'app-listing-editor-wrapper',
     standalone: true,
-    imports: [CommonModule, TranslatePipe, UniversalEditorComponent],
+    imports: [CommonModule, TranslatePipe, UniversalEditorComponent, PropertyWebsiteBuilderComponent],
     template: `
-        <app-universal-editor
-            [editorType]="'listing'"
-            [layouts]="LISTING_EDITOR_CONFIG.layouts"
-            [sections]="LISTING_EDITOR_CONFIG.sections"
-            [themeDefaults]="LISTING_EDITOR_CONFIG.themeDefaults"
-            [contentData]="contentData()"
-            [propertyName]="propertyName()"
-            [selectedLayoutInput]="selectedLayout()"
-            [selectedThemeInput]="currentTheme()"
-            [previewMode]="LISTING_EDITOR_CONFIG.previewMode"
-            [showSectionManager]="LISTING_EDITOR_CONFIG.showSectionManager"
-            [showAiButton]="true"
-            [hasAiAccess]="hasAiAccess()"
-            [configTitle]="LISTING_EDITOR_CONFIG.title"
-            [configIcon]="LISTING_EDITOR_CONFIG.icon"
-            [propertyEquipmentsInput]="propertyEquipments()"
-            [isSavingInput]="isSaving()"
-            [saveMessageInput]="saveMessage()"
-            (layoutSelected)="onLayoutSelected($event)"
-            (themeChanged)="onThemeChanged($event)"
-            (sectionsUpdated)="onSectionsUpdated($event)"
-            (contentUpdated)="onContentUpdated($event)"
-            (saveRequested)="save($event)"
-            (closeRequested)="close.emit()"
-            (generateAIRequested)="generateWithAI()">
-        </app-universal-editor>
+        <div class="h-full flex flex-col">
+            <!-- Toggle Bar -->
+            <div class="flex items-center justify-between px-6 py-3 border-b border-white/10 bg-white/5">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-slate-400">Éditeur :</span>
+                    <button 
+                        (click)="setEditorType('universal')"
+                        [class.bg-purple-600]="editorType() === 'universal'"
+                        [class.bg-white/10]="editorType() !== 'universal'"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+                        <span>🎨</span>
+                        Universal
+                    </button>
+                    <button 
+                        (click)="setEditorType('website')"
+                        [class.bg-purple-600]="editorType() === 'website'"
+                        [class.bg-white/10]="editorType() !== 'website'"
+                        class="px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+                        <span>🌐</span>
+                        Website Builder
+                    </button>
+                </div>
+                
+                <div class="flex items-center gap-2 text-xs text-slate-400">
+                    <span class="px-2 py-1 rounded bg-white/5">
+                        {{ editorType() === 'universal' ? 'Wizard avec étapes' : 'Drag & Drop WYSIWYG' }}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Editor Content -->
+            <div class="flex-1 overflow-hidden">
+                @if (editorType() === 'universal') {
+                    <app-universal-editor
+                        [editorType]="'listing'"
+                        [layouts]="LISTING_EDITOR_CONFIG.layouts"
+                        [sections]="LISTING_EDITOR_CONFIG.sections"
+                        [themeDefaults]="LISTING_EDITOR_CONFIG.themeDefaults"
+                        [contentData]="contentData()"
+                        [propertyName]="propertyName()"
+                        [selectedLayoutInput]="selectedLayout()"
+                        [selectedThemeInput]="currentTheme()"
+                        [previewMode]="LISTING_EDITOR_CONFIG.previewMode"
+                        [showSectionManager]="LISTING_EDITOR_CONFIG.showSectionManager"
+                        [showAiButton]="true"
+                        [hasAiAccess]="hasAiAccess()"
+                        [configTitle]="LISTING_EDITOR_CONFIG.title"
+                        [configIcon]="LISTING_EDITOR_CONFIG.icon"
+                        [propertyEquipmentsInput]="propertyEquipments()"
+                        [isSavingInput]="isSaving()"
+                        [saveMessageInput]="saveMessage()"
+                        (layoutSelected)="onLayoutSelected($event)"
+                        (themeChanged)="onThemeChanged($event)"
+                        (sectionsUpdated)="onSectionsUpdated($event)"
+                        (contentUpdated)="onContentUpdated($event)"
+                        (saveRequested)="save($event)"
+                        (closeRequested)="close.emit()"
+                        (generateAIRequested)="generateWithAI()">
+                    </app-universal-editor>
+                } @else {
+                    <app-property-website-builder
+                        [propertyName]="propertyName()"
+                        (close)="close.emit()">
+                    </app-property-website-builder>
+                }
+            </div>
+        </div>
     `
 })
 export class ListingEditorWrapperComponent {
@@ -58,6 +100,7 @@ export class ListingEditorWrapperComponent {
     saveMessage = signal<string | null>(null);
     isSaving = signal(false);
     propertyEquipments = signal<string[]>([]);
+    editorType = signal<'universal' | 'website'>('universal');
 
     constructor() {
         // Load property data when propertyName changes
@@ -211,6 +254,11 @@ export class ListingEditorWrapperComponent {
 
     onContentUpdated(content: Record<string, any>) {
         this.contentData.set(content);
+    }
+
+    setEditorType(type: 'universal' | 'website') {
+        this.editorType.set(type);
+        console.log('[ListingEditorWrapper] Switched to', type, 'editor');
     }
 
     async save(data: EditorSaveData) {

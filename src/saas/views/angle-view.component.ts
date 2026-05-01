@@ -11,10 +11,11 @@ import { SessionStore } from '../../state/session.store';
 
 import { MicrositeConfig, BuilderPhoto, SectionDef, resolveMicrositeConfig } from './welcome-booklet/booklet-definitions';
 import { MicrositeEditorWrapperComponent } from '../components/universal-editor/wrappers';
+import { ListingEditorWrapperComponent } from '../components/universal-editor/wrappers';
+import { PropertyWebsiteBuilderWrapperComponent } from '../components/property-website-builder/property-website-builder-wrapper.component';
 import { AiPromptsComponent } from '../features/legacy/ai-prompts/ai-prompts.component';
 import { VisibilityAuditComponent } from '../features/legacy/visibility-audit/visibility-audit.component';
 import { BookletToolComponent } from '../features/legacy/booklet-tool/booklet-tool.component';
-import { ListingEditorWrapperComponent } from '../components/universal-editor/wrappers';
 import { ListingOptimizationComponent } from '../features/marketing/listing-optimization/listing-optimization.component';
 import { AiMessageAssistantComponent } from '../features/legacy/ai-message-assistant/ai-message-assistant.component';
 import { ChecklistsToolComponent } from '../features/legacy/checklists/checklists-tool.component';
@@ -48,6 +49,7 @@ import { WelcomeBookletViewComponent } from './welcome-booklet-view.component';
         ListingOptimizationComponent,
         ListingEditorWrapperComponent,
         MicrositeEditorWrapperComponent,
+        PropertyWebsiteBuilderWrapperComponent,
         DelegationSimulatorComponent,
         CalendarToolComponent,
         ProfitabilityCalculatorComponent,
