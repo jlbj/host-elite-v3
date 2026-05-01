@@ -453,16 +453,8 @@ export class UniversalEditorComponent {
             }
         }
         
-        // Extract amenities from content
-        const amenities = content['amenities']?.['amenities'] || [];
-        if (amenities.length > 0) {
-            try {
-                const parsedAmenities = typeof amenities === 'string' ? JSON.parse(amenities) : amenities;
-                this.propertyEquipments.set(Array.isArray(parsedAmenities) ? parsedAmenities : []);
-            } catch {
-                this.propertyEquipments.set([]);
-            }
-        }
+        // DO NOT extract amenities to propertyEquipments - propertyEquipments must contain ALL available equipments from the property, not just selected ones
+        // propertyEquipments is set by the wrapper component from property.property_equipments
         
         this.contentUpdated.emit(content);
         this.markStepCompleted('content');
