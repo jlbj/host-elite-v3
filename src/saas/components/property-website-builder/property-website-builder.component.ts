@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy, input, output, signal } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '../../../pipes/translate.pipe';
 import grapesjs from 'grapesjs';
-import grapesjsPresetWebpage from 'grapesjs-preset-webpage';
 
 @Component({
     selector: 'app-property-website-builder',
@@ -39,12 +38,16 @@ import grapesjsPresetWebpage from 'grapesjs-preset-webpage';
                 </div>
             </div>
 
-            <!-- Three-panel layout -->
-            <div class="flex flex-1 overflow-hidden">
-                <!-- Left sidebar: Blocks -->
-                <div id="gjs-blocks" class="w-72 bg-slate-800 border-r border-white/10 overflow-y-auto flex-shrink-0"></div>
-                <!-- Center: Device switcher + Canvas -->
-                <div class="flex-1 flex flex-col min-w-0">
+            <!-- Editor area -->
+            <div class="flex flex-1 overflow-hidden" id="editor-wrapper">
+                <!-- Blocks panel -->
+                <div class="w-64 bg-slate-800 border-r border-white/10 overflow-y-auto flex-shrink-0">
+                    <div class="p-3 text-sm font-semibold text-white border-b border-white/10">Blocks</div>
+                    <div id="gjs-blocks" class="p-3"></div>
+                </div>
+                
+                <!-- Canvas -->
+                <div class="flex-1 flex flex-col min-w-0 bg-slate-900">
                     <div class="flex items-center gap-2 px-4 py-2 bg-slate-800 border-b border-white/10">
                         <button *ngFor="let device of devices" (click)="setDevice(device.name)"
                             [class.bg-blue-600]="currentDevice === device.name"
@@ -53,44 +56,48 @@ import grapesjsPresetWebpage from 'grapesjs-preset-webpage';
                             {{ device.label }}
                         </button>
                     </div>
-                    <div id="gjs" class="flex-1 overflow-hidden"></div>
+                    <div class="flex-1 overflow-auto">
+                        <div id="gjs" class="h-full"></div>
+                    </div>
                 </div>
-                <!-- Right sidebar: Styles -->
-                <div id="gjs-styles" class="w-80 bg-slate-800 border-l border-white/10 overflow-y-auto flex-shrink-0"></div>
+                
+                <!-- Styles panel -->
+                <div class="w-72 bg-slate-800 border-l border-white/10 overflow-y-auto flex-shrink-0">
+                    <div class="p-3 text-sm font-semibold text-white border-b border-white/10">Styles</div>
+                    <div id="gjs-styles" class="p-3"></div>
+                </div>
             </div>
         </div>
     `,
     styles: [`
         :host { display: block; height: 100%; }
+        #editor-wrapper { height: calc(100% - 73px); }
         #gjs { height: 100%; min-height: 0; }
-        #gjs-canvas { height: 100%; }
         
-        /* Hide ALL GrapesJS default panels */
-        .gjs-pn-views-container, .gjs-pn-views, .gjs-pn-commands, .gjs-pn-options, .gjs-pn-devices-c,
-        .gjs-pn-panels, .gjs-pn-c, .gjs-panels { display: none !important; }
-        
-        /* GrapesJS dark theme */
-        .gjs-one-bg { background-color: #1e293b !important; }
-        .gjs-two-bg { background-color: #334155 !important; }
-        .gjs-four-color, .gjs-four-color-h:hover { color: #f1f5f9 !important; }
-        .gjs-field { background-color: #475569 !important; border-color: #64748b !important; color: #f1f5f9 !important; }
-        
-        /* Our blocks panel */
-        #gjs-blocks { padding: 12px; }
-        #gjs-blocks .gjs-blocks-cs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        /* Blocks grid */
+        #gjs-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         #gjs-blocks .gjs-block { 
-            background: #334155 !important; border: 1px solid #475569 !important; 
-            border-radius: 8px !important; padding: 12px !important; min-height: 80px !important;
-            color: #f1f5f9 !important; cursor: grab;
+            background: #334155; border: 1px solid #475569; 
+            border-radius: 8px; padding: 16px 12px; min-height: 70px;
+            color: #f1f5f9; cursor: grab; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; font-size: 12px;
         }
-        #gjs-blocks .gjs-block:hover { border-color: #3b82f6 !important; }
-        #gjs-blocks .gjs-block-label { font-size: 12px !important; margin-top: 4px !important; color: #f1f5f9 !important; }
-        #gjs-blocks .gjs-block__media { font-size: 24px !important; }
+        #gjs-blocks .gjs-block:hover { border-color: #3b82f6; background: #475569; }
+        #gjs-blocks .gjs-block__media { font-size: 28px; margin-bottom: 4px; }
         
-        /* Our styles panel */
-        #gjs-styles { padding: 8px; }
-        #gjs-styles .gjs-sm-sector { background: #1e293b; margin-bottom: 12px; border-radius: 6px; }
-        #gjs-styles .gjs-sm-sector-title { color: #f1f5f9 !important; font-weight: 600; }
+        /* Styles panel */
+        #gjs-styles .gjs-sm-sector { 
+            background: #1e293b; margin-bottom: 12px; 
+            border-radius: 6px; padding: 8px;
+        }
+        #gjs-styles .gjs-sm-sector-title { 
+            color: #f1f5f9; font-weight: 600; font-size: 13px;
+            cursor: pointer; padding: 4px 0;
+        }
+        #gjs-styles .gjs-sm-field { 
+            background: #475569; border-color: #64748b; color: #f1f5f9;
+        }
+        #gjs-styles .gjs-sm-layer { background: #334155; color: #f1f5f9; }
     `]
 })
 export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
@@ -101,12 +108,12 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
     devices = [
         { name: 'Desktop', label: '🖥️ Desktop' },
         { name: 'Tablet', label: '📱 Tablet' },
-        { name: 'Mobile portrait', label: '📱 Mobile' },
+        { name: 'Mobile', label: '📱 Mobile' },
     ];
     currentDevice = 'Desktop';
 
     async ngOnInit() {
-        setTimeout(() => this.initEditor(), 300);
+        setTimeout(() => this.initEditor(), 200);
     }
 
     ngOnDestroy() {
@@ -114,33 +121,24 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
     }
 
     private initEditor() {
-        const container = document.getElementById('gjs');
-        if (!container) return;
-
-        grapesjs.plugins.add('gjs-preset-webpage', grapesjsPresetWebpage as any);
-
         this.editor = grapesjs.init({
             container: '#gjs',
             height: '100%',
             width: 'auto',
             fromElement: false,
             storageManager: false,
-            plugins: ['gjs-preset-webpage'],
-            pluginsOpts: {
-                'gjs-preset-webpage': { codeViewer: { theme: 'hopscotch' } }
-            },
-            // CRITICAL: Render blocks directly in our custom panel
-            blockManager: {
-                appendTo: '#gjs-blocks',
-            },
+            // Render blocks in our custom panel
+            blockManager: { appendTo: '#gjs-blocks' },
             deviceManager: {
                 devices: [
                     { name: 'Desktop', width: '' },
                     { name: 'Tablet', width: '768px' },
-                    { name: 'Mobile landscape', width: '568px' },
-                    { name: 'Mobile portrait', width: '320px' }
+                    { name: 'Mobile', width: '320px' }
                 ]
             },
+            selectorManager: { appendTo: '#gjs-styles' },
+            traitManager: { appendTo: '#gjs-styles' },
+            layerManager: { appendTo: '#gjs-styles' },
             styleManager: {
                 appendTo: '#gjs-styles',
                 sectors: [
@@ -153,7 +151,6 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
             }
         });
 
-        // Add our custom property blocks
         this.addPropertyBlocks();
     }
 
@@ -165,40 +162,40 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
     private addPropertyBlocks() {
         const bm = this.editor.BlockManager;
         
-        bm.add('hero-section', {
+        bm.add('hero', {
             label: 'Hero',
             attributes: { class: 'fa fa-image' },
             content: `<section style="position:relative;height:600px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;align-items:center;justify-content:center;"><div style="text-align:center;color:white;"><h1 style="font-size:3rem;margin-bottom:1rem;font-weight:700;">Your Property Name</h1><p style="font-size:1.5rem;margin-bottom:2rem;opacity:0.9;">Luxury Vacation Rental</p><a href="#contact" style="display:inline-block;padding:1rem 2rem;background:white;color:#667eea;text-decoration:none;border-radius:50px;font-weight:600;">Book Now</a></div></section>`
         });
-        bm.add('property-info', {
-            label: 'Property Info',
+        bm.add('info', {
+            label: 'Info',
             attributes: { class: 'fa fa-home' },
-            content: `<section style="padding:4rem 2rem;background:white;"><div style="max-width:1200px;margin:0 auto;"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;text-align:center;"><div><div style="font-size:2.5rem;">🏠</div><div style="font-size:1.25rem;font-weight:600;color:#1f2937;">3 Bedrooms</div></div><div><div style="font-size:2.5rem;">🚿</div><div style="font-size:1.25rem;font-weight:600;color:#1f2937;">2 Bathrooms</div></div><div><div style="font-size:2.5rem;">👥</div><div style="font-size:1.25rem;font-weight:600;color:#1f2937;">6 Guests</div></div><div><div style="font-size:2.5rem;">📐</div><div style="font-size:1.25rem;font-weight:600;color:#1f2937;">120 m²</div></div></div></div></section>`
+            content: `<section style="padding:4rem 2rem;background:white;"><div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2rem;text-align:center;"><div><div style="font-size:2.5rem;">🏠</div><div style="font-size:1.1rem;font-weight:600;color:#1f2937;">3 Bedrooms</div></div><div><div style="font-size:2.5rem;">🚿</div><div style="font-size:1.1rem;font-weight:600;color:#1f2937;">2 Bathrooms</div></div><div><div style="font-size:2.5rem;">👥</div><div style="font-size:1.1rem;font-weight:600;color:#1f2937;">6 Guests</div></div><div><div style="font-size:2.5rem;">📐</div><div style="font-size:1.1rem;font-weight:600;color:#1f2937;">120 m²</div></div></div></div></section>`
         });
         bm.add('amenities', {
             label: 'Amenities',
             attributes: { class: 'fa fa-star' },
-            content: `<section style="padding:4rem 2rem;background:#f9fafb;"><div style="max-width:1200px;margin:0 auto;"><h2 style="text-align:center;font-size:2.5rem;margin-bottom:3rem;color:#1f2937;">Amenities</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;"><div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:white;border-radius:8px;"><span style="font-size:2rem;">📶</span><span style="font-weight:500;color:#374151;">High-Speed WiFi</span></div><div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:white;border-radius:8px;"><span style="font-size:2rem;">❄️</span><span style="font-weight:500;color:#374151;">Air Conditioning</span></div><div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:white;border-radius:8px;"><span style="font-size:2rem;">🍳</span><span style="font-weight:500;color:#374151;">Full Kitchen</span></div><div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:white;border-radius:8px;"><span style="font-size:2rem;">🅿️</span><span style="font-weight:500;color:#374151;">Free Parking</span></div></div></div></section>`
+            content: `<section style="padding:4rem 2rem;background:#f9fafb;"><div style="max-width:1200px;margin:0 auto;"><h2 style="text-align:center;font-size:2.5rem;margin-bottom:3rem;color:#1f2937;">Amenities</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;"><div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:white;border-radius:8px;"><span style="font-size:2rem;">📶</span><span style="font-weight:500;color:#374151;">WiFi</span></div><div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:white;border-radius:8px;"><span style="font-size:2rem;">❄️</span><span style="font-weight:500;color:#374151;">A/C</span></div><div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:white;border-radius:8px;"><span style="font-size:2rem;">🍳</span><span style="font-weight:500;color:#374151;">Kitchen</span></div><div style="display:flex;align-items:center;gap:1rem;padding:1rem;background:white;border-radius:8px;"><span style="font-size:2rem;">🅿️</span><span style="font-weight:500;color:#374151;">Parking</span></div></div></div></section>`
         });
-        bm.add('photo-gallery', {
+        bm.add('gallery', {
             label: 'Gallery',
             attributes: { class: 'fa fa-th' },
-            content: `<section style="padding:4rem 2rem;background:white;"><div style="max-width:1200px;margin:0 auto;"><h2 style="text-align:center;font-size:2.5rem;margin-bottom:3rem;color:#1f2937;">Photo Gallery</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;"><div style="height:250px;background:linear-gradient(45deg,#667eea,#764ba2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:3rem;">📸</div><div style="height:250px;background:linear-gradient(45deg,#f093fb,#f5576c);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:3rem;">📸</div><div style="height:250px;background:linear-gradient(45deg,#4facfe,#00f2fe);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:3rem;">📸</div></div></div></section>`
+            content: `<section style="padding:4rem 2rem;background:white;"><div style="max-width:1200px;margin:0 auto;"><h2 style="text-align:center;font-size:2.5rem;margin-bottom:3rem;color:#1f2937;">Gallery</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;"><div style="height:200px;background:linear-gradient(45deg,#667eea,#764ba2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:3rem;">📸</div><div style="height:200px;background:linear-gradient(45deg,#f093fb,#f5576c);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:3rem;">📸</div><div style="height:200px;background:linear-gradient(45deg,#4facfe,#00f2fe);border-radius:8px;display:flex;align-items:center;justify-content:center;color:white;font-size:3rem;">📸</div></div></div></section>`
         });
         bm.add('description', {
             label: 'Description',
             attributes: { class: 'fa fa-align-left' },
-            content: `<section style="padding:4rem 2rem;background:#f9fafb;"><div style="max-width:800px;margin:0 auto;"><h2 style="text-align:center;font-size:2.5rem;margin-bottom:2rem;color:#1f2937;">About This Property</h2><p style="font-size:1.125rem;line-height:1.8;color:#4b5563;margin-bottom:1.5rem;">Welcome to our beautiful property! This stunning vacation rental offers the perfect blend of comfort and luxury.</p><p style="font-size:1.125rem;line-height:1.8;color:#4b5563;">Located in a prime location, you'll enjoy easy access to local attractions while retreating to your peaceful sanctuary.</p></div></div></section>`
+            content: `<section style="padding:4rem 2rem;background:#f9fafb;"><div style="max-width:800px;margin:0 auto;"><h2 style="text-align:center;font-size:2.5rem;margin-bottom:2rem;color:#1f2937;">About</h2><p style="font-size:1.125rem;line-height:1.8;color:#4b5563;">Welcome to our beautiful property! This stunning vacation rental offers the perfect blend of comfort and luxury.</p></div></section>`
         });
-        bm.add('contact-form', {
+        bm.add('contact', {
             label: 'Contact',
             attributes: { class: 'fa fa-envelope' },
-            content: `<section style="padding:4rem 2rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);"><div style="max-width:600px;margin:0 auto;text-align:center;"><h2 style="font-size:2.5rem;margin-bottom:1rem;color:white;">Get in Touch</h2><p style="font-size:1.125rem;margin-bottom:2rem;color:rgba(255,255,255,0.9);">Have questions? We'd love to hear from you!</p><form style="display:flex;flex-direction:column;gap:1rem;"><input type="text" placeholder="Your Name" style="padding:1rem;border-radius:8px;border:none;font-size:1rem;"><input type="email" placeholder="Your Email" style="padding:1rem;border-radius:8px;border:none;font-size:1rem;"><textarea rows="4" placeholder="Your Message" style="padding:1rem;border-radius:8px;border:none;font-size:1rem;resize:vertical;"></textarea><button type="submit" style="padding:1rem;background:white;color:#667eea;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;">Send Message</button></form></div></section>`
+            content: `<section style="padding:4rem 2rem;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);"><div style="max-width:600px;margin:0 auto;text-align:center;"><h2 style="font-size:2.5rem;margin-bottom:1rem;color:white;">Contact</h2><form style="display:flex;flex-direction:column;gap:1rem;"><input type="text" placeholder="Name" style="padding:1rem;border-radius:8px;border:none;font-size:1rem;"><input type="email" placeholder="Email" style="padding:1rem;border-radius:8px;border:none;font-size:1rem;"><textarea rows="4" placeholder="Message" style="padding:1rem;border-radius:8px;border:none;font-size:1rem;resize:vertical;"></textarea><button type="submit" style="padding:1rem;background:white;color:#667eea;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;">Send</button></form></div></section>`
         });
         bm.add('testimonials', {
             label: 'Reviews',
             attributes: { class: 'fa fa-comment' },
-            content: `<section style="padding:4rem 2rem;background:white;"><div style="max-width:1200px;margin:0 auto;"><h2 style="text-align:center;font-size:2.5rem;margin-bottom:3rem;color:#1f2937;">Guest Reviews</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;"><div style="padding:2rem;background:#f9fafb;border-radius:8px;"><div style="color:#fbbf24;font-size:1.5rem;margin-bottom:1rem;">⭐⭐⭐⭐⭐</div><p style="font-style:italic;color:#4b5563;margin-bottom:1rem;">"Amazing property! Everything was perfect!"</p><p style="font-weight:600;color:#1f2937;">- Sarah M.</p></div><div style="padding:2rem;background:#f9fafb;border-radius:8px;"><div style="color:#fbbf24;font-size:1.5rem;margin-bottom:1rem;">⭐⭐⭐⭐⭐</div><p style="font-style:italic;color:#4b5563;margin-bottom:1rem;">"Beautiful place with stunning views."</p><p style="font-weight:600;color:#1f2937;">- John D.</p></div></div></div></section>`
+            content: `<section style="padding:4rem 2rem;background:white;"><div style="max-width:1200px;margin:0 auto;"><h2 style="text-align:center;font-size:2.5rem;margin-bottom:3rem;color:#1f2937;">Reviews</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem;"><div style="padding:2rem;background:#f9fafb;border-radius:8px;"><div style="color:#fbbf24;font-size:1.5rem;margin-bottom:1rem;">⭐⭐⭐⭐⭐</div><p style="font-style:italic;color:#4b5563;margin-bottom:1rem;">"Amazing property!"</p><p style="font-weight:600;color:#1f2937;">- Sarah M.</p></div><div style="padding:2rem;background:#f9fafb;border-radius:8px;"><div style="color:#fbbf24;font-size:1.5rem;margin-bottom:1rem;">⭐⭐⭐⭐⭐</div><p style="font-style:italic;color:#4b5563;margin-bottom:1rem;">"Beautiful place!"</p><p style="font-weight:600;color:#1f2937;">- John D.</p></div></div></div></section>`
         });
     }
 
@@ -218,16 +215,7 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
     exportHtml() {
         const html = this.editor.getHtml();
         const css = this.editor.getCss();
-        const fullHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${this.propertyName()}</title>
-    <style>${css}</style>
-</head>
-<body>${html}</body>
-</html>`;
+        const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${this.propertyName()}</title><style>${css}</style></head><body>${html}</body></html>`;
         navigator.clipboard.writeText(fullHtml).then(() => alert('HTML copied!'));
     }
 }
