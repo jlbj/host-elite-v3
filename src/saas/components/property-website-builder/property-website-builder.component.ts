@@ -41,9 +41,9 @@ import grapesjs from 'grapesjs';
             <!-- Editor area -->
             <div class="flex flex-1 overflow-hidden" id="editor-wrapper">
                 <!-- Blocks panel -->
-                <div class="w-64 bg-slate-800 border-r border-white/10 overflow-y-auto flex-shrink-0">
+                <div class="w-48 bg-slate-800 border-r border-white/10 overflow-y-auto flex-shrink-0">
                     <div class="p-3 text-sm font-semibold text-white border-b border-white/10">Blocks</div>
-                    <div id="gjs-blocks" class="p-3"></div>
+                    <div id="gjs-blocks" class="p-2"></div>
                 </div>
                 
                 <!-- Canvas -->
@@ -62,9 +62,9 @@ import grapesjs from 'grapesjs';
                 </div>
                 
                 <!-- Styles panel -->
-                <div class="w-72 bg-slate-800 border-l border-white/10 overflow-y-auto flex-shrink-0">
+                <div class="w-56 bg-slate-800 border-l border-white/10 overflow-y-auto flex-shrink-0">
                     <div class="p-3 text-sm font-semibold text-white border-b border-white/10">Styles</div>
-                    <div id="gjs-styles" class="p-3"></div>
+                    <div id="gjs-styles" class="p-2"></div>
                 </div>
             </div>
         </div>
@@ -75,24 +75,24 @@ import grapesjs from 'grapesjs';
         #gjs { height: 100%; min-height: 0; }
         
         /* Blocks grid */
-        #gjs-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        #gjs-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
         #gjs-blocks .gjs-block { 
             background: #334155; border: 1px solid #475569; 
-            border-radius: 8px; padding: 16px 12px; min-height: 70px;
+            border-radius: 6px; padding: 10px 6px; min-height: 60px;
             color: #f1f5f9; cursor: grab; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; font-size: 12px;
+            align-items: center; justify-content: center; font-size: 11px;
         }
         #gjs-blocks .gjs-block:hover { border-color: #3b82f6; background: #475569; }
-        #gjs-blocks .gjs-block__media { font-size: 28px; margin-bottom: 4px; }
+        #gjs-blocks .gjs-block__media { font-size: 22px; margin-bottom: 3px; }
         
         /* Styles panel */
         #gjs-styles .gjs-sm-sector { 
-            background: #1e293b; margin-bottom: 12px; 
-            border-radius: 6px; padding: 8px;
+            background: #1e293b; margin-bottom: 8px; 
+            border-radius: 4px; padding: 6px;
         }
         #gjs-styles .gjs-sm-sector-title { 
-            color: #f1f5f9; font-weight: 600; font-size: 13px;
-            cursor: pointer; padding: 4px 0;
+            color: #f1f5f9; font-weight: 600; font-size: 12px;
+            cursor: pointer; padding: 3px 0;
         }
         #gjs-styles .gjs-sm-field { 
             background: #475569; border-color: #64748b; color: #f1f5f9;
