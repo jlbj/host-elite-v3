@@ -105,24 +105,36 @@ import grapesjs from 'grapesjs';
             align-items: center; justify-content: center; font-size: 8px;
         }
         #gjs-blocks .gjs-block:hover { border-color: #3b82f6; background: #475569; }
-        #gjs-blocks .gjs-block__media { font-size: 16px; margin-bottom: 1px; }
+        #gjs-blocks .gjs-block__media { font-size: 16px !important; margin-bottom: 1px; }
         
-        /* Styles panel - compact with small icons */
+        /* Styles panel - FORCE tiny icons */
+        #gjs-styles { font-size: 10px !important; }
+        #gjs-styles * { font-size: inherit !important; }
         #gjs-styles .gjs-sm-sector { 
             background: #1e293b; margin-bottom: 4px; 
             border-radius: 3px; padding: 3px;
         }
         #gjs-styles .gjs-sm-sector-title { 
-            color: #f1f5f9; font-weight: 600; font-size: 10px;
+            color: #f1f5f9; font-weight: 600; font-size: 10px !important;
             cursor: pointer; padding: 1px 0;
         }
-        #gjs-styles .gjs-sm-field, 
         #gjs-styles .gjs-sm-property { 
             background: #475569; border-color: #64748b; color: #f1f5f9;
+            margin-bottom: 2px; padding: 2px; border-radius: 2px;
+        }
+        #gjs-styles .gjs-sm-field { 
+            background: #475569; border-color: #64748b; color: #f1f5f9;
+            font-size: 10px !important; padding: 2px 4px;
         }
         #gjs-styles .gjs-sm-layer { background: #334155; color: #f1f5f9; }
-        #gjs-styles .gjs-sm-icon { font-size: 10px !important; }
-        #gjs-styles .gjs-clm-icons { font-size: 10px !important; }
+        #gjs-styles [class*="icon"], 
+        #gjs-styles [class*="fa-"],
+        #gjs-styles svg,
+        #gjs-styles i { 
+            font-size: 10px !important; 
+            width: 10px !important; 
+            height: 10px !important;
+        }
     `]
 })
 export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
