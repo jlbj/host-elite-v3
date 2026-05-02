@@ -80,13 +80,21 @@ import grapesjsPresetWebpage from 'grapesjs-preset-webpage';
     `,
     styles: [`
         :host { display: block; height: 100%; }
-        #gjs { height: 100%; min-height: 0; }
-        #gjs .gjs-cv-canvas { height: 100%; }
+        #gjs { height: 100%; min-height: 0; position: relative; }
+        #gjs .gjs-cv-canvas { height: 100%; width: 100%; }
+        #gjs .gjs-cv-canvas iframe { height: 100%; width: 100%; }
         
-        /* Hide default GrapesJS panels - we use custom layout */
-        #gjs .gjs-pn-views-container { display: none !important; }
-        #gjs .gjs-pn-views { display: none !important; }
-        #gjs .gjs-pn-commands { display: none !important; }
+        /* Hide ALL default GrapesJS panels and toolbars */
+        #gjs .gjs-pn-views-container,
+        #gjs .gjs-pn-views,
+        #gjs .gjs-pn-commands,
+        #gjs .gjs-pn-options,
+        #gjs .gjs-pn-devices-c {
+            display: none !important;
+        }
+        
+        /* Hide any panel elements that are direct children of #gjs */
+        #gjs > div:first-child { display: none !important; }
         
         /* GrapesJS dark theme overrides */
         .gjs-one-bg { background-color: #1e293b !important; }
@@ -97,20 +105,49 @@ import grapesjsPresetWebpage from 'grapesjs-preset-webpage';
         .gjs-category-title, .gjs-layer-title, .gjs-sm-sector-title { color: #f1f5f9 !important; }
         .gjs-sm-field { color: #f1f5f9 !important; }
         .gjs-block-label { color: #f1f5f9 !important; }
-        .gjs-block { border: 1px solid #475569 !important; border-radius: 8px !important; padding: 12px !important; }
+        .gjs-block { 
+            border: 1px solid #475569 !important; 
+            border-radius: 8px !important; 
+            padding: 12px !important;
+            background: #334155 !important;
+            color: #f1f5f9 !important;
+        }
         .gjs-block:hover { border-color: #3b82f6 !important; box-shadow: 0 0 0 2px rgba(59,130,246,0.3) !important; }
         
         /* Blocks panel styling */
-        #gjs-blocks { padding: 12px; }
-        #gjs-blocks .gjs-blocks-cs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0; }
-        #gjs-blocks .gjs-block { margin: 0; width: auto; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: grab; }
+        #gjs-blocks { 
+            padding: 12px;
+            height: 100%;
+            overflow-y: auto;
+        }
+        #gjs-blocks .gjs-blocks-cs { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 8px; 
+            padding: 0; 
+        }
+        #gjs-blocks .gjs-block { 
+            margin: 0; 
+            width: auto; 
+            min-height: 80px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: grab; 
+        }
         #gjs-blocks .gjs-block:hover { transform: translateY(-1px); }
         #gjs-blocks .gjs-block-label { font-size: 12px; margin-top: 4px; }
         #gjs-blocks .gjs-block__media { font-size: 24px; }
         #gjs-blocks .gjs-title { display: none; }
         
         /* Styles panel */
-        #gjs-styles { padding: 0; }
+        #gjs-styles { 
+            padding: 8px; 
+            height: 100%;
+            overflow-y: auto;
+        }
+        #gjs-styles .gjs-sm-sector { margin-bottom: 12px; }
     `]
 })
 export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
@@ -212,24 +249,28 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
         // Add custom blocks for property listings
         this.addPropertyBlocks();
 
-        // Move blocks/styles into our custom panels after editor fully loads
-        this.editor.on('load', () => {
+        // Move blocks/styles into our custom panels after a short delay
+        setTimeout(() => {
             const editorEl = this.editor.getContainer();
-
-            // Move blocks to left sidebar
+            
+            // Move the blocks container (gjs-blocks-c = blocks content)
             const blocksEl = editorEl.querySelector('.gjs-blocks-c');
             const blocksTarget = document.getElementById('gjs-blocks');
+            console.log('[PropertyWebsiteBuilder] Moving blocks:', { blocksEl, blocksTarget });
             if (blocksEl && blocksTarget) {
+                blocksTarget.innerHTML = '';
                 blocksTarget.appendChild(blocksEl);
             }
 
-            // Move style manager to right sidebar
+            // Move the style manager container (gjs-sm-c = style manager content)
             const stylesEl = editorEl.querySelector('.gjs-sm-c');
             const stylesTarget = document.getElementById('gjs-styles');
+            console.log('[PropertyWebsiteBuilder] Moving styles:', { stylesEl, stylesTarget });
             if (stylesEl && stylesTarget) {
+                stylesTarget.innerHTML = '';
                 stylesTarget.appendChild(stylesEl);
             }
-        });
+        }, 200);
 
         // Load existing content if any
         this.loadExistingContent();
