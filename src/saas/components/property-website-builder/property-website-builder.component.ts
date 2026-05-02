@@ -40,19 +40,19 @@ import grapesjs from 'grapesjs';
 
             <!-- Editor area -->
             <div class="flex flex-1 overflow-hidden" id="editor-wrapper">
-                <!-- Blocks panel - collapsible on mobile -->
-                <div class="w-40 md:w-48 bg-slate-800 border-r border-white/10 overflow-y-auto flex-shrink-0">
-                    <div class="p-2 text-xs font-semibold text-white border-b border-white/10">Blocks</div>
-                    <div id="gjs-blocks" class="p-2"></div>
+                <!-- Blocks panel -->
+                <div class="w-28 bg-slate-800 border-r border-white/10 overflow-y-auto flex-shrink-0">
+                    <div class="p-1.5 text-xs font-semibold text-white border-b border-white/10">Blocks</div>
+                    <div id="gjs-blocks" class="p-1.5"></div>
                 </div>
                 
                 <!-- Canvas -->
                 <div class="flex-1 flex flex-col min-w-0 bg-slate-900">
-                    <div class="flex items-center gap-2 px-2 py-1.5 bg-slate-800 border-b border-white/10">
+                    <div class="flex items-center gap-1 px-2 py-1 bg-slate-800 border-b border-white/10">
                         <button *ngFor="let device of devices" (click)="setDevice(device.name)"
                             [class.bg-blue-600]="currentDevice === device.name"
                             [class.bg-slate-700]="currentDevice !== device.name"
-                            class="px-2 py-1 text-xs text-white rounded hover:bg-slate-600 transition whitespace-nowrap">
+                            class="px-2 py-0.5 text-xs text-white rounded hover:bg-slate-600 transition whitespace-nowrap">
                             {{ device.label }}
                         </button>
                     </div>
@@ -61,10 +61,10 @@ import grapesjs from 'grapesjs';
                     </div>
                 </div>
                 
-                <!-- Styles panel - collapsible on mobile -->
-                <div class="w-36 md:w-56 bg-slate-800 border-l border-white/10 overflow-y-auto flex-shrink-0">
-                    <div class="p-2 text-xs font-semibold text-white border-b border-white/10">Styles</div>
-                    <div id="gjs-styles" class="p-2"></div>
+                <!-- Styles panel -->
+                <div class="w-32 bg-slate-800 border-l border-white/10 overflow-y-auto flex-shrink-0">
+                    <div class="p-1.5 text-xs font-semibold text-white border-b border-white/10">Styles</div>
+                    <div id="gjs-styles" class="p-1.5"></div>
                 </div>
             </div>
                 
@@ -96,35 +96,33 @@ import grapesjs from 'grapesjs';
         #editor-wrapper { height: calc(100% - 73px); }
         #gjs { height: 100%; min-height: 0; }
         
-        /* Blocks grid */
-        #gjs-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        /* Blocks grid - very compact */
+        #gjs-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
         #gjs-blocks .gjs-block { 
             background: #334155; border: 1px solid #475569; 
-            border-radius: 4px; padding: 6px 4px; min-height: 50px;
+            border-radius: 4px; padding: 4px 2px; min-height: 45px;
             color: #f1f5f9; cursor: grab; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; font-size: 9px;
+            align-items: center; justify-content: center; font-size: 8px;
         }
         #gjs-blocks .gjs-block:hover { border-color: #3b82f6; background: #475569; }
-        #gjs-blocks .gjs-block__media { font-size: 18px; margin-bottom: 2px; }
+        #gjs-blocks .gjs-block__media { font-size: 16px; margin-bottom: 1px; }
         
-        /* Styles panel */
+        /* Styles panel - compact with small icons */
         #gjs-styles .gjs-sm-sector { 
-            background: #1e293b; margin-bottom: 6px; 
-            border-radius: 4px; padding: 4px;
+            background: #1e293b; margin-bottom: 4px; 
+            border-radius: 3px; padding: 3px;
         }
         #gjs-styles .gjs-sm-sector-title { 
-            color: #f1f5f9; font-weight: 600; font-size: 11px;
-            cursor: pointer; padding: 2px 0;
+            color: #f1f5f9; font-weight: 600; font-size: 10px;
+            cursor: pointer; padding: 1px 0;
         }
-        #gjs-styles .gjs-sm-field { 
+        #gjs-styles .gjs-sm-field, 
+        #gjs-styles .gjs-sm-property { 
             background: #475569; border-color: #64748b; color: #f1f5f9;
         }
         #gjs-styles .gjs-sm-layer { background: #334155; color: #f1f5f9; }
-        
-        /* Mobile: hide sidebars on very small screens */
-        @media (max-width: 640px) {
-            .gjs-pn-views-container, .gjs-pn-views { display: none !important; }
-        }
+        #gjs-styles .gjs-sm-icon { font-size: 10px !important; }
+        #gjs-styles .gjs-clm-icons { font-size: 10px !important; }
     `]
 })
 export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
