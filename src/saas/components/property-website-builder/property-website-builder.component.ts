@@ -110,28 +110,36 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
         setTimeout(() => {
             const style = document.createElement('style');
             style.textContent = `
-                /* BLOCKS PANEL */
-                #gjs-blocks { background: #1e293b !important; }
-                #gjs-blocks .gjs-block { background: #475569 !important; border: 1px solid #64748b !important; color: #f1f5f9 !important; }
-                #gjs-blocks .gjs-block-label { color: #e2e8f0 !important; }
-                #gjs-blocks .gjs-block__media, #gjs-blocks .gjs-block__media * { color: #fff !important; fill: #fff !important; }
-                #gjs-blocks .gjs-block__media svg, #gjs-blocks .gjs-block__media path { fill: #fff !important; color: #fff !important; }
-                #gjs-blocks .gjs-block__media i, #gjs-blocks .gjs-block__media span { color: #fff !important; }
-                #gjs-blocks .gjs-block:hover { background: #64748b !important; border-color: #3b82f6 !important; }
+                /* CANVAS - FILL ALL AVAILABLE SPACE */
+                #gjs { width: 100% !important; height: 100% !important; }
+                #gjs .gjs-cv-canvas { width: 100% !important; height: 100% !important; }
+                #gjs .gjs-cv-canvas > * { width: 100% !important; height: 100% !important; }
+                #gjs .gjs-frame { width: 100% !important; height: 100% !important; }
                 
-                /* STYLES PANEL */
-                #gjs-styles { background: #1e293b !important; }
-                #gjs-styles * { font-size: 10px !important; }
-                #gjs-styles svg, #gjs-styles path { fill: #94a3b8 !important; width: 10px !important; height: 10px !important; }
-                #gjs-styles i, #gjs-styles span { color: #e2e8f0 !important; }
+                /* Hide ALL GrapesJS default panels completely */
+                #gjs .gjs-pn-devices-c,
+                #gjs .gjs-pn-views-container,
+                #gjs .gjs-pn-views,
+                #gjs .gjs-pn-commands,
+                #gjs .gjs-pn-options,
+                #gjs .gjs-pn-panels,
+                #gjs .gjs-pn-panel { display: none !important; visibility: hidden !important; }
+                
+                /* BLOCKS PANEL - compact */
+                #gjs-blocks { background: #1e293b !important; width: 80px !important; }
+                #gjs-blocks .gjs-block { background: #475569 !important; border: 1px solid #64748b !important; color: #f1f5f9 !important; min-height: 40px !important; }
+                #gjs-blocks .gjs-block-label { color: #e2e8f0 !important; font-size: 8px !important; }
+                #gjs-blocks .gjs-block__media, #gjs-blocks .gjs-block__media svg { fill: #fff !important; color: #fff !important; width: 14px !important; height: 14px !important; }
+                
+                /* STYLES PANEL - compact */
+                #gjs-styles { background: #1e293b !important; width: 96px !important; }
+                #gjs-styles svg, #gjs-styles path { fill: #94a3b8 !important; width: 8px !important; height: 8px !important; }
+                #gjs-styles i, #gjs-styles span, #gjs-styles .gjs-sm-label { color: #e2e8f0 !important; font-size: 8px !important; }
                 #gjs-styles .gjs-sm-sector { background: #1e293b !important; }
                 #gjs-styles .gjs-sm-sector-title { color: #f1f5f9 !important; }
                 #gjs-styles .gjs-sm-property { background: #334155 !important; color: #f1f5f9 !important; }
-                #gjs-styles .gjs-sm-label, #gjs-styles .gjs-sm-icon { color: #e2e8f0 !important; }
                 #gjs-styles .gjs-sm-field { background: #475569 !important; color: #f1f5f9 !important; }
-                #gjs-styles .gjs-sm-field input, #gjs-styles .gjs-sm-field select { background: #475569 !important; color: #f1f5f9 !important; }
-                #gjs-styles .gjs-clm-label, #gjs-styles .gjs-clm-field { color: #e2e8f0 !important; }
-                #gjs-styles [class*="icon"], #gjs-styles [class*="fa"] { color: #94a3b8 !important; fill: #94a3b8 !important; }
+                #gjs-styles .gjs-sm-field input, #gjs-styles .gjs-sm-field select { background: #475569 !important; color: #f1f5f9 !important; font-size: 8px !important; }
             `;
             document.head.appendChild(style);
         }, 300);
