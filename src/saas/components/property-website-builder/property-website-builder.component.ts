@@ -38,7 +38,7 @@ import grapesjs from 'grapesjs';
             </div>
 
             <div class="flex flex-1 overflow-hidden" id="editor-wrapper">
-                <div class="w-28 bg-slate-800 border-r border-white/10 overflow-y-auto flex-shrink-0">
+                <div class="w-20 bg-slate-800 border-r border-white/10 overflow-y-auto flex-shrink-0">
                     <div class="p-1.5 text-xs font-semibold text-white border-b border-white/10">Blocks</div>
                     <div id="gjs-blocks" class="p-1.5"></div>
                 </div>
@@ -55,7 +55,7 @@ import grapesjs from 'grapesjs';
                         <div id="gjs" class="h-full"></div>
                     </div>
                 </div>
-                <div class="w-32 bg-slate-800 border-l border-white/10 overflow-y-auto flex-shrink-0">
+                <div class="w-24 bg-slate-800 border-l border-white/10 overflow-y-auto flex-shrink-0">
                     <div class="p-1.5 text-xs font-semibold text-white border-b border-white/10">Styles</div>
                     <div id="gjs-styles" class="p-1.5"></div>
                 </div>
