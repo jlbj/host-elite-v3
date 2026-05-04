@@ -110,18 +110,28 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
         setTimeout(() => {
             const style = document.createElement('style');
             style.textContent = `
-                #gjs-styles { font-size: 10px !important; }
-                #gjs-styles * { font-size: 10px !important; max-width: 100%; }
-                #gjs-styles svg { width: 10px !important; height: 10px !important; min-width: 10px !important; min-height: 10px !important; fill: #cbd5e1 !important; }
-                #gjs-styles i, #gjs-styles span { font-size: 10px !important; color: #cbd5e1 !important; }
-                #gjs-styles .gjs-sm-sector { background: #1e293b !important; margin-bottom: 4px; border-radius: 3px; padding: 3px !important; }
-                #gjs-styles .gjs-sm-sector-title { color: #f1f5f9 !important; font-weight: 600; }
-                #gjs-styles .gjs-sm-property { background: #334155 !important; border-color: #475569 !important; color: #f1f5f9 !important; margin-bottom: 2px; padding: 2px !important; border-radius: 2px; }
-                #gjs-styles .gjs-sm-label, #gjs-styles .gjs-sm-icon { color: #cbd5e1 !important; }
-                #gjs-styles .gjs-sm-field { background: #475569 !important; border-color: #64748b !important; color: #f1f5f9 !important; }
-                #gjs-styles .gjs-sm-field input, #gjs-styles .gjs-sm-field select { background: #475569 !important; color: #f1f5f9 !important; border: none !important; }
-                #gjs-styles .gjs-clm-label, #gjs-styles .gjs-clm-field { color: #cbd5e1 !important; }
-                #gjs-styles [class*="icon"] { font-size: 10px !important; color: #cbd5e1 !important; }
+                /* BLOCKS PANEL */
+                #gjs-blocks { background: #1e293b !important; }
+                #gjs-blocks .gjs-block { background: #475569 !important; border: 1px solid #64748b !important; color: #f1f5f9 !important; }
+                #gjs-blocks .gjs-block-label { color: #e2e8f0 !important; }
+                #gjs-blocks .gjs-block__media, #gjs-blocks .gjs-block__media * { color: #fff !important; fill: #fff !important; }
+                #gjs-blocks .gjs-block__media svg, #gjs-blocks .gjs-block__media path { fill: #fff !important; color: #fff !important; }
+                #gjs-blocks .gjs-block__media i, #gjs-blocks .gjs-block__media span { color: #fff !important; }
+                #gjs-blocks .gjs-block:hover { background: #64748b !important; border-color: #3b82f6 !important; }
+                
+                /* STYLES PANEL */
+                #gjs-styles { background: #1e293b !important; }
+                #gjs-styles * { font-size: 10px !important; }
+                #gjs-styles svg, #gjs-styles path { fill: #94a3b8 !important; width: 10px !important; height: 10px !important; }
+                #gjs-styles i, #gjs-styles span { color: #e2e8f0 !important; }
+                #gjs-styles .gjs-sm-sector { background: #1e293b !important; }
+                #gjs-styles .gjs-sm-sector-title { color: #f1f5f9 !important; }
+                #gjs-styles .gjs-sm-property { background: #334155 !important; color: #f1f5f9 !important; }
+                #gjs-styles .gjs-sm-label, #gjs-styles .gjs-sm-icon { color: #e2e8f0 !important; }
+                #gjs-styles .gjs-sm-field { background: #475569 !important; color: #f1f5f9 !important; }
+                #gjs-styles .gjs-sm-field input, #gjs-styles .gjs-sm-field select { background: #475569 !important; color: #f1f5f9 !important; }
+                #gjs-styles .gjs-clm-label, #gjs-styles .gjs-clm-field { color: #e2e8f0 !important; }
+                #gjs-styles [class*="icon"], #gjs-styles [class*="fa"] { color: #94a3b8 !important; fill: #94a3b8 !important; }
             `;
             document.head.appendChild(style);
         }, 300);
