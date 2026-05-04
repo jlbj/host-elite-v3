@@ -66,24 +66,11 @@ import grapesjs from 'grapesjs';
         :host { display: block; height: 100%; }
         #editor-wrapper { height: calc(100% - 73px); }
         #gjs { height: 100%; min-height: 0; }
-        #gjs .gjs-pn-devices-c, #gjs .gjs-pn-views-container, #gjs .gjs-pn-views,
-        #gjs .gjs-pn-commands, #gjs .gjs-pn-options { display: none !important; }
         #gjs-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
-        #gjs-blocks .gjs-block { background: #475569 !important; border: 1px solid #64748b !important; border-radius: 4px; padding: 4px 2px !important; min-height: 45px; color: #f1f5f9 !important; cursor: grab; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #gjs-blocks .gjs-block { background: #475569 !important; border: 1px solid #64748b !important; border-radius: 4px; padding: 4px 2px !important; min-height: 45px; color: #f1f5f9 !important; cursor: grab; }
         #gjs-blocks .gjs-block:hover { border-color: #3b82f6 !important; background: #64748b !important; }
-        #gjs-blocks .gjs-block__media { font-size: 16px !important; margin-bottom: 1px; color: #fff !important; }
-        #gjs-blocks .gjs-block-label { color: #e2e8f0 !important; font-size: 9px !important; font-weight: 500; }
-        #gjs-styles { font-size: 10px !important; }
-        #gjs-styles * { font-size: 10px !important; }
-        #gjs-styles svg { width: 10px !important; height: 10px !important; min-width: 10px !important; min-height: 10px !important; }
-        #gjs-styles i { font-size: 10px !important; width: 10px !important; }
-        #gjs-styles .gjs-sm-sector { background: #1e293b !important; margin-bottom: 4px; border-radius: 3px; padding: 3px !important; }
-        #gjs-styles .gjs-sm-sector-title { color: #f1f5f9 !important; font-weight: 600; font-size: 10px !important; cursor: pointer; padding: 1px 0; }
-        #gjs-styles .gjs-sm-property { background: #334155 !important; border-color: #475569 !important; color: #f1f5f9 !important; margin-bottom: 2px; padding: 2px !important; border-radius: 2px; }
-        #gjs-styles .gjs-sm-label, #gjs-styles .gjs-sm-icon { color: #cbd5e1 !important; font-size: 10px !important; }
-        #gjs-styles .gjs-sm-field { background: #475569 !important; border-color: #64748b !important; color: #f1f5f9 !important; font-size: 10px !important; padding: 2px 4px !important; }
-        #gjs-styles .gjs-sm-field input, #gjs-styles .gjs-sm-field select { background: #475569 !important; color: #f1f5f9 !important; font-size: 10px !important; border: none !important; }
-        #gjs-styles .gjs-sm-layer { background: #334155 !important; color: #f1f5f9 !important; }
+        #gjs-blocks .gjs-block__media { font-size: 16px !important; color: #fff !important; }
+        #gjs-blocks .gjs-block-label { color: #e2e8f0 !important; font-size: 9px !important; }
     `]
 })
 export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
@@ -118,6 +105,27 @@ export class PropertyWebsiteBuilderComponent implements OnInit, OnDestroy {
                 ]
             }
         });
+        
+        // Inject custom styles for GrapesJS panels AFTER init
+        setTimeout(() => {
+            const style = document.createElement('style');
+            style.textContent = `
+                #gjs-styles { font-size: 10px !important; }
+                #gjs-styles * { font-size: 10px !important; max-width: 100%; }
+                #gjs-styles svg { width: 10px !important; height: 10px !important; min-width: 10px !important; min-height: 10px !important; fill: #cbd5e1 !important; }
+                #gjs-styles i, #gjs-styles span { font-size: 10px !important; color: #cbd5e1 !important; }
+                #gjs-styles .gjs-sm-sector { background: #1e293b !important; margin-bottom: 4px; border-radius: 3px; padding: 3px !important; }
+                #gjs-styles .gjs-sm-sector-title { color: #f1f5f9 !important; font-weight: 600; }
+                #gjs-styles .gjs-sm-property { background: #334155 !important; border-color: #475569 !important; color: #f1f5f9 !important; margin-bottom: 2px; padding: 2px !important; border-radius: 2px; }
+                #gjs-styles .gjs-sm-label, #gjs-styles .gjs-sm-icon { color: #cbd5e1 !important; }
+                #gjs-styles .gjs-sm-field { background: #475569 !important; border-color: #64748b !important; color: #f1f5f9 !important; }
+                #gjs-styles .gjs-sm-field input, #gjs-styles .gjs-sm-field select { background: #475569 !important; color: #f1f5f9 !important; border: none !important; }
+                #gjs-styles .gjs-clm-label, #gjs-styles .gjs-clm-field { color: #cbd5e1 !important; }
+                #gjs-styles [class*="icon"] { font-size: 10px !important; color: #cbd5e1 !important; }
+            `;
+            document.head.appendChild(style);
+        }, 300);
+        
         this.addPropertyBlocks();
     }
 
