@@ -47,6 +47,7 @@ export class PreviewGenerationService {
     }
 
     private generateCssVariables(theme: EditorTheme): string {
+        const headingFont = theme.fontHeading || theme.fontFamily || 'system-ui';
         return `
             :root {
                 --primary-color: ${theme.primaryColor};
@@ -55,7 +56,7 @@ export class PreviewGenerationService {
                 --text-color: ${theme.textColor};
                 --accent-color: ${theme.accentColor};
                 --font-family: ${theme.fontFamily};
-                --font-heading: ${theme.fontHeading};
+                --font-heading: ${headingFont};
                 --font-size: ${this.getFontSize(theme.fontSize)};
                 --button-radius: ${this.getButtonRadius(theme.buttonStyle)};
                 --spacing: ${this.getSpacingValue(theme.spacing)};

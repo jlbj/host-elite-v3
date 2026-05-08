@@ -9,11 +9,11 @@ import { LayoutSelectorComponent, ThemeCustomizerComponent, SectionManagerCompon
 // Metadata for mapping layout templateSection types to user-friendly labels/icons
 const TEMPLATE_SECTION_META: Record<string, { label: string; icon: string }> = {
     'hero': { label: 'EDITOR.SectionHero', icon: '🖼️' },
-    'headline': { label: 'EDITOR.SectionHeadline', icon: '✏️' },
+    'headline': { label: 'EDITOR.SectionHeadline', icon: '📝' },
     'property-info': { label: 'EDITOR.SectionPropertyInfo', icon: '🏠' },
     'description': { label: 'EDITOR.SectionDescription', icon: '📄' },
     'amenities': { label: 'EDITOR.SectionAmenities', icon: '✨' },
-    'contact': { label: 'EDITOR.SectionContact', icon: '📧' },
+    'contact': { label: 'EDITOR.SectionContact', icon: '📎' },
     'gallery': { label: 'EDITOR.SectionGallery', icon: '📸' },
 };
 
@@ -55,7 +55,6 @@ export interface EditorSaveData {
                         <span class="text-2xl">{{ configIcon() }}</span>
                         {{ configTitle() | translate }}
                     </h2>
-                    <!-- Quick Info -->
                     <span class="text-xs text-slate-400 hidden lg:inline-flex items-center gap-2">
                         <span>{{ selectedLayout()?.name }}</span>
                         <span>·</span>
@@ -95,122 +94,161 @@ export interface EditorSaveData {
                 </div>
             </div>
 
-            <!-- Tab Navigation / Wizard Steps -->
-            <div class="flex border-b border-white/10 bg-white/5">
-                @for (step of wizardSteps; track step.id; let i = $index) {
-                    <button 
-                        (click)="goToStep(i)"
-                        class="flex-1 py-3 px-4 text-xs font-medium transition-all text-center relative"
-                        [class.bg-purple-500/20]="currentStepIndex() === i"
-                        [class.text-white]="currentStepIndex() === i"
-                        [class.text-slate-400]="currentStepIndex() !== i"
-                        [class.border-b-2]="currentStepIndex() === i"
-                        [class.border-purple-500]="currentStepIndex() === i">
-                        <div class="flex items-center justify-center gap-2">
-                            <span class="text-lg">{{ step.icon }}</span>
-                            <span class="hidden sm:inline">{{ step.title | translate }}</span>
-                        </div>
-                        @if (step.completed) {
-                            <span class="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full"></span>
-                        }
-                    </button>
-                }
-            </div>
-
-            <!-- Progress Bar -->
-            <div class="h-1 bg-white/10">
-                <div 
-                    class="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500"
-                    [style.width.%]="wizardState().completionPercentage">
-                </div>
-            </div>
-
-            <!-- Wizard Navigation (Previous/Next) -->
-            <div class="flex items-center justify-between p-3 border-b border-white/10 bg-white/5">
-                <button 
-                    (click)="previousStep()"
-                    [disabled]="currentStepIndex() === 0"
-                    class="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                    {{ 'COMMON.Previous' | translate }}
-                </button>
-                
-                <div class="flex items-center gap-2">
-                    @for (dot of wizardSteps; track dot.id; let i = $index) {
-                        <button 
-                            (click)="goToStep(i)"
-                            class="w-2 h-2 rounded-full transition-all"
-                            [class.bg-purple-500]="currentStepIndex() === i"
-                            [class.bg-white/20]="currentStepIndex() !== i"
-                            [class.w-3]="currentStepIndex() === i">
-                        </button>
-                    }
-                </div>
-
-                <button 
-                    (click)="nextStep()"
-                    [disabled]="!canProceed()"
-                    class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2">
-                    {{ 'COMMON.Next' | translate }}
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-            </div>
-
             <!-- Main Content - Split Screen -->
             <div class="flex-1 overflow-hidden flex flex-col lg:flex-row">
                 
-                <!-- LEFT PANEL: Editor Steps -->
-                <div class="w-full lg:w-[450px] h-1/2 lg:h-full overflow-y-auto custom-scrollbar border-r border-white/10 bg-slate-900/50 lg:border-r-0 lg:border-b-0 border-b">
-                    <div class="p-3 sm:p-4 space-y-4">
-
-                        <!-- Step 1: Layout Selector -->
-                        @if (currentStepIndex() === 0) {
-                            <app-layout-selector
-                                [layouts]="layouts()"
-                                [selectedLayout]="selectedLayout()"
-                                (layoutSelected)="onLayoutSelected($event)">
-                            </app-layout-selector>
+                <!-- LEFT PANEL: Foldable Accordion Sections -->
+                <div class="w-full lg:w-[225px] lg:h-full overflow-y-auto custom-scrollbar border-r border-white/10 bg-slate-900/50 flex flex-col">
+                    
+                    <!-- Accordion Section 1: Layout -->
+                    <div class="border-b border-white/10">
+                        <button 
+                            (click)="toggleSection(0)"
+                            class="w-full px-4 py-3 flex items-center justify-between text-left transition-all"
+                            [class.bg-purple-500/20]="expandedSection() === 0"
+                            [class.bg-white/5]="expandedSection() !== 0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">📐</span>
+                                <span class="text-sm font-medium" [class.text-white]="expandedSection() === 0" [class.text-slate-400]="expandedSection() !== 0">
+                                    {{ wizardSteps[0].title | translate }}
+                                </span>
+                                @if (wizardSteps[0].completed) {
+                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                }
+                            </div>
+                            <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                                [class.rotate-180]="expandedSection() === 0"
+                                viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        @if (expandedSection() === 0) {
+                            <div class="p-3 bg-slate-900/30">
+                                <app-layout-selector
+                                    [layouts]="layouts()"
+                                    [selectedLayout]="selectedLayout()"
+                                    (layoutSelected)="onLayoutSelected($event)">
+                                </app-layout-selector>
+                            </div>
                         }
+                    </div>
 
-                        <!-- Step 2: Theme Customizer -->
-                        @if (currentStepIndex() === 1) {
-                            <app-theme-customizer
-                                [currentTheme]="currentTheme()"
-                                (themeChanged)="onThemeChanged($event)">
-                            </app-theme-customizer>
+                    <!-- Accordion Section 2: Theme -->
+                    <div class="border-b border-white/10">
+                        <button 
+                            (click)="toggleSection(1)"
+                            class="w-full px-4 py-3 flex items-center justify-between text-left transition-all"
+                            [class.bg-purple-500/20]="expandedSection() === 1"
+                            [class.bg-white/5]="expandedSection() !== 1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">🎨</span>
+                                <span class="text-sm font-medium" [class.text-white]="expandedSection() === 1" [class.text-slate-400]="expandedSection() !== 1">
+                                    {{ wizardSteps[1].title | translate }}
+                                </span>
+                                @if (wizardSteps[1].completed) {
+                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                }
+                            </div>
+                            <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                                [class.rotate-180]="expandedSection() === 1"
+                                viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        @if (expandedSection() === 1) {
+                            <div class="p-3 bg-slate-900/30">
+                                <app-theme-customizer
+                                    [currentTheme]="currentTheme()"
+                                    (themeChanged)="onThemeChanged($event)">
+                                </app-theme-customizer>
+                            </div>
                         }
+                    </div>
 
-                        <!-- Step 3: Section Manager (shows layout template sections, NOT content fields) -->
-                        @if (currentStepIndex() === 2 && showSectionManager()) {
-                            <app-section-manager
-                                [sections]="displaySections()"
-                                [selectedSectionIds]="selectedSectionIds()"
-                                (sectionsUpdated)="onSectionsUpdated($event)">
-                            </app-section-manager>
-                        }
+                    <!-- Accordion Section 3: Sections -->
+                    @if (showSectionManager()) {
+                        <div class="border-b border-white/10">
+                            <button 
+                                (click)="toggleSection(2)"
+                                class="w-full px-4 py-3 flex items-center justify-between text-left transition-all"
+                                [class.bg-purple-500/20]="expandedSection() === 2"
+                                [class.bg-white/5]="expandedSection() !== 2">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-lg">📑</span>
+                                    <span class="text-sm font-medium" [class.text-white]="expandedSection() === 2" [class.text-slate-400]="expandedSection() !== 2">
+                                        {{ wizardSteps[2].title | translate }}
+                                    </span>
+                                    @if (wizardSteps[2].completed) {
+                                        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    }
+                                </div>
+                                <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                                    [class.rotate-180]="expandedSection() === 2"
+                                    viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                            @if (expandedSection() === 2) {
+                                <div class="p-3 bg-slate-900/30">
+                                    <app-section-manager
+                                        [sections]="displaySections()"
+                                        [selectedSectionIds]="selectedSectionIds()"
+                                        (sectionsUpdated)="onSectionsUpdated($event)">
+                                    </app-section-manager>
+                                </div>
+                            }
+                        </div>
+                    }
 
-                        <!-- Step 4: Content Editor -->
-                        @if (currentStepIndex() === 3 || (currentStepIndex() === 2 && !showSectionManager())) {
-                            <app-content-editor
-                                [sections]="sections()"
-                                [contentData]="contentData()"
-                                [hasAiAccess]="hasAiAccess()"
-                                [isAiLoading]="isAiLoading()"
-                                [availablePhotos]="propertyPhotos()"
-                                [propertyEquipments]="propertyEquipments()"
-                                (contentUpdated)="onContentUpdated($event)"
-                                (generateAI)="generateAIRequested.emit()">
-                            </app-content-editor>
+                    <!-- Accordion Section 4: Content -->
+                    <div class="border-b border-white/10">
+                        <button 
+                            (click)="toggleSection(showSectionManager() ? 3 : 2)"
+                            class="w-full px-4 py-3 flex items-center justify-between text-left transition-all"
+                            [class.bg-purple-500/20]="expandedSection() === (showSectionManager() ? 3 : 2)"
+                            [class.bg-white/5]="expandedSection() !== (showSectionManager() ? 3 : 2)">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">✏️</span>
+                                <span class="text-sm font-medium" [class.text-white]="expandedSection() === (showSectionManager() ? 3 : 2)" [class.text-slate-400]="expandedSection() !== (showSectionManager() ? 3 : 2)">
+                                    {{ wizardSteps[showSectionManager() ? 3 : 2].title | translate }}
+                                </span>
+                                @if (wizardSteps[showSectionManager() ? 3 : 2].completed) {
+                                    <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                }
+                            </div>
+                            <svg 
+                                xmlns="http://www.w3.org/2000/svg" 
+                                class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                                [class.rotate-180]="expandedSection() === (showSectionManager() ? 3 : 2)"
+                                viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        @if (expandedSection() === (showSectionManager() ? 3 : 2)) {
+                            <div class="p-3 bg-slate-900/30">
+                                <app-content-editor
+                                    [sections]="sections()"
+                                    [contentData]="contentData()"
+                                    [hasAiAccess]="hasAiAccess()"
+                                    [isAiLoading]="isAiLoading()"
+                                    [availablePhotos]="propertyPhotos()"
+                                    [propertyEquipments]="propertyEquipments()"
+                                    (contentUpdated)="onContentUpdated($event)"
+                                    (generateAI)="generateAIRequested.emit()">
+                                </app-content-editor>
+                            </div>
                         }
                     </div>
                 </div>
 
                 <!-- RIGHT PANEL: Preview -->
-                <div class="flex-1 h-1/2 lg:h-full bg-slate-800 overflow-hidden" [class.hidden]="isFullscreenPreview()">
+                <div class="flex-1 lg:h-full bg-slate-800 overflow-hidden" [class.hidden]="isFullscreenPreview()">
                     <app-preview-panel
                         [previewHtml]="previewHtml()"
                         [theme]="currentTheme()"
@@ -293,6 +331,7 @@ export class UniversalEditorComponent {
     propertyEquipments = signal<string[]>([]);
     previewHtml = signal<string>('');
     isFullscreenPreview = signal(false);
+    expandedSection = signal(0);
 
     // Computed: convert layout templateSections into EditorSection[] format for the SectionManager
     displaySections = computed<EditorSection[]>(() => {
@@ -358,7 +397,7 @@ export class UniversalEditorComponent {
             const inputLayout = this.selectedLayoutInput();
             if (inputLayout) {
                 this.selectedLayout.set(inputLayout);
-                this.markStepCompleted('layout');
+                this.wizardSteps[0].completed = true;
             }
         });
 
@@ -367,7 +406,7 @@ export class UniversalEditorComponent {
             const inputTheme = this.selectedThemeInput();
             if (inputTheme) {
                 this.currentTheme.set(inputTheme);
-                this.markStepCompleted('theme');
+                this.wizardSteps[1].completed = true;
             } else {
                 const defaults = this.themeDefaults();
                 if (defaults) {
@@ -420,19 +459,19 @@ export class UniversalEditorComponent {
     onLayoutSelected(layout: EditorLayout) {
         this.selectedLayout.set(layout);
         this.layoutSelected.emit(layout);
-        this.markStepCompleted('layout');
+        this.wizardSteps[0].completed = true;
     }
 
     onThemeChanged(theme: EditorTheme) {
         this.currentTheme.set(theme);
         this.themeChanged.emit(theme);
-        this.markStepCompleted('theme');
+        this.wizardSteps[1].completed = true;
     }
 
     onSectionsUpdated(sectionIds: string[]) {
         this.selectedSectionIds.set(sectionIds);
         this.sectionsUpdated.emit(sectionIds);
-        this.markStepCompleted('sections');
+        this.wizardSteps[2].completed = true;
     }
 
     onContentUpdated(content: Record<string, any>) {
@@ -457,28 +496,18 @@ export class UniversalEditorComponent {
         // propertyEquipments is set by the wrapper component from property.property_equipments
         
         this.contentUpdated.emit(content);
-        this.markStepCompleted('content');
+        this.wizardSteps[3].completed = true;
     }
 
     onFullscreenChanged(isFullscreen: boolean) {
         this.isFullscreenPreview.set(isFullscreen);
     }
 
-    goToStep(index: number) {
-        if (index >= 0 && index < this.wizardSteps.length) {
-            this.currentStepIndex.set(index);
-        }
-    }
-
-    nextStep() {
-        if (this.currentStepIndex() < this.wizardSteps.length - 1) {
-            this.currentStepIndex.update(i => i + 1);
-        }
-    }
-
-    previousStep() {
-        if (this.currentStepIndex() > 0) {
-            this.currentStepIndex.update(i => i - 1);
+    toggleSection(index: number) {
+        if (this.expandedSection() === index) {
+            this.expandedSection.set(-1);
+        } else {
+            this.expandedSection.set(index);
         }
     }
 

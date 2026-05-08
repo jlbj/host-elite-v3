@@ -1,6 +1,7 @@
 
 import { Injectable, inject } from '@angular/core';
 import { SupabaseService } from './supabase.service';
+import { LoggingService } from './logging.service';
 import { ContextData, Scores, ReportData, UserProfile, AppPlan, ApiKey, PlanConfig, AppSettings, View, Property, AppTier, RenovationRoom, RenovationQuote, QuoteFile, CapexAnalysis, ComplianceRule, ConstructionTask } from '../types';
 
 @Injectable({
@@ -8,6 +9,7 @@ import { ContextData, Scores, ReportData, UserProfile, AppPlan, ApiKey, PlanConf
 })
 export class HostRepository {
     private supabaseService = inject(SupabaseService);
+    private loggingService = inject(LoggingService);
 
     // Helper to access raw client if needed, guarded by service configuration
     private get supabase() { return this.supabaseService.supabase; }
@@ -91,6 +93,7 @@ export class HostRepository {
     private readonly defaultSubViews: View[] = [
         // Phase 1: Préparation
         { id: 'manage-property', title: 'Manage', icon: 'settings', phase: 'preparation', requiredTier: 'TIER_1' },
+        { id: 'mdx-editor', title: 'MDX Editor', icon: 'code', phase: 'preparation', requiredTier: 'TIER_1' },
         { id: 'welcome-booklet', title: 'NAV.welcome-booklet', icon: 'info', featureId: 'MKT_00', phase: 'preparation', requiredTier: 'TIER_1' },
 
         // Phase 2: Lancement
@@ -171,10 +174,10 @@ export class HostRepository {
     async saveDiagnosticResult(context: ContextData, scores: Scores, report: ReportData): Promise<void> {
         if (!this.supabaseService.isConfigured) throw new Error("Database not configured");
 
+        const startTime = Date.now();
         const { user } = await this.supabaseService.getUser();
         if (!user) throw new Error("User not authenticated");
 
-        // 1. Insert the main Diagnostic row
         const { data: diagnostic, error: diagError } = await this.supabase
             .from('diagnostics')
             .insert({
@@ -203,7 +206,6 @@ export class HostRepository {
             throw new Error("Error: Diagnostic could not be created (no data returned).");
         }
 
-        // 2. Insert Strengths and Opportunities
         const points = [
             ...report.strengths.map(s => ({ diagnostic_id: diagnostic.id, type: 'strength', content: s })),
             ...report.opportunities.map(o => ({ diagnostic_id: diagnostic.id, type: 'opportunity', content: o }))
@@ -216,18 +218,23 @@ export class HostRepository {
         if (pointsError) {
             console.error('Error saving points:', pointsError);
         }
+
+        this.loggingService.logDatabaseQuery('INSERT', 'diagnostics + diagnostic_points', 1 + points.length, Date.now() - startTime);
     }
 
     async getProperties(): Promise<Property[]> {
         if (!this.supabaseService.isConfigured) return [];
 
+        const startTime = Date.now();
         const { user } = await this.supabaseService.getUser();
         if (!user) return [];
 
         const { data, error } = await this.supabase
             .from('properties')
-            .select('id, name')
+            .select('id, name, mdx_content')
             .eq('owner_id', user.id);
+
+        this.loggingService.logDatabaseQuery('SELECT', 'properties', data?.length || 0, Date.now() - startTime);
 
         if (error) {
             // Table doesn't exist yet or other error
@@ -242,6 +249,7 @@ export class HostRepository {
         return data.map(row => ({
             id: row.id,
             name: row.name,
+            mdx_content: row.mdx_content,
             subViews: this.defaultSubViews
         }));
     }
@@ -376,6 +384,31 @@ export class HostRepository {
         if (formData.photos && Array.isArray(formData.photos)) {
             await this.savePropertyPhotos(propertyId, formData.photos);
         }
+    }
+
+    async saveMdxContent(propertyName: string, mdxContent: string): Promise<void> {
+        if (!this.supabaseService.isConfigured) throw new Error("Database not configured");
+
+        const { user } = await this.supabaseService.getUser();
+        if (!user) throw new Error("User not authenticated");
+
+        const { data: properties, error: fetchError } = await this.supabase
+            .from('properties')
+            .select('id')
+            .eq('owner_id', user.id)
+            .eq('name', propertyName)
+            .limit(1);
+
+        if (fetchError || !properties || properties.length === 0) {
+            throw new Error("Property not found");
+        }
+
+        const { error: updateError } = await this.supabase
+            .from('properties')
+            .update({ mdx_content: mdxContent })
+            .eq('id', properties[0].id);
+
+        if (updateError) throw updateError;
     }
 
     async savePropertyPhotos(propertyId: string, photos: { url: string, category: string }[]): Promise<void> {

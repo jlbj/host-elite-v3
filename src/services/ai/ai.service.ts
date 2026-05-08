@@ -5,6 +5,7 @@ import { OpenAIProvider } from './openai-provider';
 import { ClaudeProvider } from './claude-provider';
 import { OpenRouterProvider } from './openrouter-provider';
 import { OllamaProvider } from './ollama-provider';
+import { LoggingService } from '../logging.service';
 
 export type { AIProvider, AIProviderType, AIProviderConfig, AIGenerateOptions, AIMessage };
 export { DEFAULT_MODELS, PROVIDER_MODELS };
@@ -21,6 +22,7 @@ export class AIService {
     private claude = inject(ClaudeProvider);
     private openrouter = inject(OpenRouterProvider);
     private ollama = inject(OllamaProvider);
+    private loggingService = inject(LoggingService);
 
     private providers: Record<AIProviderType, AIProvider> = {
         'gemini': this.gemini,
@@ -31,6 +33,8 @@ export class AIService {
     };
 
     async initialize(provider: AIProviderType = 'gemini', apiKey?: string): Promise<void> {
+        this.loggingService.logUserEvent('AI Service initializing', { provider });
+        
         if (this.isInitialized() && this.currentProviderType() === provider) {
             return;
         }
@@ -53,11 +57,13 @@ export class AIService {
                 this.currentProviderType.set(provider);
                 this.isInitialized.set(true);
                 console.log(`[AIService] Initialized with ${provider}`);
+                this.loggingService.logUserEvent('AI Service initialized', { provider, model });
             } else {
                 throw new Error(`Provider ${provider} not available`);
             }
         } catch (error) {
             console.error('[AIService] Initialization error:', error);
+            this.loggingService.logSystem('AI Service init failed: ' + String(error), 'ERROR', { provider });
             throw error;
         } finally {
             this.isLoading.set(false);
@@ -65,10 +71,21 @@ export class AIService {
     }
 
     async generateText(prompt: string, options?: AIGenerateOptions): Promise<string> {
+        console.log('[AI] generateText called, ensuring initialized...');
         await this.ensureInitialized();
+        console.log('[AI] initialized, calling provider...');
+        const startTime = Date.now();
+        const provider = this.currentProviderType();
+        const model = DEFAULT_MODELS[provider] || 'default';
         try {
-            return await this.currentProvider!.generateText(prompt, options);
+            console.log('[AI] calling currentProvider.generateText...');
+            const result = await this.currentProvider!.generateText(prompt, options);
+            console.log('[AI] got result, logging...');
+            this.loggingService.logAiPrompt(provider, model, prompt, 'success', Date.now() - startTime);
+            return result;
         } catch (error) {
+            console.log('[AI] error, logging...');
+            this.loggingService.logAiPrompt(provider, model, prompt, 'error', Date.now() - startTime, { error: String(error) });
             console.error('[AIService] generateText failed:', error);
             throw new Error(`AI text generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -80,9 +97,15 @@ export class AIService {
         options?: AIGenerateOptions
     ): Promise<T> {
         await this.ensureInitialized();
+        const startTime = Date.now();
+        const provider = this.currentProviderType();
+        const model = DEFAULT_MODELS[provider] || 'default';
         try {
-            return await this.currentProvider!.generateJSON(prompt, schema, options);
+            const result = await this.currentProvider!.generateJSON(prompt, schema, options) as T;
+            this.loggingService.logAiPrompt(provider, model, prompt, 'success', Date.now() - startTime);
+            return result;
         } catch (error) {
+            this.loggingService.logAiPrompt(provider, model, prompt, 'error', Date.now() - startTime, { error: String(error) });
             console.error('[AIService] generateJSON failed:', error);
             throw new Error(`AI JSON generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -90,9 +113,16 @@ export class AIService {
 
     async chat(messages: AIMessage[], options?: AIGenerateOptions): Promise<string> {
         await this.ensureInitialized();
+        const startTime = Date.now();
+        const provider = this.currentProviderType();
+        const model = DEFAULT_MODELS[provider] || 'default';
+        const prompt = messages.map(m => `${m.role}: ${m.content}`).join(' | ');
         try {
-            return await this.currentProvider!.chat(messages, options);
+            const result = await this.currentProvider!.chat(messages, options);
+            this.loggingService.logAiPrompt(provider, model, prompt, 'success', Date.now() - startTime);
+            return result;
         } catch (error) {
+            this.loggingService.logAiPrompt(provider, model, prompt, 'error', Date.now() - startTime, { error: String(error) });
             console.error('[AIService] chat failed:', error);
             throw new Error(`AI chat failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
@@ -111,11 +141,15 @@ export class AIService {
     }
 
     private async ensureInitialized(): Promise<void> {
+        console.log('[AI] ensureInitialized called, isInitialized:', this.isInitialized());
         if (!this.isInitialized()) {
             try {
+                console.log('[AI] calling initialize...');
                 await this.initialize();
+                console.log('[AI] initialize done');
             } catch (error) {
                 console.error('[AIService] Auto-initialization failed:', error);
+                this.loggingService.logSystem('AI init failed: ' + String(error), 'ERROR');
                 throw error;
             }
         }

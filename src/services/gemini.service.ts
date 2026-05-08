@@ -5,6 +5,7 @@ import { SupabaseService } from './supabase.service';
 import { TranslationService } from './translation.service';
 import { AIService, AIProviderType } from './ai/ai.service';
 import { AIConfigService } from './ai/ai-config.service';
+import { LoggingService } from './logging.service';
 
 @Injectable({
   providedIn: 'root',
@@ -14,6 +15,7 @@ export class GeminiService {
   private translationService = inject(TranslationService);
   private aiService = inject(AIService);
   private aiConfigService = inject(AIConfigService);
+  private loggingService = inject(LoggingService);
   
   private useNewProvider = signal(false);
   private isNewInitialized = signal(false);
@@ -608,10 +610,14 @@ constructor() {
 
   async generateText(prompt: string, retries = 3): Promise<string> {
     await this.enableNewProvider();
+    const startTime = Date.now();
+    this.loggingService.logUserEvent('AI generateText called', { promptLength: prompt.length });
     
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        return await this.aiService.generateText(prompt);
+        const result = await this.aiService.generateText(prompt);
+        this.loggingService.logAiPrompt('gemini', 'default', prompt, 'success', Date.now() - startTime);
+        return result;
       } catch (error: any) {
         const is503 = error?.message?.includes('503') || error?.status === 503;
         const isRateLimit = error?.message?.includes('429');
@@ -624,6 +630,7 @@ constructor() {
         }
         
         console.error('Error generating text:', error);
+        this.loggingService.logAiPrompt('gemini', 'default', prompt, 'error', Date.now() - startTime, { error: String(error) });
         throw error;
       }
     }

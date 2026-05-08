@@ -23,5 +23,5 @@ export const LISTING_EDITOR_CONFIG: EditorTypeConfig = {
     showSectionManager: true,
     showPhotoManager: true,
     title: 'LISTING.ListingEditor',
-    icon: '📝'
+    icon: '◰'
 };

@@ -130,7 +130,7 @@ import { TranslatePipe } from '../pipes/translate.pipe';
                                 <!-- Management Tools -->
                                 <div class="space-y-1">
                                     @for(subView of prop.subViews; track subView.id) {
-                                        @if (subView.id === 'manage-property' || subView.id === 'welcome-booklet') {
+                                        @if (subView.id === 'manage-property' || subView.id === 'welcome-booklet' || subView.id === 'mdx-editor') {
                                         <a (click)="isLocked(subView) ? null : changeView(subView, prop.name)"
                                         class="group flex items-center justify-between px-3 py-2 text-sm font-medium rounded-r-lg cursor-pointer transition-all relative"
                                         [class]="activeView().id === subView.id && activeView().propertyName === prop.name 
