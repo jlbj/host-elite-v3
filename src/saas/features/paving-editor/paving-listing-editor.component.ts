@@ -45,8 +45,6 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
     scriptsLoaded = signal(false);
     loadError = signal<string | null>(null);
 
-    private listingEditorUrl = '/listing-editor/listing-editor.umd.js?v=' + Date.now();
-    private cssUrl = '/listing-editor/listing-editor.css?v=' + Date.now();
     private loaded = false;
 
     constructor() {
@@ -66,6 +64,23 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
 
     ngOnDestroy() {
         this.loaded = false;
+    }
+
+    private get assetBasePath(): string {
+        const match = window.location.pathname.match(/^(\/api\/preview\/proxy\/[a-f0-9]{16,64})(?:\/|$)/i);
+        return match ? match[1] : '';
+    }
+
+    private cacheBust(): string {
+        return '?v=' + Date.now();
+    }
+
+    private get listingEditorUrl(): string {
+        return this.assetBasePath + '/listing-editor/listing-editor.umd.js' + this.cacheBust();
+    }
+
+    private get cssUrl(): string {
+        return this.assetBasePath + '/listing-editor/listing-editor.css' + this.cacheBust();
     }
 
     private async loadPropertyData(propertyName: string) {
@@ -88,11 +103,12 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
                 await this.loadScript(this.listingEditorUrl);
             }
 
-            const linkEl = document.querySelector(`link[href="${this.cssUrl}"]`);
+            const cssUrl = this.cssUrl;
+            const linkEl = document.querySelector(`link[href="${cssUrl}"]`);
             if (!linkEl) {
                 const link = document.createElement('link');
                 link.rel = 'stylesheet';
-                link.href = this.cssUrl;
+                link.href = cssUrl;
                 document.head.appendChild(link);
             }
 
