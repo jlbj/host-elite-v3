@@ -19,6 +19,7 @@ import { ListingOptimizationComponent } from '../features/marketing/listing-opti
 import { AiMessageAssistantComponent } from '../features/legacy/ai-message-assistant/ai-message-assistant.component';
 import { ChecklistsToolComponent } from '../features/legacy/checklists/checklists-tool.component';
 import { DelegationSimulatorComponent } from '../features/legacy/delegation/delegation-simulator.component';
+import { PavingListingEditorComponent } from '../features/paving-editor/paving-listing-editor.component';
 import { CalendarToolComponent } from '../features/legacy/calendar-tool/components/calendar-tool.component';
 import { ProfitabilityCalculatorComponent } from '../features/legacy/profitability/profitability-calculator.component';
 import { MarketAlertsComponent } from '../features/legacy/market-alerts/market-alerts.component';
@@ -53,7 +54,8 @@ import { WelcomeBookletViewComponent } from './welcome-booklet-view.component';
         ProfitabilityCalculatorComponent,
         MarketAlertsComponent,
         PropertyAuditComponent,
-        WelcomeBookletViewComponent
+        WelcomeBookletViewComponent,
+        PavingListingEditorComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './angle-view.component.html',
@@ -127,8 +129,8 @@ export class PhaseViewComponent implements OnInit {
     });
 
     private legacyToolMapping: Record<string, string> = {
-        // Marketing - MKT_00 opens ListingEditorComponent (WYSIWYG listing editor)
-        'MKT_00': 'listing-editor',
+        // Marketing - MKT_00 opens PavingEditorComponent (WYSIWYG paving listing editor)
+        'MKT_00': 'paving-editor',
         'MKT_01': 'booklet',
         'MKT_02': 'microsite',
         // Experience
@@ -207,7 +209,7 @@ export class PhaseViewComponent implements OnInit {
     openFeatureById(featureId: string) {
         // Handle MKT features
         if (featureId === 'MKT_00') {
-            this.activeToolId.set('listing-editor');
+            this.activeToolId.set('paving-editor');
             return;
         } else if (featureId === 'MKT_01') {
             this.bookletService.activeTab.set('booklet');

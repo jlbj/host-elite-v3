@@ -215,6 +215,8 @@
     <app-visibility-audit [propertyName]="view().propertyName!" (close)="closeTool()"></app-visibility-audit>
     } @else if (activeToolId() === 'listing-editor') {
     <app-listing-editor-wrapper [propertyName]="view().propertyName!" (close)="closeTool()"></app-listing-editor-wrapper>
+    } @else if (activeToolId() === 'paving-editor') {
+    <app-paving-listing-editor [propertyName]="view().propertyName!" (close)="closeTool()"></app-paving-listing-editor>
     } @else if (activeToolId() === 'website-builder') {
     <app-property-website-builder-wrapper [propertyName]="view().propertyName!" (close)="closeTool()"></app-property-website-builder-wrapper>
     } @else if (activeToolId() === 'listing-optimization') {
