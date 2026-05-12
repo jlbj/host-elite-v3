@@ -67,11 +67,10 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
     }
 
     private get assetBaseUrl(): string {
-        // When behind the OpenChamber preview proxy (port 3000), the proxy doesn't
-        // reliably serve static assets. Load directly from the Angular dev server.
         const match = window.location.pathname.match(/^\/api\/preview\/proxy\/[a-f0-9]{16,64}/i);
         if (match) {
-            return 'http://localhost:4200';
+            const { protocol, hostname } = window.location;
+            return `${protocol}//${hostname}:4200`;
         }
         return '';
     }
