@@ -21,7 +21,8 @@ import { SUPABASE_CONFIG } from '../../../supabase.config';
                 </div>
             </div>
             }
-            <div [class.hidden]="!scriptsLoaded()" class="flex-1 overflow-hidden">
+            @if (propertyId() && scriptsLoaded()) {
+            <div class="flex-1 overflow-hidden">
                 <listing-editor
                     [attr.property-id]="propertyId()"
                     [attr.api-url]="supabaseUrl"
@@ -29,6 +30,7 @@ import { SUPABASE_CONFIG } from '../../../supabase.config';
                     style="display:block;height:100%;width:100%"
                 ></listing-editor>
             </div>
+            }
         </div>
     `
 })
@@ -41,7 +43,7 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
     supabaseUrl = SUPABASE_CONFIG.url;
     supabaseKey = SUPABASE_CONFIG.key;
 
-    propertyId = signal<string>('demo-property-1');
+    propertyId = signal<string | null>(null);
     scriptsLoaded = signal(false);
     loadError = signal<string | null>(null);
 
@@ -57,9 +59,7 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
-        if (!this.loaded) {
-            this.loadAssets();
-        }
+        // Wait for property data before loading the editor
     }
 
     ngOnDestroy() {
@@ -88,9 +88,12 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
             const prop = await this.repository.getPropertyByName(propertyName);
             if (prop?.id) {
                 this.propertyId.set(prop.id);
+                await this.loadAssets();
+            } else {
+                this.loadError.set('Property not found: ' + propertyName);
             }
-        } catch (e) {
-            console.error('Error loading property data:', e);
+        } catch (e: any) {
+            this.loadError.set('Failed to load property: ' + (e?.message || e));
         }
     }
 
