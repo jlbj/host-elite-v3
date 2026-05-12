@@ -415,7 +415,7 @@ export class SessionStore {
 
     private setUserFromSupabase(user: any, profile: UserProfile | null = null) {
         const role = profile?.role || user.app_metadata?.role || 'user';
-        const lang = profile?.language || 'fr'; // Default to FR
+        const lang = profile?.language || 'en';
 
         this.userProfile.set({
             id: user.id,

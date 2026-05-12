@@ -52,7 +52,7 @@ export interface MarketData {
     baseOccupancy: number; // 0.72 = 72%
     baseADR: number; // in cents
     nightLimit: number | null;
-    regulatoryRisk: 'Low' | 'Medium' | 'High' | 'Critical';
+    regulatoryRisk?: 'Low' | 'Medium' | 'High' | 'Critical';
     type: MarketType;
     operationalCosts: OperationalCostData;
 }

@@ -30,36 +30,15 @@ import { GeminiService } from '../../../../services/gemini.service';
         </div>
       </div>
 
-      <!-- Tier 0: Static Database -->
+      <!-- Tier 0: No compliance data available without subscription -->
       @if (isTier0()) {
          <div class="p-6 bg-slate-800 rounded-xl border border-white/10 flex-1 overflow-y-auto custom-scrollbar">
-            <h3 class="text-xl font-bold text-white mb-4">{{ 'COMPLY.GlobalRegulationsDatabase' | translate }}</h3>
-            <p class="text-slate-400 mb-4">{{ 'COMPLY.AccessOurCuratedDatabaseOf' | translate }}</p>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-               <div class="p-4 bg-white/5 rounded-lg border border-white/5 hover:border-indigo-500/50 cursor-pointer group" data-debug-id="compliance-card-paris">
-                  <h4 class="text-white font-bold group-hover:text-indigo-400 transition-colors">🇫🇷 Paris</h4>
-                  <p class="text-xs text-slate-500 mt-1">120-day limit, Registration mandatory</p>
+            <div class="flex flex-col items-center justify-center h-full text-center gap-6">
+               <span class="text-6xl">🕵️</span>
+               <div>
+                  <h3 class="text-xl font-bold text-white mb-2">{{ 'COMPLY.NeedAddresslevelChecks' | translate }}</h3>
+                  <p class="text-slate-400 max-w-md">{{ 'COMPLY.UpgradeToSilverToCheck' | translate }}</p>
                </div>
-               <div class="p-4 bg-white/5 rounded-lg border border-white/5 hover:border-indigo-500/50 cursor-pointer group" data-debug-id="compliance-card-london">
-                  <h4 class="text-white font-bold group-hover:text-indigo-400 transition-colors">🇬🇧 London</h4>
-                  <p class="text-xs text-slate-500 mt-1">90-day cap per year</p>
-               </div>
-               <div class="p-4 bg-white/5 rounded-lg border border-white/5 hover:border-indigo-500/50 cursor-pointer group" data-debug-id="compliance-card-barcelona">
-                  <h4 class="text-white font-bold group-hover:text-indigo-400 transition-colors">🇪🇸 Barcelona</h4>
-                  <p class="text-xs text-slate-500 mt-1">{{ 'COMPLY.StrictLicensingMoratorium' | translate }}</p>
-               </div>
-               <div class="p-4 bg-white/5 rounded-lg border border-white/5 hover:border-indigo-500/50 cursor-pointer group" data-debug-id="compliance-card-nyc">
-                  <h4 class="text-white font-bold group-hover:text-indigo-400 transition-colors">🇺🇸 New York</h4>
-                  <p class="text-xs text-slate-500 mt-1">{{ 'COMPLY.DefactoBanClassBDwellings' | translate }}</p>
-               </div>
-            </div>
-            
-            <div class="mt-8 p-4 bg-gradient-to-r from-indigo-900/50 to-purple-900/50 border border-indigo-500/20 rounded-lg flex items-center gap-4">
-                <span class="text-3xl">🕵️</span>
-                <div>
-                   <h4 class="font-bold text-white text-sm">{{ 'COMPLY.NeedAddresslevelChecks' | translate }}</h4>
-                   <p class="text-xs text-indigo-200">{{ 'COMPLY.UpgradeToSilverToCheck' | translate }}</p>
-                </div>
             </div>
          </div>
       }
@@ -200,41 +179,10 @@ export class ComplianceCheckerComponent implements OnInit, OnChanges {
         const prop = this.propertyDetails();
         if (prop?.address) {
             this.address = prop.address;
-            if (this.isTier3()) {
-                this.sentinelAlerts.set([]); // Reset for new property
-                this.refreshSentinel();
-            }
         }
     }
 
     sentinelAlerts = signal<any[]>([]);
-
-    async refreshSentinel() {
-        if (!this.isTier3() || !this.address) return;
-
-        const cityMatch = this.address.match(/([a-zA-Z\s]+),?\s*[0-9]*/);
-        const cityCandidate = cityMatch ? cityMatch[1].trim() : this.address;
-
-        // Simulate background legislative scan
-        setTimeout(() => {
-            this.sentinelAlerts.set([
-                {
-                    id: 1,
-                    title: this.translate.instant('COMPLY.NoActiveBans'),
-                    time: '10m ago',
-                    desc: `Scanning municipal gazettes for ${cityCandidate}... All clean.`,
-                    severity: 'safe'
-                },
-                {
-                    id: 2,
-                    title: 'Proposal 291 Detected',
-                    time: '2d ago',
-                    desc: `"Discussion on limiting keys per building" in ${cityCandidate} - Monitoring.`,
-                    severity: 'warning'
-                }
-            ]);
-        }, 1200);
-    }
 
     // Result signals
     riskScore = signal(0); // 0 (Safe) to 100 (Banned)
@@ -267,18 +215,6 @@ export class ComplianceCheckerComponent implements OnInit, OnChanges {
                 this.riskDescription.set(aiResult.description);
                 this.recommendations.set(aiResult.recommendations || []);
 
-                // Add a sentinel alert about the manual scan
-                this.sentinelAlerts.update(alerts => [
-                    {
-                        id: Date.now(),
-                        title: 'Manual Scan Performed',
-                        time: 'Just now',
-                        desc: `AI-Deep-Dive completed for ${cityCandidate}. Risk level: ${aiResult.riskLevel}.`,
-                        severity: aiResult.riskScore > 50 ? 'warning' : 'safe'
-                    },
-                    ...alerts.slice(0, 4)
-                ]);
-
                 if (aiResult.riskScore >= 90) this.riskColor.set('#f43f5e');
                 else if (aiResult.riskScore >= 60) this.riskColor.set('#f59e0b');
                 else this.riskColor.set('#10b981');
@@ -294,18 +230,18 @@ export class ComplianceCheckerComponent implements OnInit, OnChanges {
                         'Consult local tax advisor'
                     ]);
                 } else {
-                    this.riskScore.set(10);
-                    this.riskLevel.set('Safe Zone');
-                    this.riskStatus.set('Permitted');
-                    this.riskDescription.set('No active bans found for this specific area. Basic registration may still be required.');
-                    this.riskColor.set('#10b981');
-                    this.recommendations.set(['Check municipal registration website']);
+                    this.riskScore.set(0);
+                    this.riskLevel.set('No Data');
+                    this.riskStatus.set('Unknown');
+                    this.riskDescription.set('No compliance data available for this city. Consult local authorities for accurate information.');
+                    this.riskColor.set('#94a3b8');
+                    this.recommendations.set([]);
                 }
             }
         } catch (error) {
             console.error('Scan failed', error);
-            this.riskStatus.set('Scan Failed');
-            this.riskDescription.set('Unable to complete compliance scan. Please try again.');
+            this.riskStatus.set('Unavailable');
+            this.riskDescription.set('AI compliance check requires a configured API key. Set GEMINI_API_KEY in your environment or configure AI provider in settings.');
         } finally {
             this.isScanning.set(false);
         }

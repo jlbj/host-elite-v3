@@ -30,7 +30,24 @@
                         placeholder="gemini-2.0-flash">
                 </div>
             </div>
-            <div class="mt-4 flex justify-end">
+            <div class="mt-4 flex justify-end gap-2">
+                @if (testResult()?.keyId === 'config') {
+                    <div class="flex items-center gap-2 px-3 py-2 rounded-md text-sm"
+                         [class.bg-green-100]="testResult()?.success"
+                         [class.text-green-800]="testResult()?.success"
+                         [class.bg-red-100]="!testResult()?.success"
+                         [class.text-red-800]="!testResult()?.success">
+                        {{ testResult()?.message }}
+                    </div>
+                }
+                <button (click)="testAiConfig()" [disabled]="testingKeyId() === 'config'"
+                    class="bg-slate-600 hover:bg-slate-700 disabled:bg-slate-300 text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors">
+                    @if (testingKeyId() === 'config') {
+                    <span>Test en cours...</span>
+                    } @else {
+                    <span>Tester</span>
+                    }
+                </button>
                 <button (click)="saveAiConfig()" [disabled]="isAiConfigSaving()"
                     class="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300 text-white px-4 py-2 rounded-md text-sm font-bold shadow-sm transition-colors">
                     @if (isAiConfigSaving()) {
@@ -45,6 +62,18 @@
 
     <!-- API Keys Management Section -->
     <div class="bg-white border border-indigo-200 rounded-lg shadow-sm overflow-hidden mb-8">
+        @if (testResult() && testResult()?.keyId !== 'config') {
+            <div class="px-6 py-3 text-sm font-medium flex items-center gap-2 border-b"
+                 [class.bg-green-50]="testResult()?.success"
+                 [class.text-green-800]="testResult()?.success"
+                 [class.border-green-200]="testResult()?.success"
+                 [class.bg-red-50]="!testResult()?.success"
+                 [class.text-red-800]="!testResult()?.success"
+                 [class.border-red-200]="!testResult()?.success">
+                <span>{{ testResult()?.success ? '✓' : '✗' }}</span>
+                <span>{{ testResult()?.message }}</span>
+            </div>
+        }
         <div class="bg-indigo-50 px-6 py-4 border-b border-indigo-100 flex justify-between items-center">
             <div>
                 <h2 class="text-lg font-bold text-indigo-900">Gestion des Clés IA</h2>
@@ -100,7 +129,19 @@
                             {{ key.created_at | date:'short' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                            <button (click)="testApiKey(key)" [disabled]="testingKeyId() === key.id"
+                                class="text-emerald-600 hover:text-emerald-900 font-semibold disabled:text-emerald-300 disabled:cursor-not-allowed">
+                                @if (testingKeyId() === key.id) { ... } @else { Tester }
+                            </button>
+                            @if (testResult()?.keyId === key.id) {
+                                <span class="text-xs"
+                                      [class.text-green-600]="testResult()?.success"
+                                      [class.text-red-600]="!testResult()?.success">
+                                    {{ testResult()?.success ? '✓' : '✗' }}
+                                </span>
+                            }
                             @if(!key.is_active) {
+                            <span class="text-slate-300">|</span>
                             <button (click)="activateKey(key)" [disabled]="processingKeyId() === key.id"
                                 class="text-indigo-600 hover:text-indigo-900 font-semibold disabled:text-indigo-300 disabled:cursor-not-allowed">
                                 @if (processingKeyId() === key.id) { ... } @else { Activer }
@@ -569,13 +610,26 @@
                             <p class="text-xs text-slate-500 mt-1">Sera chiffrée en base de données.</p>
                         </div>
 
-                        <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                        @if (testNewKeyResult()) {
+                            <div class="p-3 rounded-md text-sm font-medium text-center"
+                                 [class.bg-green-100]="testNewKeyResult()?.success"
+                                 [class.text-green-800]="testNewKeyResult()?.success"
+                                 [class.bg-red-100]="!testNewKeyResult()?.success"
+                                 [class.text-red-800]="!testNewKeyResult()?.success">
+                                {{ testNewKeyResult()?.message }}
+                            </div>
+                        }
+                        <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-3 sm:gap-3">
+                            <button type="button" (click)="testNewKey()" [disabled]="apiKeyForm.invalid || testingNewKey()"
+                                class="inline-flex w-full justify-center rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-500 disabled:bg-emerald-300 sm:col-start-1">
+                                @if (testingNewKey()) { ... } @else { Tester }
+                            </button>
                             <button type="submit" [disabled]="apiKeyForm.invalid"
                                 class="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:col-start-2">
                                 Ajouter
                             </button>
                             <button type="button" (click)="closeKeyModal()"
-                                class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:col-start-1 sm:mt-0">Annuler</button>
+                                class="mt-3 sm:mt-0 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:col-start-3">Annuler</button>
                         </div>
                     </form>
                 </div>

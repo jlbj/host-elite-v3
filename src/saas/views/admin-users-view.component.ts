@@ -5,7 +5,7 @@ import { HostRepository } from '../../services/host-repository.service';
 import { SessionStore } from '../../state/session.store';
 import { UserProfile, AppPlan, ApiKey, PlanConfig, Feature } from '../../types';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { AIProviderType } from '../../services/ai/ai.service';
+import { AIProviderType, AIService } from '../../services/ai/ai.service';
 import { AIConfigService } from '../../services/ai/ai-config.service';
 
 @Component({
@@ -50,6 +50,7 @@ export class AdminUsersViewComponent implements OnInit {
     private store = inject(SessionStore);
     private fb: FormBuilder = inject(FormBuilder);
     private aiConfigService = inject(AIConfigService);
+    private aiService = inject(AIService);
 
     // Global Config (Linked to store for reading, but local signal for form state)
     showPlanBadges = signal(false);
@@ -63,6 +64,10 @@ export class AdminUsersViewComponent implements OnInit {
     apiKeys = signal<ApiKey[]>([]);
     isKeyModalOpen = signal(false);
     processingKeyId = signal<string | null>(null);
+    testingKeyId = signal<string | null>(null);
+    testResult = signal<{ keyId: string; success: boolean; message: string } | null>(null);
+    testingNewKey = signal(false);
+    testNewKeyResult = signal<{ success: boolean; message: string } | null>(null);
 
     // Plans State
     plans = signal<PlanConfig[]>([]);
@@ -572,6 +577,88 @@ CREATE POLICY "Admin update plans" ON app_plans FOR UPDATE USING (
         } catch (e: any) {
             this.handleDatabaseError(e);
             await this.refreshFeatures();
+        }
+    }
+
+    // --- AI TEST ACTIONS ---
+
+    async testApiKey(key: ApiKey) {
+        if (this.testingKeyId()) return;
+
+        if (!key.is_active) {
+            this.testResult.set({ keyId: key.id, success: false, message: 'Active la clé d\'abord avant de tester.' });
+            setTimeout(() => this.testResult.set(null), 4000);
+            return;
+        }
+
+        this.testingKeyId.set(key.id);
+        this.testResult.set(null);
+        try {
+            const decryptedKey = await this.aiConfigService.fetchApiKey(key.provider as AIProviderType);
+            if (!decryptedKey) {
+                this.testResult.set({
+                    keyId: key.id,
+                    success: false,
+                    message: 'Impossible de récupérer la clé. La fonction Supabase RPC get_ai_api_key est peut-être manquante, ou aucune clé active n\'est stockée.'
+                });
+                return;
+            }
+            const ok = await this.aiService.testConnection(key.provider as AIProviderType, decryptedKey);
+            if (ok) {
+                this.testResult.set({ keyId: key.id, success: true, message: 'Connexion réussie ! Le fournisseur AI répond correctement.' });
+            } else {
+                this.testResult.set({ keyId: key.id, success: false, message: 'Échec de la connexion. Clé invalide ou fournisseur indisponible.' });
+            }
+        } catch (e: any) {
+            this.testResult.set({ keyId: key.id, success: false, message: `Erreur: ${e?.message || 'Inconnue'}` });
+        } finally {
+            this.testingKeyId.set(null);
+            setTimeout(() => this.testResult.set(null), 6000);
+        }
+    }
+
+    async testNewKey() {
+        if (this.testingNewKey() || this.apiKeyForm.invalid) return;
+        this.testingNewKey.set(true);
+        this.testNewKeyResult.set(null);
+        try {
+            const { provider, key } = this.apiKeyForm.value;
+            const ok = await this.aiService.testConnection(provider as AIProviderType, key);
+            this.testNewKeyResult.set({
+                success: ok,
+                message: ok
+                    ? 'Connexion réussie ! Cette clé fonctionne.'
+                    : 'Échec de la connexion. Clé invalide ou fournisseur indisponible.'
+            });
+        } catch (e: any) {
+            this.testNewKeyResult.set({ success: false, message: `Erreur: ${e?.message || 'Inconnue'}` });
+        } finally {
+            this.testingNewKey.set(false);
+        }
+    }
+
+    async testAiConfig() {
+        if (this.testingKeyId()) return;
+        this.testingKeyId.set('config');
+        this.testResult.set(null);
+        try {
+            const provider = this.aiProvider();
+            const decryptedKey = await this.aiConfigService.fetchApiKey(provider);
+            if (!decryptedKey) {
+                this.testResult.set({ keyId: 'config', success: false, message: 'Aucune clé API trouvée pour ce fournisseur. Ajoute une clé d\'abord.' });
+                return;
+            }
+            const ok = await this.aiService.testConnection(provider, decryptedKey);
+            if (ok) {
+                this.testResult.set({ keyId: 'config', success: true, message: `Connexion réussie avec ${provider.toUpperCase()} !` });
+            } else {
+                this.testResult.set({ keyId: 'config', success: false, message: `Échec de la connexion avec ${provider.toUpperCase()}.` });
+            }
+        } catch (e: any) {
+            this.testResult.set({ keyId: 'config', success: false, message: `Erreur: ${e?.message || 'Inconnue'}` });
+        } finally {
+            this.testingKeyId.set(null);
+            setTimeout(() => this.testResult.set(null), 6000);
         }
     }
 

@@ -31,7 +31,6 @@ import { LoggingService } from '../services/logging.service';
 
 import { ProfitabilityViewComponent } from './views/profitability-view.component';
 import { WelcomeBookletService } from './views/welcome-booklet/welcome-booklet.service';
-import { MdxVisualEditorComponent } from './features/mdx-editor/mdx-visual-editor.component';
 
 @Component({
   selector: 'saas-app',
@@ -58,8 +57,7 @@ import { MdxVisualEditorComponent } from './features/mdx-editor/mdx-visual-edito
     NotificationBellComponent,
     NotificationCenterComponent,
     ProfileModalComponent,
-    CalendarToolComponent,
-    MdxVisualEditorComponent
+    CalendarToolComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './saas-app.component.html',

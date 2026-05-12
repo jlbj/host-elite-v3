@@ -9,7 +9,7 @@ export type Language = 'en' | 'fr' | 'es';
     providedIn: 'root'
 })
 export class TranslationService {
-    currentLang = signal<Language>('fr'); // Default to French as per legacy
+    currentLang = signal<Language>('en');
 
     private dictionaries: Record<Language, Record<string, string>> = {
         'fr': fr,

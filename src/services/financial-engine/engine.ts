@@ -132,15 +132,6 @@ export class FinancialCalculator {
                 }
             }
 
-            // Regulatory Risk Flag
-            if (marketData && (marketData.regulatoryRisk === 'High' || marketData.regulatoryRisk === 'Critical')) {
-                output.redFlags?.push({
-                    code: 'REGULATORY_RISK_CRITICAL',
-                    severity: marketData.regulatoryRisk === 'Critical' ? 'CRITICAL' : 'WARNING',
-                    message: `Regulatory Risk in ${marketData.marketName} is ${marketData.regulatoryRisk}. Check local laws.`
-                });
-            }
-
 
             // --- TAX STRATEGY INTEGRATION ---
             if (marketData && input.taxRegime) {

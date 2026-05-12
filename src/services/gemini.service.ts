@@ -883,13 +883,7 @@ constructor() {
       return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Error checking compliance:', error);
-      return {
-        riskScore: 50,
-        riskLevel: 'Moderate Risk',
-        riskStatus: 'Unknown',
-        description: 'Unable to perform real-time scan. Please check local municipal website.',
-        recommendations: ['Check for registration requirements', 'Verify tax obligations', 'Consult a legal expert']
-      };
+      throw new Error('Compliance check failed. Please try again later.');
     }
   }
 

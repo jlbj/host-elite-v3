@@ -93,7 +93,6 @@ export class HostRepository {
     private readonly defaultSubViews: View[] = [
         // Phase 1: Préparation
         { id: 'manage-property', title: 'Manage', icon: 'settings', phase: 'preparation', requiredTier: 'TIER_1' },
-        { id: 'mdx-editor', title: 'MDX Editor', icon: 'code', phase: 'preparation', requiredTier: 'TIER_1' },
         { id: 'welcome-booklet', title: 'NAV.welcome-booklet', icon: 'info', featureId: 'MKT_00', phase: 'preparation', requiredTier: 'TIER_1' },
 
         // Phase 2: Lancement
