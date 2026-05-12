@@ -66,9 +66,14 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
         this.loaded = false;
     }
 
-    private get assetBasePath(): string {
-        const match = window.location.pathname.match(/^(\/api\/preview\/proxy\/[a-f0-9]{16,64})(?:\/|$)/i);
-        return match ? match[1] : '';
+    private get assetBaseUrl(): string {
+        // When behind the OpenChamber preview proxy (port 3000), the proxy doesn't
+        // reliably serve static assets. Load directly from the Angular dev server.
+        const match = window.location.pathname.match(/^\/api\/preview\/proxy\/[a-f0-9]{16,64}/i);
+        if (match) {
+            return 'http://localhost:4200';
+        }
+        return '';
     }
 
     private cacheBust(): string {
@@ -76,11 +81,11 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
     }
 
     private get listingEditorUrl(): string {
-        return this.assetBasePath + '/listing-editor/listing-editor.umd.js' + this.cacheBust();
+        return this.assetBaseUrl + '/listing-editor/listing-editor.umd.js' + this.cacheBust();
     }
 
     private get cssUrl(): string {
-        return this.assetBasePath + '/listing-editor/listing-editor.css' + this.cacheBust();
+        return this.assetBaseUrl + '/listing-editor/listing-editor.css' + this.cacheBust();
     }
 
     private async loadPropertyData(propertyName: string) {
