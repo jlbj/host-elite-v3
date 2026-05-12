@@ -45,8 +45,8 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
     scriptsLoaded = signal(false);
     loadError = signal<string | null>(null);
 
-    private listingEditorUrl = 'https://cdn.jsdelivr.net/gh/jlbj/host-elite-v3@main/public/listing-editor/listing-editor.umd.js?v=' + Date.now();
-    private cssUrl = 'https://cdn.jsdelivr.net/gh/jlbj/host-elite-v3@main/public/listing-editor/listing-editor.css?v=' + Date.now();
+    private listingEditorUrl = '/listing-editor/listing-editor.umd.js?v=' + Date.now();
+    private cssUrl = '/listing-editor/listing-editor.css?v=' + Date.now();
     private loaded = false;
 
     constructor() {
