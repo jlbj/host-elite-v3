@@ -5,10 +5,6 @@ const DELETE_THRESHOLD = 15;
 const SNAP_THRESHOLD = 10;
 const EPSILON = 1;
 
-export function getBlockArea(block: GridBlock): number {
-  return block.bounds.right * block.bounds.bottom;
-}
-
 export interface Separator {
   id: string;
   orientation: 'horizontal' | 'vertical';
@@ -104,10 +100,6 @@ export function initializeGridState(
   }));
 }
 
-export function computeBlocksFromSeparators(_state: { horizontalSeparators: number[]; verticalSeparators: number[]; blockSectionMap: Record<string, string | undefined> }): GridBlock[] {
-  return [];
-}
-
 export function refreshLayoutPositions(blocks: GridBlock[]): GridBlock[] {
   if (blocks.length === 0) return [];
   
@@ -149,45 +141,6 @@ export function refreshLayoutPositions(blocks: GridBlock[]): GridBlock[] {
   });
   
   return updated;
-}
-
-export function findEdgeAtPosition(
-  blocks: GridBlock[],
-  x: number,
-  y: number,
-  containerWidth: number
-): { orientation: 'H' | 'V'; coordinate: number; affectedA: string[]; affectedB: string[] } | null {
-  const hitArea = 8;
-  
-  console.log('[findEdge] blocks:', blocks.map(b => ({ id: b.id, top: b.bounds.top, bottom: b.bounds.bottom, left: b.bounds.left, right: b.bounds.right })));
-  console.log('[findEdge] click at:', x, y, 'containerWidth:', containerWidth);
-  
-  for (const b of blocks) {
-    const rightEdge = b.bounds.left + (b.bounds.right - b.bounds.left);
-    const bottomEdge = b.bounds.top + (b.bounds.bottom - b.bounds.top);
-    
-    console.log('[findEdge] block:', b.id, 'rightEdge:', rightEdge, 'bottomEdge:', bottomEdge);
-    console.log('[findEdge] check V:', Math.abs(x - rightEdge), '<', hitArea, '&&', y, '>=', b.bounds.top, '&&', y, '<=', bottomEdge, '&&', rightEdge, '<', containerWidth);
-    
-    if (Math.abs(x - rightEdge) < hitArea && y >= b.bounds.top && y <= bottomEdge && rightEdge < containerWidth) {
-      const affectedA = blocks.filter(bl => Math.abs(bl.bounds.left + (bl.bounds.right - bl.bounds.left) - rightEdge) < EPSILON).map(bl => bl.id);
-      const affectedB = blocks.filter(bl => Math.abs(bl.bounds.left - rightEdge) < EPSILON).map(bl => bl.id);
-      console.log('[findEdge] FOUND V edge:', { orientation: 'V', coordinate: rightEdge, affectedA, affectedB });
-      return { orientation: 'V', coordinate: rightEdge, affectedA, affectedB };
-    }
-    
-    console.log('[findEdge] check H:', Math.abs(y - bottomEdge), '<', hitArea, '&&', x, '>=', b.bounds.left, '&&', x, '<=', rightEdge);
-    
-    if (Math.abs(y - bottomEdge) < hitArea && x >= b.bounds.left && x <= rightEdge) {
-      const affectedA = blocks.filter(bl => Math.abs(bl.bounds.top + (bl.bounds.bottom - bl.bounds.top) - bottomEdge) < EPSILON).map(bl => bl.id);
-      const affectedB = blocks.filter(bl => Math.abs(bl.bounds.top - bottomEdge) < EPSILON).map(bl => bl.id);
-      console.log('[findEdge] FOUND H edge:', { orientation: 'H', coordinate: bottomEdge, affectedA, affectedB });
-      return { orientation: 'H', coordinate: bottomEdge, affectedA, affectedB };
-    }
-  }
-  
-  console.log('[findEdge] no edge found');
-  return null;
 }
 
 export function applyDragToBlocks(
@@ -278,90 +231,6 @@ export function applyDragToBlocks(
   const kept = next.filter(b => (b.bounds.right - b.bounds.left) > 2 && (b.bounds.bottom - b.bounds.top) > 2);
   const result = kept.length !== next.length ? refreshLayoutPositions(kept) : next;
   return { blocks: result, appliedPos: pos };
-}
-
-export function splitBlockVertically(
-  blocks: GridBlock[],
-  blockId: string,
-  _containerWidth: number
-): GridBlock[] {
-  const idx = blocks.findIndex(b => b.id === blockId);
-  const target = blocks[idx];
-  if (!target) return blocks;
-  
-  const width = target.bounds.right - target.bounds.left;
-  if (width < MIN_SIZE * 2) return blocks;
-  
-  const halfW = Math.round(width / 2);
-  
-  const leftBlock: GridBlock = {
-    ...target,
-    bounds: {
-      ...target.bounds,
-      right: target.bounds.left + halfW,
-    },
-  };
-  
-  const rightBlock: GridBlock = {
-    id: `blk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    sectionId: undefined,
-    row: target.row,
-    col: target.col + 1,
-    bounds: {
-      top: target.bounds.top,
-      left: target.bounds.left + halfW,
-      right: target.bounds.right,
-      bottom: target.bounds.bottom,
-    },
-  };
-  
-  const updated = [...blocks];
-  updated[idx] = leftBlock;
-  updated.splice(idx + 1, 0, rightBlock);
-  
-  return updated;
-}
-
-export function splitBlockHorizontally(
-  blocks: GridBlock[],
-  blockId: string,
-  _containerHeight: number
-): GridBlock[] {
-  const idx = blocks.findIndex(b => b.id === blockId);
-  const target = blocks[idx];
-  if (!target) return blocks;
-  
-  const height = target.bounds.bottom - target.bounds.top;
-  if (height < MIN_SIZE * 2) return blocks;
-  
-  const halfH = Math.round(height / 2);
-  
-  const topBlock: GridBlock = {
-    ...target,
-    bounds: {
-      ...target.bounds,
-      bottom: target.bounds.top + halfH,
-    },
-  };
-  
-  const bottomBlock: GridBlock = {
-    id: `blk_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    sectionId: undefined,
-    row: target.row + 1,
-    col: target.col,
-    bounds: {
-      top: target.bounds.top + halfH,
-      left: target.bounds.left,
-      right: target.bounds.right,
-      bottom: target.bounds.bottom,
-    },
-  };
-  
-  const updated = [...blocks];
-  updated[idx] = topBlock;
-  updated.splice(idx + 1, 0, bottomBlock);
-  
-  return refreshLayoutPositions(updated);
 }
 
 export function mergeBlocks(

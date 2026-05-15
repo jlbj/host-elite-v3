@@ -20,7 +20,6 @@ export function EditorCanvas() {
 
   const sortedSections = [...pageConfig.sections].sort((a, b) => a.order - b.order);
   const isCustom = pageConfig.layout === 'custom';
-  console.log('[EditorCanvas] Rendering. layout:', pageConfig.layout, 'isCustom:', isCustom, 'sections:', sortedSections.length, 'gridBlocks:', gridBlocks.length);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -168,30 +167,15 @@ export function EditorCanvas() {
           </div>
         ) : (
           <>
-            {gridBlocks.map((block, index) => {
-              // Find the section assigned to this block
-              const assignedSection = block.sectionId 
-                ? sortedSections.find(s => s.id === block.sectionId) 
-                : null;
-              const blockHeight = block.bounds ? block.bounds.bottom - block.bounds.top : undefined;
-              return (
-                <div 
-                  key={block.id} 
-                  style={{ flex: 'none', height: blockHeight ? `${blockHeight}px` : 'auto', minHeight: '100px', cursor: 'pointer', border: selectedBlockId === block.id ? '2px solid #3b82f6' : '2px solid transparent', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                  onClickCapture={() => { console.log('[EditorCanvas] Click CAPTURE on block:', block.id, 'section:', assignedSection?.id); setSelectedBlock(block.id); }}
-                >
-                  {assignedSection ? (
-                    <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                      <SectionRenderer section={assignedSection} style={{ flex: 1, ...getSectionStyle(assignedSection, index) }} theme={theme} blockId={block.id} />
-                    </div>
-                  ) : (
-                    <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', background: '#f8fafc', minHeight: '100px' }}>
-                      Empty block - assign a section from sidebar
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {sortedSections.map((section, index) => (
+              <div
+                key={section.id}
+                style={{ cursor: 'pointer', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                onClickCapture={() => setSelectedBlock(gridBlocks[index]?.id || section.id)}
+              >
+                <SectionRenderer section={section} style={{ flex: 1, ...getSectionStyle(section, index) }} theme={theme} />
+              </div>
+            ))}
             <div style={{ height: '48px', flexShrink: 0 }} />
           </>
         )}

@@ -243,26 +243,18 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   loadProperty: async (propertyId: string) => {
     set({ isLoading: true, error: null });
     try {
-      console.log('[loadProperty] Loading property:', propertyId);
       const [propertyData, photos] = await Promise.all([
         supabase.fetchProperty(propertyId),
         supabase.fetchPropertyPhotos(propertyId),
       ]);
-
-      console.log('[loadProperty] Property data:', propertyData);
-      console.log('[loadProperty] Photos:', photos);
 
       if (!propertyData) {
         throw new Error('Property not found');
       }
 
       let pageConfig = propertyData.page_config || DEFAULT_PAGE_CONFIG;
-      console.log('[loadProperty] Initial pageConfig sections:', pageConfig.sections?.length);
-
-      // If no sections exist, create them from property data
       if (!pageConfig.sections || pageConfig.sections.length === 0) {
         const newSections = createSectionsFromProperty(propertyData, photos);
-        console.log('[loadProperty] Created sections from property:', newSections.length);
         pageConfig = {
           ...pageConfig,
           sections: newSections,
@@ -287,7 +279,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         gridBlocks,
         isLoading: false,
       });
-      console.log('[loadProperty] Done, sections in store:', pageConfig.sections?.length);
 
       // Load available layouts from DB after property is loaded
       get().loadLayouts();
@@ -353,7 +344,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     if (!hasHeroFirst) missingPredefined.push(predefinedLayouts.find(l => l.id === 'hero-first')!);
     
     const allLayouts = [...customLayouts, ...missingPredefined];
-    console.log('[loadLayouts] Total:', allLayouts.length, 'layouts. Missing predefined added:', missingPredefined.length);
     set({ availableLayouts: allLayouts });
   },
 
@@ -383,7 +373,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setViewMode: (mode) => set({ viewMode: mode }),
 
   setLayout: (layoutId) => {
-    console.log('[setLayout] layoutId:', layoutId);
     if (layoutId === 'custom') {
       set((state) => {
         let sections = state.pageConfig.sections;
@@ -407,9 +396,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const dbLayout = get().availableLayouts.find(l => l.id === layoutId);
       
       if (dbLayout) {
-        console.log('[setLayout] Found DB layout:', dbLayout.name, 'type:', dbLayout.type);
-        console.log('[setLayout] gridBlocks count:', (dbLayout.grid_blocks as any[])?.length);
-
         set((state) => {
           const gridBlocks = (dbLayout.grid_blocks as GridBlock[]) || [];
           const finalSections = state.pageConfig.sections;
@@ -485,8 +471,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   editLayout: (layoutId) => {
     const dbLayout = get().availableLayouts.find(l => l.id === layoutId);
     if (!dbLayout) return;
-
-    console.log('[editLayout] Editing layout:', dbLayout.name, 'type:', dbLayout.type);
 
     set((state) => {
       const gridBlocks = (dbLayout.grid_blocks as GridBlock[]) || [];
@@ -612,7 +596,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         sectionId: undefined,
         bounds: { ...target.bounds, left: target.bounds.left + halfW },
       });
-      set({ gridBlocks: newBlocks, selectedBlockId: blockId });
+      set({
+        gridBlocks: newBlocks,
+        selectedBlockId: blockId,
+        pageConfig: { ...state.pageConfig, layout: 'custom' },
+        selectedCustomLayoutId: null,
+      });
     } else {
       const height = target.bounds.bottom - target.bounds.top;
       if (height < 100) return;
@@ -625,7 +614,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         sectionId: undefined,
         bounds: { ...target.bounds, top: target.bounds.top + halfH },
       });
-      set({ gridBlocks: newBlocks, selectedBlockId: blockId });
+      set({
+        gridBlocks: newBlocks,
+        selectedBlockId: blockId,
+        pageConfig: { ...state.pageConfig, layout: 'custom' },
+        selectedCustomLayoutId: null,
+      });
     }
   },
 
@@ -763,8 +757,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   saveCustomLayout: async (name) => {
     const { gridBlocks, propertyData, editingLayoutId, availableLayouts } = get();
-    console.log('[saveCustomLayout] Saving gridBlocks count:', gridBlocks.length);
-    console.log('[saveCustomLayout] editingLayoutId:', editingLayoutId);
     if (gridBlocks.length === 0) return false;
 
     const existingLayout = editingLayoutId ? availableLayouts.find(l => l.id === editingLayoutId) : null;
@@ -795,7 +787,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     }
 
     if (saved) {
-      console.log('[saveCustomLayout] Saved to DB:', saved.id);
       // Refresh layouts list
       await get().loadLayouts();
       // Switch to the saved layout (exit editing mode)
@@ -813,7 +804,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   deleteCustomLayout: async (id) => {
     const success = await supabase.deleteListingLayout(id);
     if (success) {
-      console.log('[deleteCustomLayout] Deleted from DB:', id);
       // Refresh layouts list
       await get().loadLayouts();
 
