@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "ng serve --host 0.0.0.0",
     "start": "npm run dev",
-    "build": "ng build",
+    "build:listing-editor": "cd src/listing-editor && npm install && npm run build",
+    "build": "npm run build:listing-editor && ng build",
     "preview": "ng serve --configuration=production"
   },
   "dependencies": {

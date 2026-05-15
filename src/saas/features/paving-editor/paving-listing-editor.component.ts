@@ -67,11 +67,7 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
     }
 
     private get assetBaseUrl(): string {
-        const match = window.location.pathname.match(/^\/api\/preview\/proxy\/[a-f0-9]{16,64}/i);
-        if (match) {
-            const { protocol, hostname } = window.location;
-            return `${protocol}//${hostname}:4200`;
-        }
+        // Listing editor is bundled with the app at /listing-editor/
         return '';
     }
 
