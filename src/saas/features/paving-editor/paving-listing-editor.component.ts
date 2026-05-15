@@ -67,8 +67,7 @@ export class PavingListingEditorComponent implements OnInit, OnDestroy {
     }
 
     private get assetBaseUrl(): string {
-        // Listing editor is bundled with the app at /listing-editor/
-        return '';
+        return window.location.protocol + '//' + window.location.hostname + ':4200';
     }
 
     private cacheBust(): string {

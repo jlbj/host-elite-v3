@@ -13,6 +13,7 @@ export function EditorCanvas() {
   const gridBlocks = useEditorStore((s) => s.gridBlocks);
   const setSelectedBlock = useEditorStore((s) => s.setSelectedBlock);
   const selectedBlockId = useEditorStore((s) => s.selectedBlockId);
+  const containerWidth = useEditorStore((s) => s.containerWidth);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const theme = getTheme();
@@ -121,14 +122,15 @@ export function EditorCanvas() {
                 const width = block.bounds.right - block.bounds.left;
                 const top = block.bounds.top;
                 const left = block.bounds.left;
+                const scaleX = containerWidth > 0 ? containerWidth / 800 : 1;
                 return (
                   <div 
                     key={block.id} 
                     style={{ 
                       position: 'absolute',
                       top: `${top}px`,
-                      left: `${left}px`,
-                      width: `${width}px`,
+                      left: `${left * scaleX}px`,
+                      width: `${width * scaleX}px`,
                       height: `${height}px`,
                       cursor: 'pointer', 
                       border: selectedBlockId === block.id ? '2px solid #3b82f6' : '2px solid transparent',

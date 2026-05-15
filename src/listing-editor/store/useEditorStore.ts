@@ -7,8 +7,6 @@ import type { ListingLayout } from '../services/supabase';
 import {
   initializeGridState,
   applyDragToBlocks,
-  splitBlockVertically,
-  splitBlockHorizontally,
   mergeBlocks,
 } from '../lib/grid-utils';
 
@@ -315,9 +313,12 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   loadLayouts: async () => {
-    const { propertyData, pageConfig } = get();
+    const { propertyData, pageConfig, containerWidth } = get();
     const ownerId = propertyData?.owner_id;
     const customLayouts = await supabase.fetchListingLayouts(ownerId);
+    
+    const blockWidth = containerWidth || 800;
+    const blockHeight = 150;
     
     // Add predefined layouts from LAYOUTS constant with proper gridBlocks
     const sections = pageConfig.sections.length > 0 ? pageConfig.sections : createDefaultSections();
@@ -333,7 +334,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           sectionId: section.id,
           row: 0,
           col: 0,
-          bounds: { top: index * 150, left: 0, right: 800, bottom: (index + 1) * 150 },
+          bounds: { top: index * blockHeight, left: 0, right: blockWidth, bottom: (index + 1) * blockHeight },
           displayMode: 'LOCKED' as const,
         })) as unknown as GridBlock[],
         section_assignments: sections.reduce((acc, s, i) => ({ ...acc, [`block_${i}`]: s.id }), {}),
@@ -593,20 +594,37 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   splitBlock: (blockId, direction) => {
     const state = get();
+    const idx = state.gridBlocks.findIndex(b => b.id === blockId);
+    const target = state.gridBlocks[idx];
+    if (!target) return;
+
     get().saveBlockHistory();
+
     if (direction === 'vertical') {
-      const newBlocks = splitBlockVertically(state.gridBlocks, blockId, state.containerWidth);
-      if (newBlocks === state.gridBlocks) {
-        get().setToastMessage('Block too narrow to split');
-        return;
-      }
+      const width = target.bounds.right - target.bounds.left;
+      if (width < 100) return;
+      const halfW = Math.round(width / 2);
+      const newBlocks = [...state.gridBlocks];
+      newBlocks[idx] = { ...target, bounds: { ...target.bounds, right: target.bounds.left + halfW } };
+      newBlocks.splice(idx + 1, 0, {
+        ...target,
+        id: 'blk_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        sectionId: undefined,
+        bounds: { ...target.bounds, left: target.bounds.left + halfW },
+      });
       set({ gridBlocks: newBlocks, selectedBlockId: blockId });
     } else {
-      const newBlocks = splitBlockHorizontally(state.gridBlocks, blockId, state.containerHeight);
-      if (newBlocks === state.gridBlocks) {
-        get().setToastMessage('Block too short to split');
-        return;
-      }
+      const height = target.bounds.bottom - target.bounds.top;
+      if (height < 100) return;
+      const halfH = Math.round(height / 2);
+      const newBlocks = [...state.gridBlocks];
+      newBlocks[idx] = { ...target, bounds: { ...target.bounds, bottom: target.bounds.top + halfH } };
+      newBlocks.splice(idx + 1, 0, {
+        ...target,
+        id: 'blk_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        sectionId: undefined,
+        bounds: { ...target.bounds, top: target.bounds.top + halfH },
+      });
       set({ gridBlocks: newBlocks, selectedBlockId: blockId });
     }
   },
