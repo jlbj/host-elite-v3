@@ -261,13 +261,17 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         };
       }
 
-      // Create gridBlocks from sections (each section is a block)
+      const count = Math.max(1, pageConfig.sections.length);
+      const ch = get().containerHeight > 0 ? get().containerHeight : 748;
+      const blockWidth = get().containerWidth || 800;
+      const h = ch / count;
+      
       const gridBlocks = pageConfig.sections.map((section, index) => ({
         id: `block_${index}`,
         sectionId: section.id,
         row: 0,
         col: 0,
-        bounds: { top: index * 150, left: 0, right: 800, bottom: (index + 1) * 150 },
+        bounds: { top: index * h, left: 0, right: blockWidth, bottom: (index + 1) * h },
         displayMode: 'LOCKED' as const,
       }));
 
@@ -309,7 +313,62 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     const customLayouts = await supabase.fetchListingLayouts(ownerId);
     
     const blockWidth = containerWidth || 800;
-    const blockHeight = 150;
+    const blockHeight = containerHeight > 0 ? containerHeight : 748;
+
+    const generatePredefinedBlocks = (layoutId: string, sections: Section[]) => {
+      const count = Math.max(1, sections.length);
+      const blocks: GridBlock[] = [];
+      
+      if (layoutId === 'two-column') {
+        let currentY = 0;
+        const rowHeight = blockHeight / Math.ceil(count / 1.5); // Approximate
+        for (let i = 0; i < count; i++) {
+          if (i % 3 === 0 || i === count - 1) { // Full width
+            blocks.push({
+              id: `block_${i}`, sectionId: sections[i].id, row: 0, col: 0,
+              bounds: { top: currentY, left: 0, right: blockWidth, bottom: currentY + rowHeight },
+              displayMode: 'LOCKED'
+            });
+            currentY += rowHeight;
+          } else { // Half width
+            const isLeft = i % 3 === 1;
+            blocks.push({
+              id: `block_${i}`, sectionId: sections[i].id, row: 0, col: 0,
+              bounds: { 
+                top: currentY, 
+                left: isLeft ? 0 : blockWidth / 2, 
+                right: isLeft ? blockWidth / 2 : blockWidth, 
+                bottom: currentY + rowHeight 
+              },
+              displayMode: 'LOCKED'
+            });
+            if (!isLeft) currentY += rowHeight;
+          }
+        }
+      } else if (layoutId === 'hero-first') {
+        const heroHeight = blockHeight * 0.4;
+        const restHeight = (blockHeight - heroHeight) / (count - 1 || 1);
+        for (let i = 0; i < count; i++) {
+          const top = i === 0 ? 0 : heroHeight + (i - 1) * restHeight;
+          const bottom = i === 0 ? heroHeight : top + restHeight;
+          blocks.push({
+            id: `block_${i}`, sectionId: sections[i].id, row: 0, col: 0,
+            bounds: { top, left: 0, right: blockWidth, bottom },
+            displayMode: 'LOCKED'
+          });
+        }
+      } else { // list, magazine, custom
+        const h = blockHeight / count;
+        for (let i = 0; i < count; i++) {
+          blocks.push({
+            id: `block_${i}`, sectionId: sections[i].id, row: 0, col: 0,
+            bounds: { top: i * h, left: 0, right: blockWidth, bottom: (i + 1) * h },
+            displayMode: 'LOCKED'
+          });
+        }
+      }
+      return blocks;
+    };
     
     // Add predefined layouts from LAYOUTS constant with proper gridBlocks
     const sections = pageConfig.sections.length > 0 ? pageConfig.sections : createDefaultSections();
@@ -320,14 +379,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         name: l.name,
         type: 'predefined' as const,
         owner_id: undefined as string | undefined,
-        grid_blocks: sections.map((section, index) => ({
-          id: `block_${index}`,
-          sectionId: section.id,
-          row: 0,
-          col: 0,
-          bounds: { top: index * blockHeight, left: 0, right: blockWidth, bottom: (index + 1) * blockHeight },
-          displayMode: 'LOCKED' as const,
-        })) as unknown as GridBlock[],
+        grid_blocks: generatePredefinedBlocks(l.id, sections) as unknown as GridBlock[],
         section_assignments: sections.reduce((acc, s, i) => ({ ...acc, [`block_${i}`]: s.id }), {}),
         created_at: '',
       }));
@@ -442,14 +494,50 @@ export const useEditorStore = create<EditorState>((set, get) => ({
           }
           
           const sections = state.pageConfig.sections;
-          const gridBlocks = sections.map((section, index) => ({
-            id: `block_${index}`,
-            sectionId: section.id,
-            row: 0,
-            col: 0,
-            bounds: { top: index * 150, left: 0, right: 800, bottom: (index + 1) * 150 },
-            displayMode: 'LOCKED' as const,
-          }));
+          const count = Math.max(1, sections.length);
+          const blockWidth = state.containerWidth || 800;
+          const ch = state.containerHeight > 0 ? state.containerHeight : 748;
+          let gridBlocks: GridBlock[] = [];
+          
+          if (layoutId === 'two-column') {
+            let currentY = 0;
+            const rowHeight = ch / Math.ceil(count / 1.5);
+            for (let i = 0; i < count; i++) {
+              if (i % 3 === 0 || i === count - 1) {
+                gridBlocks.push({
+                  id: `block_${i}`, sectionId: sections[i].id, row: 0, col: 0,
+                  bounds: { top: currentY, left: 0, right: blockWidth, bottom: currentY + rowHeight }, displayMode: 'LOCKED'
+                });
+                currentY += rowHeight;
+              } else {
+                const isLeft = i % 3 === 1;
+                gridBlocks.push({
+                  id: `block_${i}`, sectionId: sections[i].id, row: 0, col: 0,
+                  bounds: { top: currentY, left: isLeft ? 0 : blockWidth / 2, right: isLeft ? blockWidth / 2 : blockWidth, bottom: currentY + rowHeight }, displayMode: 'LOCKED'
+                });
+                if (!isLeft) currentY += rowHeight;
+              }
+            }
+          } else if (layoutId === 'hero-first') {
+            const heroHeight = ch * 0.4;
+            const restHeight = (ch - heroHeight) / (count - 1 || 1);
+            for (let i = 0; i < count; i++) {
+              const top = i === 0 ? 0 : heroHeight + (i - 1) * restHeight;
+              const bottom = i === 0 ? heroHeight : top + restHeight;
+              gridBlocks.push({
+                id: `block_${i}`, sectionId: sections[i].id, row: 0, col: 0,
+                bounds: { top, left: 0, right: blockWidth, bottom }, displayMode: 'LOCKED'
+              });
+            }
+          } else {
+            const h = ch / count;
+            for (let i = 0; i < count; i++) {
+              gridBlocks.push({
+                id: `block_${i}`, sectionId: sections[i].id, row: 0, col: 0,
+                bounds: { top: i * h, left: 0, right: blockWidth, bottom: (i + 1) * h }, displayMode: 'LOCKED'
+              });
+            }
+          }
           
           return {
             pageConfig: { ...state.pageConfig, layout: 'custom', sections },
