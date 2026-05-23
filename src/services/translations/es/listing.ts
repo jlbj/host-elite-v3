@@ -60,5 +60,13 @@ export const listing = {
     'LISTING.RequestQuote': 'Solicitar un Presupuesto',
     'LISTING.ResponseGuarantee': 'Respuesta garantizada en 24h',
     'LISTING.PhotosCount': '+{{count}} fotos',
+    'LISTING.TitlePlaceholder': 'Por ejemplo, Impresionante Villa frente al mar con Vistas Panorámicas',
+    'LISTING.CoverImagePlaceholder': 'https://example.com/cover-image.jpg',
+    'LISTING.DescriptionPlaceholder': 'Escribe una descripción convincente de tu propiedad...',
+    'LISTING.DescriptionHelp': 'Esta descripción aparecerá en tu anuncio en las plataformas de reserva.',
+    'LISTING.Tips': 'Consejos para un gran anuncio',
+    'LISTING.Tip1': 'Destaca las características únicas y las atracciones cercanas',
+    'LISTING.Tip2': 'Usa un lenguaje descriptivo que evoque emociones',
+    'LISTING.Tip3': 'Incluye información práctica que los huéspedes necesiten',
     'LISTING.Photos': 'fotos',
 };

@@ -63,4 +63,16 @@ export const training = {
     'TRAINING.pricing_q7_Title': '¿Ha definido reglas de estancia mínima dinámicas (ej: 2 noches los fines de semana, 7 noches en verano) para optimizar su calendario?',
     'TRAINING.pricing_q8_Title': '¿Utiliza una herramienta externa de precios dinámicos (ej: PriceLabs, Wheelhouse) para automatizar sus precios?',
     'TRAINING.pricing_q9_Title': '¿Ofrece tarifas escalonadas (ej: -10% semana, -25% mes) para atraer estancias largas?',
+
+    // Operations
+    'TRAINING.operations_q1_Title': 'Gestión de Recursos Humanos de Limpieza',
+    'TRAINING.operations_q2_Title': 'Optimización del Stock de Ropa de Cama',
+    'TRAINING.operations_q3_Title': 'Procesos Industriales (Checklist)',
+    'TRAINING.operations_q4_Title': 'Cadena de Suministro de Consumibles',
+    'TRAINING.operations_q5_Title': 'Mantenimiento Curativo de Emergencia',
+    'TRAINING.operations_q6_Title': 'Externalización de Lavandería',
+    'TRAINING.operations_q7_Title': 'Dominio del Channel Manager',
+    'TRAINING.operations_q8_Title': 'Control de Calidad a Distancia',
+    'TRAINING.operations_q9_Title': 'Procedimientos Operativos Estándar',
+    'TRAINING.operations_q10_Title': 'Hacia la Gestión 100% Pasiva',
 };

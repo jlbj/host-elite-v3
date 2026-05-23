@@ -134,7 +134,7 @@ export const audit = {
 
     // New keys for PropertyAudit UI
     'AUDIT.FullAuditDesc': 'Audit complet ({{count}} questions) de votre niveau d\'équipement et d\'hospitalité.',
-    'AUDIT.HospitalityScore': 'Hospitality Score',
+    'AUDIT.HospitalityScore': "Score d'Hospitalité",
     'AUDIT.CurrentRank': 'Rang actuel :',
     'AUDIT.Rank.Basic': 'Basique',
     'AUDIT.Rank.Standard': 'Standard',
