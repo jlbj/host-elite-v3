@@ -5,6 +5,7 @@ import { TranslatePipe } from '../../../pipes/translate.pipe';
 import { EditorLayout, EditorTheme, DEFAULT_THEME, EditorSection, EditorStep, DEFAULT_WIZARD_STEPS, WizardState } from './models';
 import { PreviewGenerationService, PreviewData } from './services';
 import { LayoutSelectorComponent, ThemeCustomizerComponent, SectionManagerComponent, ContentEditorComponent, PreviewPanelComponent } from './parts';
+import { LayoutEditorComponent } from './parts/layout-editor.component';
 
 // Metadata for mapping layout templateSection types to user-friendly labels/icons
 const TEMPLATE_SECTION_META: Record<string, { label: string; icon: string }> = {
@@ -35,7 +36,8 @@ export interface EditorSaveData {
         ThemeCustomizerComponent,
         SectionManagerComponent,
         ContentEditorComponent,
-        PreviewPanelComponent
+        PreviewPanelComponent,
+        LayoutEditorComponent
     ],
     template: `
         <div class="h-full flex flex-col bg-slate-900/50 rounded-2xl overflow-hidden border border-white/10">
@@ -131,6 +133,24 @@ export interface EditorSaveData {
                                     [selectedLayout]="selectedLayout()"
                                     (layoutSelected)="onLayoutSelected($event)">
                                 </app-layout-selector>
+                                
+                                @if (selectedLayout()) {
+                                    <button 
+                                        (click)="toggleLayoutEditor()"
+                                        class="w-full mt-3 py-2 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 border"
+                                        [class.bg-purple-600]="isEditingLayout()"
+                                        [class.border-purple-500]="isEditingLayout()"
+                                        [class.text-white]="isEditingLayout()"
+                                        [class.bg-white/5]="!isEditingLayout()"
+                                        [class.border-white/10]="!isEditingLayout()"
+                                        [class.text-slate-300]="!isEditingLayout()"
+                                        [class.hover:bg-white/10]="!isEditingLayout()">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                                        </svg>
+                                        {{ isEditingLayout() ? 'Close Layout Editor' : 'Edit Selected Layout' }}
+                                    </button>
+                                }
                             </div>
                         }
                     </div>
@@ -247,16 +267,20 @@ export interface EditorSaveData {
                     </div>
                 </div>
 
-                <!-- RIGHT PANEL: Preview -->
+                <!-- RIGHT PANEL: Preview or Layout Editor -->
                 <div class="flex-1 lg:h-full bg-slate-800 overflow-hidden" [class.hidden]="isFullscreenPreview()">
-                    <app-preview-panel
-                        [previewHtml]="previewHtml()"
-                        [theme]="currentTheme()"
-                        [layout]="selectedLayout()"
-                        [previewModeInput]="previewMode()"
-                        [forceMobileFrame]="forceMobileFrame()"
-                        (fullscreenChanged)="onFullscreenChanged($event)">
-                    </app-preview-panel>
+                    @if (isEditingLayout()) {
+                        <app-layout-editor></app-layout-editor>
+                    } @else {
+                        <app-preview-panel
+                            [previewHtml]="previewHtml()"
+                            [theme]="currentTheme()"
+                            [layout]="selectedLayout()"
+                            [previewModeInput]="previewMode()"
+                            [forceMobileFrame]="forceMobileFrame()"
+                            (fullscreenChanged)="onFullscreenChanged($event)">
+                        </app-preview-panel>
+                    }
                 </div>
             </div>
         </div>
@@ -331,6 +355,7 @@ export class UniversalEditorComponent {
     propertyEquipments = signal<string[]>([]);
     previewHtml = signal<string>('');
     isFullscreenPreview = signal(false);
+    isEditingLayout = signal(false);
     expandedSection = signal(0);
 
     // Computed: convert layout templateSections into EditorSection[] format for the SectionManager
@@ -508,7 +533,15 @@ export class UniversalEditorComponent {
             this.expandedSection.set(-1);
         } else {
             this.expandedSection.set(index);
+            // Hide the layout editor if we switch away from the layout tab
+            if (index !== 0) {
+                this.isEditingLayout.set(false);
+            }
         }
+    }
+
+    toggleLayoutEditor() {
+        this.isEditingLayout.update(v => !v);
     }
 
     markStepCompleted(stepId: string) {

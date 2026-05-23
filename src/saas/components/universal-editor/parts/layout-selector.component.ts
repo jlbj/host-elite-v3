@@ -11,11 +11,11 @@ import { EditorLayout } from '../models/editor-layout';
         <div class="space-y-3">
             <h3 class="text-sm font-medium text-white">{{ 'EDITOR.ChooseLayout' | translate }}</h3>
             
-            <div class="grid grid-cols-1 gap-2">
+            <div class="grid grid-cols-1 gap-2 auto-rows-fr">
                 @for (layout of layouts(); track layout.id) {
                     <div 
                         (click)="selectLayout(layout)"
-                        class="py-3 px-4 rounded-lg border cursor-pointer transition-all text-center group"
+                        class="p-4 rounded-lg border cursor-pointer transition-all text-center group flex flex-col items-center justify-center h-full"
                         [class.border-purple-500]="selectedLayout()?.id === layout.id"
                         [class.bg-purple-500/20]="selectedLayout()?.id === layout.id"
                         [class.border-white/10]="selectedLayout()?.id !== layout.id"

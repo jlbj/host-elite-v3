@@ -1,0 +1,92 @@
+<div class="paving-engine"
+  [class.mode-display]="store.editorMode() === 'display'"
+  [class.mode-layout]="store.editorMode() === 'layout'"
+  [class.mode-config]="store.editorMode() === 'config'">
+
+  @if (_message(); as msg) {
+    <div class="paving-toast">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+      {{ msg }}
+    </div>
+  }
+
+  <div class="paving-body">
+    <div #wrapperRef class="paving-canvas-wrapper" style="overflow-y: auto; position: relative"
+      (click)="onWrapperClick($event)">
+
+      @if (isLayoutEditing()) {
+        <div class="paving-floating-toolbar">
+          <button (click)="undo()" [disabled]="_history().past.length === 0" title="Undo"
+            class="paving-floating-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+          </button>
+          <button (click)="redo()" [disabled]="_history().future.length === 0" title="Redo"
+            class="paving-floating-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+          </button>
+          <button (click)="handleAddBlock()" title="Add block"
+            class="paving-floating-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <button (click)="handleMerge()" [disabled]="store.selectedBlockIds().length !== 2" title="Merge selected blocks"
+            class="paving-floating-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="8" height="8" rx="1"></rect>
+              <rect x="14" y="2" width="8" height="8" rx="1"></rect>
+              <rect x="8" y="14" width="8" height="8" rx="1"></rect>
+            </svg>
+          </button>
+        </div>
+      }
+
+      <div #canvasRef
+        class="paving-canvas"
+        [style.height.px]="_canvasHeight()"
+        [style.cursor]="_activeEdge() ? (_activeEdge()!.orientation === 'V' ? 'col-resize' : 'row-resize') : 'default'"
+        (mousedown)="onMouseDown($event)"
+        (mousemove)="onMouseMove($event)"
+        (mouseup)="onMouseUp()"
+        (mouseleave)="onMouseUp()"
+        (click)="onCanvasClick($event)">
+
+        @for (block of _blocks(); track block.id) {
+          <app-paving-block
+            [block]="block"
+            [isSelected]="store.selectedBlockIds().includes(block.id)"
+            [editorMode]="store.editorMode()"
+            [frameWidth]="_frameWidth()"
+            [adjacentEdges]="adjacentEdgesMap().get(block.id) || { top: false, right: false, bottom: false, left: false }"
+            [sectionName]="sectionNameMap().get(block.id) || null"
+            [sectionObj]="sectionMap().get(block.id) || null"
+            (blockClick)="onBlockClick($event)"
+            (blockDoubleClick)="onBlockDoubleClick($event)"
+            (splitVertical)="handleSplitV($event)"
+            (splitHorizontal)="handleSplitH($event)"
+            (toggleLock)="handleToggleLock($event)"
+            (blockDrop)="handleBlockDrop($event)" />
+        }
+
+        @if (isLayoutEditing()) {
+          <div class="paving-bottom-handle"
+            (mousedown)="onBottomResizeStart($event)"
+            style="position: absolute; left: 0; right: 0; bottom: 0; height: 24px; cursor: row-resize; z-index: 10; display: flex; align-items: center; justify-content: center;">
+            <div style="width: 60px; height: 4px; background: #cbd5e1; border-radius: 2px;"></div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

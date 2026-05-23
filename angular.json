@@ -17,7 +17,8 @@
               "browser": "."
             },
             "styles": [
-              "src/styles.css"
+              "src/styles.css",
+              "src/saas/features/listing-editor/styles/paving-editor.css"
             ],
             "index": "src/index.html",
             "browser": "src/main.ts",
@@ -37,16 +38,6 @@
                 "glob": "**/*.{ttf,woff,woff2,eot}",
                 "input": "node_modules/monaco-editor",
                 "output": "/assets/monaco/"
-              },
-              {
-                "glob": "**/*",
-                "input": "src/assets/listing-editor",
-                "output": "/assets/listing-editor/"
-              },
-              {
-                "glob": "**/*",
-                "input": "public/listing-editor",
-                "output": "/listing-editor/"
               }
             ]
           },

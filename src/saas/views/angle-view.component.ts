@@ -19,7 +19,7 @@ import { ListingOptimizationComponent } from '../features/marketing/listing-opti
 import { AiMessageAssistantComponent } from '../features/legacy/ai-message-assistant/ai-message-assistant.component';
 import { ChecklistsToolComponent } from '../features/legacy/checklists/checklists-tool.component';
 import { DelegationSimulatorComponent } from '../features/legacy/delegation/delegation-simulator.component';
-import { PavingListingEditorComponent } from '../features/paving-editor/paving-listing-editor.component';
+import { ListingEditorPavingComponent } from '../features/listing-editor/listing-editor-paving.component';
 import { CalendarToolComponent } from '../features/legacy/calendar-tool/components/calendar-tool.component';
 import { ProfitabilityCalculatorComponent } from '../features/legacy/profitability/profitability-calculator.component';
 import { MarketAlertsComponent } from '../features/legacy/market-alerts/market-alerts.component';
@@ -55,7 +55,7 @@ import { WelcomeBookletViewComponent } from './welcome-booklet-view.component';
         MarketAlertsComponent,
         PropertyAuditComponent,
         WelcomeBookletViewComponent,
-        PavingListingEditorComponent
+        ListingEditorPavingComponent
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     templateUrl: './angle-view.component.html',

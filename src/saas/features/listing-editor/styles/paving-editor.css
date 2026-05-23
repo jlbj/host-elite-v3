@@ -1,0 +1,453 @@
+/* ── Paving Engine ── */
+.paving-engine {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+/* ── Toast ── */
+.paving-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #1e293b;
+  color: #f1f5f9;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  font-size: 14px;
+  font-weight: 500;
+  animation: paving-toast-in 0.25s ease-out;
+}
+
+@keyframes paving-toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ── Body ── */
+.paving-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ── Canvas Wrapper ── */
+.paving-canvas-wrapper {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+  background: #e2e8f0;
+  display: flex;
+  justify-content: center;
+}
+
+/* ── Canvas ── */
+.paving-canvas {
+  position: relative;
+  background: #ffffff;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  border-radius: 4px;
+  width: 100%;
+}
+
+.mode-display .paving-canvas {
+  cursor: default;
+}
+
+.mode-layout .paving-canvas {
+  cursor: default;
+}
+
+.mode-config .paving-canvas {
+  cursor: pointer;
+}
+
+/* ── Block ── */
+.paving-block {
+  position: absolute;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.paving-block.selected {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99,102,241,0.2), 0 4px 12px rgba(0,0,0,0.08);
+  z-index: 2;
+}
+
+.paving-block:hover {
+  border-color: #94a3b8;
+  z-index: 1;
+}
+
+.paving-block.selected:hover {
+  border-color: #6366f1;
+}
+
+/* ── Block Inner ── */
+.paving-block-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.paving-block-fill {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.paving-block-fill[data-default="true"] {
+  background-color: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+}
+
+/* ── Block Label ── */
+.paving-block-label-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  pointer-events: none;
+}
+
+.paving-block-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.paving-block-section-name {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* ── Block Overlay (split buttons) ── */
+.paving-block-overlay {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+
+.paving-block:hover .paving-block-overlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.paving-split-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e293b;
+  border: none;
+  border-radius: 4px;
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  padding: 0;
+  line-height: 1;
+}
+
+.paving-split-btn:hover {
+  background: #334155;
+}
+
+.paving-split-btn:active {
+  transform: scale(0.92);
+}
+
+.paving-icon-rotated {
+  transform: rotate(90deg);
+}
+
+/* ── Lock Button ── */
+.paving-lock-btn {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30,41,59,0.8);
+  border: none;
+  border-radius: 4px;
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  padding: 0;
+  line-height: 1;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.paving-block:hover .paving-lock-btn {
+  opacity: 1;
+}
+
+.paving-lock-btn:hover {
+  background: #334155;
+}
+
+.paving-lock-btn:active {
+  transform: scale(0.92);
+}
+
+.text-lock { color: #fbbf24; }
+.text-unlock { color: #94a3b8; }
+
+/* ── Drag Handles ── */
+.paving-handle {
+  position: absolute;
+  background: #6366f1;
+  border-radius: 2px;
+  z-index: 5;
+}
+
+.paving-handle-top {
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 6px;
+  cursor: row-resize;
+}
+
+.paving-handle-bottom {
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 6px;
+  cursor: row-resize;
+}
+
+.paving-handle-right {
+  right: -3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 24px;
+  cursor: col-resize;
+}
+
+.paving-handle-left {
+  left: -3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 24px;
+  cursor: col-resize;
+}
+
+/* ── Bottom Handle ── */
+.paving-bottom-handle:hover > div {
+  background: #6366f1 !important;
+}
+
+/* ── Floating Toolbar (overlays canvas) ── */
+.paving-floating-toolbar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 20;
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.paving-floating-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+
+.paving-floating-btn:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.paving-floating-btn:active {
+  transform: scale(0.92);
+}
+
+.paving-floating-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── Editor Shell ── */
+.editor-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.editor-shell.fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.editor-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-fullscreen-exit {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 24px;
+  background: #1e293b;
+  color: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 10000;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  transition: background 0.15s;
+}
+
+.editor-fullscreen-exit:hover {
+  background: #334155;
+}
+
+/* ── Editor Canvas ── */
+.editor-canvas {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Mode Styles ── */
+.mode-display .paving-canvas-wrapper {
+  background: #f8fafc;
+}
+
+.mode-layout .paving-canvas-wrapper {
+  background: #e2e8f0;
+}
+
+.mode-config .paving-canvas-wrapper {
+  background: #f8fafc;
+}
+
+/* ── Editor Toolbar (Phase 3 stub) ── */
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 12px;
+  min-height: 48px;
+}
+
+/* ── Editor Sidebar ── */
+.editor-sidebar {
+  width: 240px;
+  background: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.editor-sidebar.collapsed {
+  width: 0;
+  overflow: hidden;
+  border-left: none;
+}
+
+.sidebar-toggle {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+/* ── View Mode ── */
+.view-desktop .paving-canvas-wrapper {
+  padding: 24px;
+}
+
+.view-tablet .paving-canvas-wrapper {
+  padding: 24px calc(50% - 384px);
+}
+
+.view-mobile .paving-canvas-wrapper {
+  padding: 24px calc(50% - 180px);
+}
+
+.view-mobile-horizontal .paving-canvas-wrapper {
+  padding: 24px calc(50% - 320px);
+}
