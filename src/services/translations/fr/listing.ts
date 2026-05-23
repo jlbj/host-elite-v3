@@ -60,5 +60,13 @@ export const listing = {
     'LISTING.RequestQuote': 'Demander un Devis',
     'LISTING.ResponseGuarantee': 'Réponse garantie sous 24h',
     'LISTING.PhotosCount': '+{{count}} photos',
+    'LISTING.TitlePlaceholder': 'e.g., Superbe Villa en Bord de Mer avec Vue Panoramique',
+    'LISTING.CoverImagePlaceholder': 'https://example.com/cover-image.jpg',
+    'LISTING.DescriptionPlaceholder': 'Rédigez une description captivante de votre propriété...',
+    'LISTING.DescriptionHelp': 'Cette description apparaîtra dans votre annonce sur les plateformes de réservation.',
+    'LISTING.Tips': 'Conseils pour une belle annonce',
+    'LISTING.Tip1': 'Mettez en avant les caractéristiques uniques et les attractions à proximité',
+    'LISTING.Tip2': 'Utilisez un langage descriptif qui évoque des émotions',
+    'LISTING.Tip3': 'Incluez les informations pratiques dont les voyageurs ont besoin',
     'LISTING.Photos': 'photos',
 };

@@ -2,8 +2,8 @@ export const checklists = {
     // Checklists
     'CHECKLIST.Loading': 'Chargement des checklists...',
     'CHECKLIST.Choose': 'Choisir une checklist',
-    'CHECKLIST.Items': 'items',
     'CHECKLIST.Tasks': 'tâches',
+    'CHECKLIST.Items': 'articles',
     'CHECKLIST.Minutes': 'minutes',
     'CHECKLIST.MinutesShort': 'min',
     'CHECKLIST.Print': 'Imprimer',

@@ -1,7 +1,7 @@
 export const booklet = {
     // Booklet View
     'BOOKLET.DataEntry': 'Saisie Données',
-    'BOOKLET.WelcomeBook': 'Welcome Book',
+    'BOOKLET.WelcomeBook': 'Livret de Bienvenue',
     'BOOKLET.PublicMicrosite': 'Microsite Public',
 
     // Booklet Sections
@@ -320,7 +320,7 @@ export const booklet = {
     'BOOKLET.structure_desc': 'Activez ou désactivez les sections que vous souhaitez afficher dans le livret d\'accueil invité.',
     'BOOKLET.icon_style_label': 'Style des Icônes',
     'BOOKLET.icon_style_tooltip': 'Choisissez le style des icônes',
-    'BOOKLET.icon_emoji': 'Emojis (Fun)',
+    'BOOKLET.icon_emoji': 'Emojis (Amusant)',
     'BOOKLET.icon_minimalist': 'Minimaliste (Épuré)',
     'BOOKLET.icon_drawn': 'Dessiné (Artistique)',
     'BOOKLET.desc.welcome': 'Infos d\'arrivée & wifi',
