@@ -41,7 +41,7 @@ import { GeminiService } from '../../../../services/gemini.service';
                    <div class="space-y-6">
                        <div class="p-4 bg-black/20 rounded-xl border border-white/5">
                            <label class="block text-slate-400 text-[10px] uppercase font-bold mb-1 tracking-wider">{{ 'YIELD.BreakevenPrice' | translate }}</label>
-                           <div class="text-3xl font-mono text-white font-bold">€85.00</div>
+                            <div class="text-3xl font-mono text-white font-bold">€{{ basePrice().toFixed(2) }}</div>
                            <p class="text-[10px] text-slate-500 mt-1">{{ 'YIELD.FixedCostsCleaning30Nights' | translate }}</p>
                        </div>
                        <div>
@@ -233,7 +233,7 @@ import { GeminiService } from '../../../../services/gemini.service';
                                 </div>
                                 <div class="flex justify-between gap-4">
                                     <span class="text-slate-400">Avg Price:</span>
-                                    <span class="text-emerald-400">€{{ (85 * (1 + margin()/100) * (0.5 + month.demand/100)).toFixed(0) }}</span>
+                                    <span class="text-emerald-400">€{{ effectiveMonthlyPrices()[$index] }}</span>
                                 </div>
                             </div>
                         </div>
@@ -250,7 +250,7 @@ import { GeminiService } from '../../../../services/gemini.service';
                 <div class="mt-8 pt-8 border-t border-white/5 grid grid-cols-2 md:grid-cols-4 gap-6">
                     <div class="text-center md:text-left">
                         <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Projected ADR</div>
-                        <div class="text-xl font-mono text-white font-bold">€{{ (85 * (1 + margin()/100) * 1.2).toFixed(0) }}</div>
+                        <div class="text-xl font-mono text-white font-bold">€{{ (basePrice() * (1 + margin()/100)).toFixed(0) }}</div>
                     </div>
                     <div class="text-center md:text-left">
                         <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Peak Occupancy</div>
@@ -258,7 +258,7 @@ import { GeminiService } from '../../../../services/gemini.service';
                     </div>
                     <div class="text-center md:text-left">
                         <div class="text-[9px] text-slate-500 uppercase font-bold tracking-widest mb-1">Margin Capture</div>
-                        <div class="text-xl font-mono text-amber-400 font-bold">€{{ (85 * (margin()/100)).toFixed(0) }}/night</div>
+                        <div class="text-xl font-mono text-amber-400 font-bold">€{{ (basePrice() * (margin()/100)).toFixed(0) }}/night</div>
                     </div>
                     <div class="text-center md:text-left">
                         <button (click)="recalculate()" 
@@ -310,6 +310,11 @@ export class YieldSetupComponent implements OnInit {
 
     margin = signal(25);
 
+    /** Dynamic base price per night from AI market analysis. Fallback to €85 kept for backward compatibility. */
+    basePrice = signal(85);
+    /** Monthly prices directly from AI analysis (if available) for more accurate seasonal pricing. */
+    monthlyPrices = signal<number[] | null>(null);
+
     @Input() feature?: any;
     @Input() propertyDetails?: any;
     @Input() selectFeature?: (featureId: string) => void;
@@ -339,14 +344,14 @@ export class YieldSetupComponent implements OnInit {
     });
 
     pricePath = computed(() => {
-        const basePrice = 85;
+        const bp = this.basePrice();
         const marginPct = this.margin();
-        const prices = this.forecast().map((m, i) => {
-            const price = basePrice * (0.5 + m.demand / 100) * (1 + marginPct / 100);
-            const minPrice = 85 * 0.5 * (1 + marginPct / 100);  // ~51 with 20% margin
-            const maxPrice = 85 * 1.5 * (1 + marginPct / 100); // ~153 with 20% margin
+        const effectivePrices = this.effectiveMonthlyPrices();
+        const prices = effectivePrices.map((price, i) => {
+            const minPrice = bp * 0.5 * (1 + marginPct / 100);
+            const maxPrice = bp * 1.5 * (1 + marginPct / 100);
             const normalizedY = ((price - minPrice) / (maxPrice - minPrice)) * 100;
-            return `${(i * 100) / 11},${100 - normalizedY}`;
+            return `${(i * 100) / 11},${100 - Math.max(0, Math.min(100, normalizedY))}`;
         });
         let d = `M ${prices[0]}`;
         for (let i = 0; i < prices.length; i++) {
@@ -355,11 +360,21 @@ export class YieldSetupComponent implements OnInit {
         return d;
     });
 
+    effectiveMonthlyPrices = computed(() => {
+        const aiPrices = this.monthlyPrices();
+        if (aiPrices && aiPrices.length === 12) return aiPrices;
+        const bp = this.basePrice();
+        const m = this.margin();
+        return this.forecast().map(month =>
+            Math.round(bp * (0.5 + month.demand / 100) * (1 + m / 100))
+        );
+    });
+
     priceRange = computed(() => {
-        const basePrice = 85;
+        const bp = this.basePrice();
         const marginPct = this.margin();
-        const minPrice = Math.floor(basePrice * 0.5 * (1 + marginPct / 100));
-        const maxPrice = Math.ceil(basePrice * 1.5 * (1 + marginPct / 100));
+        const minPrice = Math.floor(bp * 0.5 * (1 + marginPct / 100));
+        const maxPrice = Math.ceil(bp * 1.5 * (1 + marginPct / 100));
         const midPrice = Math.floor((minPrice + maxPrice) / 2);
         return { min: minPrice, mid: midPrice, max: maxPrice };
     });
@@ -369,9 +384,7 @@ export class YieldSetupComponent implements OnInit {
     }
 
     ngOnInit() {
-        if (this.isTier3()) {
-            this.loadMarketAnalysis();
-        }
+        this.loadMarketAnalysis();
     }
 
     async loadMarketAnalysis() {
@@ -379,19 +392,30 @@ export class YieldSetupComponent implements OnInit {
         
         this.isLoadingMarket.set(true);
         try {
+            const db = this.propertyDetails;
             const context = {
-                propertyType: this.propertyDetails.type || 'Apartment',
-                hostCountry: this.propertyDetails.country || 'Spain',
-                propertyCountry: this.propertyDetails.country || 'Spain',
-                rooms: this.propertyDetails.rooms || 2,
-                totalSize: this.propertyDetails.size || 80,
-                gardenSize: this.propertyDetails.gardenSize || 0,
-                hasPool: this.propertyDetails.hasPool || false,
-                additionalDetails: this.propertyDetails.description || ''
+                propertyType: db.type || db.property_type || 'Apartment',
+                hostCountry: db.country || 'Spain',
+                propertyCountry: db.country || 'Spain',
+                rooms: db.rooms || db.bedrooms || 2,
+                totalSize: db.size || db.surface_area || 80,
+                gardenSize: db.gardenSize || 0,
+                hasPool: db.hasPool || false,
+                additionalDetails: db.description || db.listing_description || ''
             };
 
-            const address = this.propertyDetails.address || this.propertyDetails.location || 'Spain';
+            const address = db.address || db.location || 'Spain';
             const analysis = await this.geminiService.getMarketAnalysis(address, context);
+
+            // Use AI-estimated nightly rate as the base price for much more accurate pricing
+            if (analysis.estimatedNightlyRate && analysis.estimatedNightlyRate > 0) {
+                this.basePrice.set(analysis.estimatedNightlyRate);
+            }
+
+            // Use AI monthly prices if available for granular seasonal pricing
+            if (analysis.monthlyNightlyPrices && analysis.monthlyNightlyPrices.length === 12) {
+                this.monthlyPrices.set(analysis.monthlyNightlyPrices);
+            }
 
             if (analysis.monthlySeasonality && analysis.monthlySeasonality.length === 12) {
                 const months = ['January', 'February', 'March', 'April', 'May', 'June', 
