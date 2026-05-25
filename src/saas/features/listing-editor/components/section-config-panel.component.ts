@@ -335,12 +335,44 @@ const ANIMATION_PRESETS = [
                 <input type="text" [ngModel]="effectiveStyle().backgroundImage" (ngModelChange)="updateStyle({ backgroundImage: $event ? 'url(' + $event + ')' : undefined })" placeholder="https://..." />
               </div>
               <div class="config-field">
+                <label>Fit / Layout</label>
+                <select [ngModel]="effectiveStyle().backgroundSize || 'cover'" (ngModelChange)="updateStyle({ backgroundSize: $event })">
+                  <option value="cover">Cover — fills block, clips edges</option>
+                  <option value="contain">Contain — fits inside</option>
+                  <option value="auto">Original — native size</option>
+                  <option value="stretch">Stretch — distorts to fill</option>
+                </select>
+              </div>
+              <div class="config-field">
+                <label>Anchor Point</label>
+                <select [ngModel]="effectiveStyle().backgroundPosition || '50% 50%'" (ngModelChange)="updateStyle({ backgroundPosition: $event })">
+                  <option value="0% 0%">Top Left</option>
+                  <option value="50% 0%">Top Center</option>
+                  <option value="100% 0%">Top Right</option>
+                  <option value="0% 50%">Center Left</option>
+                  <option value="50% 50%">Center</option>
+                  <option value="100% 50%">Center Right</option>
+                  <option value="0% 100%">Bottom Left</option>
+                  <option value="50% 100%">Bottom Center</option>
+                  <option value="100% 100%">Bottom Right</option>
+                </select>
+              </div>
+              <div class="config-field">
                 <label>Attachment</label>
-                <div class="btn-group">
-                  <button class="btn-group-btn" [class.active]="!effectiveStyle().backgroundAttachment || effectiveStyle().backgroundAttachment === 'scroll'" (click)="updateStyle({ backgroundAttachment: 'scroll' })">Scroll</button>
-                  <button class="btn-group-btn" [class.active]="effectiveStyle().backgroundAttachment === 'fixed'" (click)="updateStyle({ backgroundAttachment: 'fixed' })">Fixed</button>
-                  <button class="btn-group-btn" [class.active]="effectiveStyle().backgroundAttachment === 'parallax'" (click)="updateStyle({ backgroundAttachment: 'parallax' })">Parallax</button>
-                </div>
+                <select [ngModel]="effectiveStyle().backgroundAttachment || 'scroll'" (ngModelChange)="updateStyle({ backgroundAttachment: $event })">
+                  <option value="scroll">Scroll — moves with page</option>
+                  <option value="fixed">Fixed — stays in place</option>
+                  <option value="parallax">Parallax — slow movement</option>
+                </select>
+              </div>
+              <div class="config-field">
+                <label>Scroll Effect</label>
+                <select [ngModel]="effectiveStyle().scrollEffect || 'none'" (ngModelChange)="updateStyle({ scrollEffect: $event })">
+                  <option value="none">None</option>
+                  <option value="parallax">Shift</option>
+                  <option value="zoom-parallax">Zoom</option>
+                  <option value="translate-parallax">Pan</option>
+                </select>
               </div>
             }
           </div>

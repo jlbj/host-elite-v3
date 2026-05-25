@@ -6,6 +6,7 @@ import { SECTION_TYPES } from '../constants/paving.constants';
 @Component({
   selector: 'app-section-renderer',
   standalone: true,
+  host: { style: 'display: flex; flex: 1; width: 100%; height: 100%;' },
   imports: [CommonModule],
   template: `
     <div
@@ -242,6 +243,10 @@ import { SECTION_TYPES } from '../constants/paving.constants';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SectionRendererComponent {
+  constructor() {
+    console.log('[SectionRenderer] CONSTRUCTED');
+  }
+
   section = input.required<Section>();
   blockId = input<string | undefined>(undefined);
   theme = input<Theme | undefined>(undefined);
@@ -252,7 +257,9 @@ export class SectionRendererComponent {
   mergedStyle = computed(() => {
     const s = this.section();
     const bs = this.blockStyle();
-    return { ...s.style, ...bs };
+    const merged = { ...s.style, ...bs };
+    console.log('[Renderer] section:', s?.type, s?.id, 'mergedStyle:', merged);
+    return merged;
   });
 
   animationClass = computed(() => {
@@ -271,6 +278,13 @@ export class SectionRendererComponent {
     const bgImage = ms.backgroundImage;
     const hasBgImage = !!bgImage;
     const isParallax = ms.backgroundAttachment === 'parallax' && !!bgImage;
+    const hasExplicitBgSize = !!ms.backgroundSize;
+    const bgSize = ms.backgroundSize === 'stretch' ? '100% 100%' : (ms.backgroundSize || (isParallax ? 'cover' : 'contain'));
+    const bgPos = ms.backgroundPosition || (isParallax ? 'top left' as const : 'center' as const);
+    // When user explicitly sets backgroundSize, use scroll attachment so sizing applies to the block, not the viewport
+    const bgAttach = hasExplicitBgSize ? 'scroll' as const : (isParallax ? 'fixed' as const : (ms.backgroundAttachment === 'fixed' ? 'fixed' as const : 'scroll' as const));
+
+    if (hasBgImage) console.log('[Renderer] style output:', { bgSize, bgPos, bgAttach, hasExplicitBgSize });
 
     return {
       position: 'relative' as const,
@@ -281,10 +295,10 @@ export class SectionRendererComponent {
       transition: 'border-color 0.15s ease',
       backgroundColor: ms.backgroundColor || (hasBgImage ? 'transparent' : theme?.colors.background || 'transparent'),
       backgroundImage: hasBgImage ? bgImage : undefined,
-      backgroundSize: isParallax ? 'cover' : 'contain' as const,
-      backgroundPosition: isParallax ? 'top left' as const : 'center' as const,
+      backgroundSize: bgSize,
+      backgroundPosition: bgPos,
       backgroundRepeat: 'no-repeat' as const,
-      backgroundAttachment: isParallax ? 'fixed' as const : 'scroll' as const,
+      backgroundAttachment: bgAttach,
       overflow: 'hidden' as const,
       flex: 1,
       width: '100%',

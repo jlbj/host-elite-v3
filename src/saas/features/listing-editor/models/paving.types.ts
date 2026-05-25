@@ -11,6 +11,9 @@ export interface SectionStyle {
   backgroundColor?: string;
   backgroundImage?: string;
   backgroundAttachment?: 'scroll' | 'fixed' | 'parallax';
+  backgroundSize?: 'cover' | 'contain' | 'auto' | 'stretch';
+  backgroundPosition?: string;
+  scrollEffect?: 'none' | 'parallax' | 'zoom-parallax' | 'translate-parallax';
   padding?: string;
 }
 

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { PavingStoreService } from '../services/paving-store.service';
 import { SECTION_TYPES, SECTION_LIBRARY, generateBlockId } from '../constants/paving.constants';
 import { PavingBlockComponent, type PavingBlock, type AdjacentEdges } from './paving-block.component';
-import type { Section, SectionType, GridBlock } from '../models/paving.types';
+import type { Section, SectionType, SectionStyle, GridBlock } from '../models/paving.types';
 
 const TARGET_VIEW_HEIGHT = 600;
 const DELETE_THRESHOLD = 15;
@@ -129,9 +129,21 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     return map;
   });
 
+  blockStyleMap = computed(() => {
+    const blockList = this._blocks();
+    const storeBlocks = this.store.gridBlocks();
+    const map = new Map<string, Partial<SectionStyle> | undefined>();
+    for (const block of blockList) {
+      const gb = storeBlocks.find(g => g.id === block.id);
+      map.set(block.id, gb?.blockStyle);
+    }
+    return map;
+  });
+
   isLayoutEditing = computed(() => this.store.editorMode() === 'layout');
 
   constructor() {
+    console.log('[PavingCanvas] CONSTRUCTED');
     effect(() => {
       const currentBlocks = this._blocks();
       if (!this._initialized || currentBlocks.length === 0) return;

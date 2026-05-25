@@ -70,6 +70,7 @@
             [adjacentEdges]="adjacentEdgesMap().get(block.id) || { top: false, right: false, bottom: false, left: false }"
             [sectionName]="sectionNameMap().get(block.id) || null"
             [sectionObj]="sectionMap().get(block.id) || null"
+            [blockStyle]="blockStyleMap().get(block.id)"
             [isSmall]="block.w < 30 || block.h < 30"
             (blockClick)="onBlockClick($event)"
             (blockDoubleClick)="onBlockDoubleClick($event)"

@@ -6,7 +6,7 @@ import { PavingStoreService } from '../services/paving-store.service';
   selector: 'app-editor-canvas',
   standalone: true,
   imports: [CommonModule],
-  host: { style: 'display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; width: 100%;' },
+  host: { style: 'display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; width: 100%; overflow: hidden;' },
   template: `
     <div #canvasRef class="editor-canvas view-{{ store.viewMode() }}" [style]="cssVars()">
       <ng-content />

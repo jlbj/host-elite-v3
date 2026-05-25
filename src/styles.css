@@ -18,13 +18,15 @@
     
     /* Mobile Optimization: Prevent horizontal overflow */
     html {
-        overflow-x: hidden;
+        overflow: hidden;
         width: 100%;
+        height: 100%;
     }
     
     body {
-        overflow-x: hidden;
+        overflow: hidden;
         width: 100%;
+        height: 100%;
         max-width: 100vw;
     }
     

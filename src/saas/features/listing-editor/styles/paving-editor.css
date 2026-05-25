@@ -52,7 +52,8 @@
 /* ── Canvas Wrapper ── */
 .paving-canvas-wrapper {
   flex: 1;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 24px;
   background: #e2e8f0;
   display: flex;
@@ -422,7 +423,7 @@
 .editor-main {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  min-height: 0;
 }
 
 /* ── Mode Styles ── */
@@ -456,6 +457,7 @@
   border-left: 1px solid #e2e8f0;
   overflow-y: auto;
   flex-shrink: 0;
+  max-height: 100%;
 }
 
 .editor-sidebar.collapsed {
@@ -614,6 +616,14 @@
   cursor: pointer;
   transition: all 0.15s;
   font-size: 13px;
+  overflow: hidden;
+}
+
+.section-list-label {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .section-list-item:hover {
@@ -660,6 +670,14 @@
   transition: all 0.15s;
   font-size: 13px;
   margin-bottom: 6px;
+  overflow: hidden;
+}
+
+.existing-section-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .existing-section-item:hover {

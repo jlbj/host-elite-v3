@@ -93,7 +93,7 @@ export interface AdjacentEdges {
               <app-section-renderer
                 [section]="sectionObj()!"
                 [blockId]="block().id"
-                [blockStyle]="sectionObj()!.style"
+                [blockStyle]="blockStyle()"
               />
             } @else {
               <div class="paving-block-label-wrapper">
@@ -136,6 +136,10 @@ export interface AdjacentEdges {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PavingBlockComponent {
+  constructor() {
+    console.log('[PavingBlock] CONSTRUCTED');
+  }
+
   block = input.required<PavingBlock>();
   isSelected = input(false);
   editorMode = input<'display' | 'layout' | 'config'>('display');
@@ -144,6 +148,7 @@ export class PavingBlockComponent {
   sectionName = input<string | null>(null);
   sectionObj = input<Section | null>(null);
   isSmall = input(false);
+  blockStyle = input<Partial<SectionStyle> | undefined>(undefined);
 
   blockClick = output<{ event: MouseEvent; block: PavingBlock }>();
   blockDoubleClick = output<{ event: MouseEvent; block: PavingBlock }>();
