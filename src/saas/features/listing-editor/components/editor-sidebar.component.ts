@@ -1,11 +1,9 @@
-import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PavingStoreService } from '../services/paving-store.service';
 import { SectionListComponent } from './section-list.component';
 import { SectionConfigPanelComponent } from './section-config-panel.component';
 import { SECTION_TYPES } from '../constants/paving.constants';
-
-type SidebarTab = 'sections' | 'config';
 
 @Component({
   selector: 'app-editor-sidebar',
@@ -23,23 +21,23 @@ type SidebarTab = 'sections' | 'config';
           <div class="sidebar-tabs">
             <button
               class="sidebar-tab"
-              [class.active]="activeTab() === 'sections'"
-              (click)="activeTab.set('sections')">
+              [class.active]="store.sidebarTab() === 'sections'"
+              (click)="store.sidebarTab.set('sections')">
               Sections
             </button>
             <button
               class="sidebar-tab"
-              [class.active]="activeTab() === 'config'"
+              [class.active]="store.sidebarTab() === 'config'"
               [class.disabled]="!store.selectedSectionId()"
               [disabled]="!store.selectedSectionId()"
-              (click)="activeTab.set('config')">
+              (click)="store.sidebarTab.set('config')">
               Config
             </button>
           </div>
           <button class="sidebar-close" (click)="closeSidebar()">✕</button>
         </div>
 
-        @if (activeTab() === 'sections' && showBlockTools()) {
+        @if (store.sidebarTab() === 'sections' && showBlockTools()) {
           <div class="block-tools">
             <button
               class="block-tool-btn"
@@ -81,11 +79,11 @@ type SidebarTab = 'sections' | 'config';
         }
 
         <div class="sidebar-content">
-          @if (activeTab() === 'sections') {
-            <app-section-list />
-          } @else {
-            <app-section-config-panel />
-          }
+        @if (store.sidebarTab() === 'sections') {
+          <app-section-list />
+        } @else {
+          <app-section-config-panel />
+        }
         </div>
       }
     </div>
@@ -94,17 +92,14 @@ type SidebarTab = 'sections' | 'config';
 })
 export class EditorSidebarComponent {
   store = inject(PavingStoreService);
-  activeTab = signal<SidebarTab>('sections');
-
-  constructor() {
-    this.store.editorMode;
-  }
 
   sortedSections = computed(() =>
     [...this.store.pageConfig().sections].sort((a, b) => a.order - b.order)
   );
 
-  showBlockTools = computed(() => !!this.store.selectedBlockId());
+  showBlockTools = computed(() =>
+    !!this.store.selectedBlockId() && this.store.editorMode() === 'layout'
+  );
 
   closeSidebar(): void {
     this.store.toggleSidebar();

@@ -62,34 +62,29 @@ export class SectionListComponent {
   handleClick(type: SectionType): void {
     const existing = this.findSection(type);
     const selectedBlockId = this.store.selectedBlockId();
+    console.log('[SectionList.handleClick] type:', type, 'existing:', existing, 'selectedBlockId:', selectedBlockId);
 
     if (existing) {
       if (selectedBlockId) {
-        if (this.store.selectedSectionId() === existing.id) {
-          this.store.assignSectionToBlock(selectedBlockId, '');
-          this.store.setSelectedSection(null);
-        } else {
-          this.store.assignSectionToBlock(selectedBlockId, existing.id);
-          this.store.setSelectedSection(existing.id);
-        }
+        console.log('[SectionList] assigning section', existing.id, 'to block', selectedBlockId);
+        this.store.assignSectionToBlock(selectedBlockId, existing.id);
+        this.store.setSelectedSection(existing.id);
       } else {
         this.store.setSelectedSection(existing.id);
       }
     } else {
+      console.log('[SectionList] adding new section of type:', type);
       this.store.addSection(type);
     }
   }
 
   handleSectionClick(sectionId: string): void {
     const selectedBlockId = this.store.selectedBlockId();
+    console.log('[SectionList.handleSectionClick] sectionId:', sectionId, 'selectedBlockId:', selectedBlockId);
     if (selectedBlockId) {
-      if (this.store.selectedSectionId() === sectionId) {
-        this.store.assignSectionToBlock(selectedBlockId, '');
-        this.store.setSelectedSection(null);
-      } else {
-        this.store.assignSectionToBlock(selectedBlockId, sectionId);
-        this.store.setSelectedSection(sectionId);
-      }
+      console.log('[SectionList] assigning section', sectionId, 'to block', selectedBlockId);
+      this.store.assignSectionToBlock(selectedBlockId, sectionId);
+      this.store.setSelectedSection(sectionId);
     } else {
       this.store.setSelectedSection(sectionId);
     }

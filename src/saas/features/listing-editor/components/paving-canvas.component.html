@@ -59,7 +59,6 @@
         (mousedown)="onMouseDown($event)"
         (mousemove)="onMouseMove($event)"
         (mouseup)="onMouseUp()"
-        (mouseleave)="onMouseUp()"
         (click)="onCanvasClick($event)">
 
         @for (block of _blocks(); track block.id) {
@@ -71,12 +70,14 @@
             [adjacentEdges]="adjacentEdgesMap().get(block.id) || { top: false, right: false, bottom: false, left: false }"
             [sectionName]="sectionNameMap().get(block.id) || null"
             [sectionObj]="sectionMap().get(block.id) || null"
+            [isSmall]="block.w < 30 || block.h < 30"
             (blockClick)="onBlockClick($event)"
             (blockDoubleClick)="onBlockDoubleClick($event)"
             (splitVertical)="handleSplitV($event)"
             (splitHorizontal)="handleSplitH($event)"
             (toggleLock)="handleToggleLock($event)"
-            (blockDrop)="handleBlockDrop($event)" />
+            (blockDrop)="handleBlockDrop($event)"
+            (lockDragStart)="onLockDragStart($event)" />
         }
 
         @if (isLayoutEditing()) {

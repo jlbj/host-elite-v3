@@ -37,6 +37,7 @@ export interface AdjacentEdges {
     <div
       class="paving-block"
       [class.selected]="isSelected()"
+      [class.deleting]="isSmall()"
       [style.left.px]="block().x"
       [style.top.px]="block().y"
       [style.width.px]="block().w"
@@ -54,9 +55,9 @@ export interface AdjacentEdges {
       }
 
       @if (block().section.id !== 'S0' && editorMode() === 'layout') {
-        <button
+        <div
           class="paving-lock-btn"
-          (click)="onToggleLock($event)"
+          (mousedown)="onLockDrag($event)"
         >
           @if (isLocked()) {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-lock">
@@ -69,10 +70,18 @@ export interface AdjacentEdges {
               <path d="M7 11V7a5 5 0 0110 0v4"></path>
             </svg>
           }
-        </button>
+        </div>
       }
 
       <div class="paving-block-inner">
+        @if (isSmall() && editorMode() === 'layout') {
+          <div class="paving-delete-overlay">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </div>
+        }
         <div
           class="paving-block-fill"
           [attr.data-default]="block().section.id === 'S0'"
@@ -134,6 +143,7 @@ export class PavingBlockComponent {
   adjacentEdges = input<AdjacentEdges>({ top: false, right: false, bottom: false, left: false });
   sectionName = input<string | null>(null);
   sectionObj = input<Section | null>(null);
+  isSmall = input(false);
 
   blockClick = output<{ event: MouseEvent; block: PavingBlock }>();
   blockDoubleClick = output<{ event: MouseEvent; block: PavingBlock }>();
@@ -141,6 +151,7 @@ export class PavingBlockComponent {
   splitHorizontal = output<string>();
   toggleLock = output<string>();
   blockDrop = output<{ blockId: string; data: string }>();
+  lockDragStart = output<string>();
 
   isLocked(): boolean {
     return this.block().section.id !== 'S0' && this.block().section.displayMode === 'LOCKED';
@@ -167,6 +178,11 @@ export class PavingBlockComponent {
   onToggleLock(event: MouseEvent): void {
     event.stopPropagation();
     this.toggleLock.emit(this.block().id);
+  }
+
+  onLockDrag(event: MouseEvent): void {
+    event.stopPropagation();
+    this.lockDragStart.emit(this.block().id);
   }
 
   onDrop(event: DragEvent): void {

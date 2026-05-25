@@ -184,7 +184,7 @@
 
 } @else {
 <!-- Active Tool View (Preserved) -->
-<div class="animate-fade-in-up">
+<div class="animate-fade-in-up h-full flex flex-col">
     @if (activeFeatureComponent(); as ComponentClass) {
     <div class="h-full relative z-10 p-6 flex flex-col">
         <button (click)="closeTool()" class="mb-4 self-start text-sm text-slate-400 hover:text-white flex items-center"
@@ -216,7 +216,7 @@
     } @else if (activeToolId() === 'listing-editor') {
     <app-listing-editor-wrapper [propertyName]="view().propertyName!" (close)="closeTool()"></app-listing-editor-wrapper>
     } @else if (activeToolId() === 'paving-editor') {
-    <app-listing-editor-paving [propertyName]="view().propertyName!" (close)="closeTool()"></app-listing-editor-paving>
+    <app-listing-editor-paving class="h-full block" [propertyName]="view().propertyName!" (close)="closeTool()"></app-listing-editor-paving>
     } @else if (activeToolId() === 'website-builder') {
     <app-property-website-builder-wrapper [propertyName]="view().propertyName!" (close)="closeTool()"></app-property-website-builder-wrapper>
     } @else if (activeToolId() === 'listing-optimization') {

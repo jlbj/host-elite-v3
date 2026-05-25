@@ -129,6 +129,7 @@ export class PavingStoreService {
   readonly containerWidth = signal(800);
   readonly containerHeight = signal(748);
   readonly sidebarOpen = signal(true);
+  readonly sidebarTab = signal<'sections' | 'config'>('sections');
   readonly isLoading = signal(false);
   readonly isSaving = signal(false);
   readonly error = signal<string | null>(null);
@@ -591,7 +592,20 @@ export class PavingStoreService {
     };
 
     const newSections = [...this.pageConfig().sections, newSection];
+    const selectedBlockId = this.selectedBlockId();
 
+    // If a block is selected, assign the new section to it
+    if (selectedBlockId && this.gridBlocks().length > 0) {
+      const updatedBlocks = this.gridBlocks().map(b =>
+        b.id === selectedBlockId ? { ...b, sectionId: newSection.id, displayMode: 'LOCKED' as const } : b
+      );
+      this.pageConfig.update(pc => ({ ...pc, sections: newSections }));
+      this.gridBlocks.set(updatedBlocks);
+      this.selectedSectionId.set(newSection.id);
+      return;
+    }
+
+    // Otherwise, assign to last block if layout is 'custom'
     if (this.pageConfig().layout === 'custom' && this.gridBlocks().length > 0) {
       const lastBlock = this.gridBlocks()[this.gridBlocks().length - 1];
       const updatedBlocks = this.gridBlocks().map(b =>
@@ -705,14 +719,21 @@ export class PavingStoreService {
   }
 
   assignSectionToBlock(blockId: string, sectionId: string): void {
+    console.log('[assignSectionToBlock] BEFORE update - gridBlocks:', this.gridBlocks().map(b => ({ id: b.id, sectionId: b.sectionId })));
+    console.log('[assignSectionToBlock] blockId:', blockId, 'sectionId:', sectionId);
     this.saveBlockHistory();
-    this.gridBlocks.update(blocks =>
-      blocks.map(block =>
-        block.id === blockId
+    this.gridBlocks.update(blocks => {
+      const next = blocks.map(block => {
+        const updated = block.id === blockId
           ? { ...block, sectionId: sectionId || undefined, displayMode: sectionId ? 'LOCKED' as const : 'UNLOCKED' as const }
-          : block
-      )
-    );
+          : block;
+        console.log('[assignSectionToBlock update] block', block.id, ':', block.sectionId, '->', updated.sectionId);
+        return updated;
+      });
+      console.log('[assignSectionToBlock] AFTER update - gridBlocks:', next.map(b => ({ id: b.id, sectionId: b.sectionId })));
+      return next;
+    });
+    console.log('[assignSectionToBlock] FINAL - gridBlocks:', this.gridBlocks().map(b => ({ id: b.id, sectionId: b.sectionId })));
   }
 
   setGridBlocks(blocks: GridBlock[]): void {

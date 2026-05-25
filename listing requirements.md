@@ -8,6 +8,7 @@ List (1-column stack, equal rows)
 2-Columns (2x2 grid style)
 Hero First (Large top block, smaller subsequent blocks)
 Magazine (Custom grid layout)
+
 1.1 Layout Structure
 All layouts, including predefined ones, are fundamentally composed of a grid of Blocks.
 Each predefined layout will have a specific default block arrangement and sizes.

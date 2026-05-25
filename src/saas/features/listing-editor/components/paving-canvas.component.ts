@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, effect, signal, computed, inject, viewChild, ElementRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, NgZone, effect, signal, computed, inject, viewChild, ElementRef, ChangeDetectionStrategy, untracked, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PavingStoreService } from '../services/paving-store.service';
 import { SECTION_TYPES, SECTION_LIBRARY, generateBlockId } from '../constants/paving.constants';
@@ -16,6 +16,7 @@ interface ActiveEdge {
   coordinate: number;
   affectedA: string[];
   affectedB: string[];
+  locked?: boolean;
 }
 
 interface History {
@@ -63,21 +64,19 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   _history = signal<History>({ past: [], future: [] });
   _activeEdge = signal<ActiveEdge | null>(null);
   _message = signal<string | null>(null);
-  _canvasActualWidth = signal(800);
-  _frameWidth = computed(() => Math.max(400, this._canvasActualWidth()));
+  _frameWidth = signal(800);
   _canvasHeight = computed(() => {
     const b = this._blocks();
-    return Math.max(TARGET_VIEW_HEIGHT, 0, ...b.map(bl => bl.y + bl.h)) + 100;
+    return Math.max(TARGET_VIEW_HEIGHT, 0, ...b.map(bl => bl.y + bl.h)) + 200;
   });
   _minSize = computed(() => Math.max(50, this._frameWidth() / 16));
 
   private _canvasRef = viewChild<ElementRef<HTMLElement>>('canvasRef');
   private _wrapperRef = viewChild<ElementRef<HTMLElement>>('wrapperRef');
-  private _clickTimeout: ReturnType<typeof setTimeout> | null = null;
   private _initialized = false;
   private _resizeObserver: ResizeObserver | null = null;
   private _prevFrameWidth = signal(0);
-  private _resizeBlockTimer: ReturnType<typeof setTimeout> | null = null;
+  private _zone = inject(NgZone);
 
   adjacentEdgesMap = computed(() => {
     const blockList = this._blocks();
@@ -137,7 +136,8 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
       const currentBlocks = this._blocks();
       if (!this._initialized || currentBlocks.length === 0) return;
 
-      const currentGridBlocks = this.store.gridBlocks();
+      // Use untracked to avoid creating a dependency on gridBlocks
+      const currentGridBlocks = untracked(() => this.store.gridBlocks());
       const next: GridBlock[] = currentBlocks.map(b => {
         const existing = currentGridBlocks.find(g => g.id === b.id);
         return {
@@ -151,19 +151,7 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
         };
       });
 
-      const prev = currentGridBlocks;
-      const changed = prev.length !== next.length || prev.some((g, i) =>
-        g.id !== next[i]?.id ||
-        g.bounds.top !== next[i].bounds.top ||
-        g.bounds.left !== next[i].bounds.left ||
-        g.bounds.right !== next[i].bounds.right ||
-        g.bounds.bottom !== next[i].bounds.bottom ||
-        g.sectionId !== next[i].sectionId
-      );
-
-      if (changed) {
-        this.store.setGridBlocks(next);
-      }
+      this.store.setGridBlocks(next);
     });
 
     effect(() => {
@@ -172,28 +160,33 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
       if (!this._initialized) return;
 
       const localBlocks = this._blocks();
+
       let changed = false;
       const next: PavingBlock[] = localBlocks.map(b => {
         const gb = storeBlocks.find(g => g.id === b.id);
-        if (gb?.sectionId && gb.sectionId !== b.section.id) {
+        const assignSection = gb?.sectionId && gb.sectionId !== b.section.id;
+        const removeSection = gb && !gb.sectionId && b.section.id !== 'S0';
+        if (assignSection) {
+          console.log('[Sync Effect] assigning section', gb!.sectionId, 'to block', b.id, 'old section:', b.section.id);
           changed = true;
-          const section = sections.find(s => s.id === gb.sectionId);
+          const section = sections.find(s => s.id === gb!.sectionId);
           const libItem = section ? SECTION_LIBRARY.find(item => item.type === section?.type) : null;
           return {
             ...b,
             section: {
               ...b.section,
-              id: gb.sectionId,
+              id: gb!.sectionId,
               color: libItem?.color || '#3b82f6',
               type: section?.type || 'ADAPTIVE',
               displayMode: 'LOCKED',
               requestedWidth: (section?.content as any)?.requestedWidth || 0,
               requestedHeight: (section?.content as any)?.requestedHeight || 0,
-              style: { ...(section?.style || {}), ...(gb.blockStyle || {}) },
+              style: { ...(section?.style || {}), ...(gb!.blockStyle || {}) },
             },
           };
         }
-        if (gb && !gb.sectionId && b.section.id !== 'S0') {
+        if (removeSection) {
+          console.log('[Sync Effect] removing section from block', b.id);
           changed = true;
           return {
             ...b,
@@ -204,6 +197,7 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
       if (changed) {
+        console.log('[Sync Effect] updating _blocks, changed blocks:', next.filter((b, i) => b.section.id !== localBlocks[i].section.id).map(b => ({ id: b.id, section: b.section.id })));
         this._blocks.set(next);
       }
     });
@@ -225,12 +219,15 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
         this._prevFrameWidth.set(fw);
         return;
       }
-      const allFullWidth = blocks.every(b => b.x === 0 && Math.abs(b.w - prev) < 2);
-      if (allFullWidth) {
+      // Check if this is a single-column layout (all blocks start at x=0)
+      // In this case, just update width without proportional scaling
+      const singleColumn = blocks.every(b => b.x === 0);
+      if (singleColumn) {
         this._blocks.update(prevBlocks =>
           prevBlocks.map(b => ({ ...b, w: fw }))
         );
       } else {
+        // Multi-column layout: scale proportionally
         this._blocks.update(prevBlocks =>
           prevBlocks.map(b => ({
             ...b,
@@ -271,11 +268,12 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
       }));
     } else {
       const initialH = TARGET_VIEW_HEIGHT / 4;
+      const fw = this._frameWidth();
       const initBlocks = Array.from({ length: 4 }).map((_, i) => ({
         id: generateBlockId(),
         x: 0,
         y: i * initialH,
-        w: this._frameWidth(),
+        w: fw,
         h: initialH,
         section: {
           id: 'S0' as const,
@@ -294,22 +292,23 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    const el = this._canvasRef()?.nativeElement;
+    const el = this._wrapperRef()?.nativeElement;
     if (el) {
-      this._canvasActualWidth.set(el.clientWidth);
-      this._resizeObserver = new ResizeObserver(entries => {
-        for (const entry of entries) {
-          const w = entry.contentRect.width;
-          if (w > 0) this._canvasActualWidth.set(Math.round(w));
-        }
+      const ro = new ResizeObserver(() => {
+        this._zone.run(() => {
+          const w = el.clientWidth;
+          if (w > 100) this._frameWidth.set(Math.max(400, w - 48));
+        });
       });
-      this._resizeObserver.observe(el);
+      const initialW = el.clientWidth;
+      if (initialW > 100) this._frameWidth.set(Math.max(400, initialW - 48));
+      ro.observe(el);
+      this._resizeObserver = ro;
     }
   }
 
   ngOnDestroy(): void {
     this._resizeObserver?.disconnect();
-    this._resizeObserver = null;
   }
 
   saveHistory(): void {
@@ -448,6 +447,21 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     ));
   }
 
+  onLockDragStart(blockId: string): void {
+    const blocks = this._blocks();
+    const block = blocks.find(b => b.id === blockId);
+    if (!block) return;
+    const edgeY = block.y + block.h;
+    this.saveHistory();
+    this._activeEdge.set({
+      orientation: 'H',
+      coordinate: edgeY,
+      affectedA: blocks.filter(bl => Math.abs(bl.y + bl.h - edgeY) < EPSILON).map(bl => bl.id),
+      affectedB: blocks.filter(bl => bl.y >= edgeY).map(bl => bl.id),
+      locked: true,
+    });
+  }
+
   handleBlockDrop(evt: { blockId: string; data: string }): void {
     const libSection = JSON.parse(evt.data);
     this.saveHistory();
@@ -472,6 +486,12 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
     const { event: e, block } = evt;
     const editorMode = this.store.editorMode();
 
+    if (editorMode === 'display') {
+      this.store.setSelectedBlock(block.id);
+      this.store.sidebarOpen.set(true);
+      return;
+    }
+
     if (editorMode === 'layout') {
       const isShift = e.shiftKey;
       const isSelected = this.store.selectedBlockIds().includes(block.id);
@@ -492,37 +512,21 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
         this.store.selectedBlockIds.set(next);
         this.store.selectedBlockId.set(null);
       }
-      return;
-    }
-
-    if (editorMode === 'display') {
-      if (this._clickTimeout) {
-        clearTimeout(this._clickTimeout);
-        this._clickTimeout = null;
-      }
-      this._clickTimeout = setTimeout(() => {
-        this.store.setEditorMode('layout');
-        this.store.setSelectedBlock(block.id);
-        this.store.sidebarOpen.set(false);
-        this._clickTimeout = null;
-      }, 250);
     }
   }
 
   onBlockDoubleClick(evt: { event: MouseEvent; block: PavingBlock }): void {
     const block = evt.block;
-    if (this._clickTimeout) {
-      clearTimeout(this._clickTimeout);
-      this._clickTimeout = null;
-    }
-
     const editorMode = this.store.editorMode();
-    if (editorMode === 'display' || editorMode === 'config') {
-      this.store.setEditorMode('config');
+
+    if (editorMode === 'display') {
+      this.store.setEditorMode('layout');
       this.store.setSelectedBlock(block.id);
-      const isS0 = block.section.id === 'S0';
+      this.store.sidebarOpen.set(false);
+    } else if (editorMode === 'layout') {
+      this.store.setEditorMode('display');
+      this.store.setSelectedBlock(block.id);
       this.store.sidebarOpen.set(true);
-      this.store.setSelectedSection(isS0 ? null : block.section.id);
     }
   }
 
@@ -594,74 +598,48 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
       pos = Math.max(0, pos);
     }
 
-    const snapPoints = new Set<number>();
-    if (ae.orientation === 'V') {
-      snapPoints.add(0);
-      snapPoints.add(this._frameWidth());
-      this._blocks().forEach(b => { snapPoints.add(b.x); snapPoints.add(b.x + b.w); });
-    } else {
-      snapPoints.add(0);
-      this._blocks().forEach(b => { snapPoints.add(b.y); snapPoints.add(b.y + b.h); });
-    }
-    for (const point of snapPoints) {
-      if (Math.abs(pos - point) < SNAP_THRESHOLD) { pos = point; break; }
-    }
-
-    const initialCoord = ae.coordinate;
-    const checkClamping = (blockIds: string[], type: 'A' | 'B') => {
-      for (const id of blockIds) {
-        const b = this._blocks().find(x => x.id === id);
-        if (!b) continue;
-        let newDim: number;
-        if (type === 'A') {
-          newDim = (ae.orientation === 'V' ? b.w : b.h) + (pos - initialCoord);
-        } else {
-          newDim = (ae.orientation === 'V' ? b.w : b.h) - (pos - initialCoord);
-        }
-        if (newDim < this._minSize() && newDim > DELETE_THRESHOLD) {
-          if (type === 'A') {
-            pos = ae.orientation === 'V' ? b.x + this._minSize() : b.y + this._minSize();
-          } else {
-            pos = ae.orientation === 'V' ? (b.x + b.w) - this._minSize() : (b.y + b.h) - this._minSize();
-          }
-        } else if (newDim <= DELETE_THRESHOLD) {
-          pos = type === 'A'
-            ? (ae.orientation === 'V' ? b.x : b.y)
-            : (ae.orientation === 'V' ? b.x + b.w : b.y + b.h);
-        }
-      }
-    };
-    checkClamping(ae.affectedA, 'A');
-    checkClamping(ae.affectedB, 'B');
-
     const delta = pos - ae.coordinate;
     this._blocks.update(prev => {
-      const next = prev.map(b => {
+      return prev.map(b => {
         if (ae.affectedA.includes(b.id)) {
-          return ae.orientation === 'V' ? { ...b, w: b.w + delta } : { ...b, h: b.h + delta };
+          const newVal = (ae.orientation === 'V' ? b.w : b.h) + delta;
+          return ae.orientation === 'V' ? { ...b, w: newVal } : { ...b, h: newVal };
         }
         if (ae.affectedB.includes(b.id)) {
-          return ae.orientation === 'V' ? { ...b, x: b.x + delta, w: b.w - delta } : { ...b, y: b.y + delta, h: b.h - delta };
+          if (ae.locked && ae.orientation === 'H') {
+            return { ...b, y: b.y + delta };
+          }
+          const newVal = (ae.orientation === 'V' ? b.w : b.h) - delta;
+          return ae.orientation === 'V'
+            ? { ...b, x: b.x + delta, w: newVal }
+            : { ...b, y: b.y + delta, h: newVal };
         }
         return b;
       });
-      const kept = next.filter(b => b.w > 2 && b.h > 2);
-      return kept.length !== next.length ? refreshLayoutPositions(kept) : next;
     });
     this._activeEdge.update(prev => prev ? { ...prev, coordinate: pos } : null);
-
-    if (ae.orientation === 'H') {
-      const wrapper = this._wrapperRef()?.nativeElement;
-      if (wrapper) {
-        const scrollBottom = wrapper.scrollTop + wrapper.clientHeight;
-        if (pos > scrollBottom - 50) {
-          wrapper.scrollTop = pos - wrapper.clientHeight + 100;
-        }
-      }
-    }
   }
 
   onMouseUp(): void {
+    const wasDragging = this._activeEdge() !== null;
+    this._activeEdge.set(null);
+    // Delete tiny blocks only on mouse release after a drag
+    if (wasDragging) {
+      this._blocks.update(prev => {
+        const kept = prev.filter(b => b.w > 2 && b.h > 2);
+        return kept.length !== prev.length ? refreshLayoutPositions(kept) : prev;
+      });
+    }
+  }
+
+  @HostListener('window:mouseup')
+  onWindowMouseUp(): void {
+    if (this._activeEdge()) {
+      this.onMouseUp();
+    }
+  }
+
+  onMouseLeave(): void {
     this._activeEdge.set(null);
   }
 
@@ -682,7 +660,8 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onCanvasClick(event: MouseEvent): void {
     const canvasEl = this._canvasRef()?.nativeElement;
-    if (canvasEl && event.target === canvasEl && this.store.editorMode() !== 'layout') {
+    if (canvasEl && event.target === canvasEl) {
+      if (this.store.editorMode() === 'layout') return;
       this.store.setEditorMode('display');
       this.store.clearBlockSelection();
       this.store.sidebarOpen.set(false);
@@ -690,7 +669,8 @@ export class PavingCanvasComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onWrapperClick(event: MouseEvent): void {
-    if (event.target === event.currentTarget && this.store.editorMode() !== 'layout') {
+    if (event.target === event.currentTarget) {
+      if (this.store.editorMode() === 'layout') return;
       this.store.setEditorMode('display');
       this.store.clearBlockSelection();
       this.store.sidebarOpen.set(false);

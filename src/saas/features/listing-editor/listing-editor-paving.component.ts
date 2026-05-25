@@ -46,15 +46,19 @@ export class ListingEditorPavingComponent {
     }
 
     private async loadProperty(name: string) {
+        console.log('[ListingEditorPaving] Loading property:', name);
         try {
             const prop = await this.repository.getPropertyByName(name);
+            console.log('[ListingEditorPaving] Got property:', prop?.id, prop?.name);
             if (prop?.id) {
                 await this.store.loadProperty(prop.id);
+                console.log('[ListingEditorPaving] Store loaded');
                 this.loaded.set(true);
             } else {
                 this.store.error.set('Property not found: ' + name);
             }
         } catch (e: any) {
+            console.error('[ListingEditorPaving] Error:', e);
             this.store.error.set('Failed to load property: ' + (e?.message || e));
         }
     }
