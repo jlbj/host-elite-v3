@@ -8,6 +8,10 @@ import { SECTION_TYPES } from '../constants/paving.constants';
   standalone: true,
   host: { style: 'display: flex; flex: 1; width: 100%; height: 100%;' },
   imports: [CommonModule],
+  styles: [`
+    .section-bg-fixed { z-index: 0; }
+    .section-content-wrapper { position: relative; z-index: 1; }
+  `],
   template: `
     <div
       class="section-renderer"
@@ -17,6 +21,10 @@ import { SECTION_TYPES } from '../constants/paving.constants';
       [class.section-animate-slide]="animationClass() === 'slide'"
       (mouseenter)="onMouseEnter($event)"
       (mouseleave)="onMouseLeave($event)">
+
+      @if (fixedBgStyle(); as bg) {
+        <div class="section-bg-fixed" [style]="bg"></div>
+      }
 
       @if (blockId()) {
         <div class="section-label-badge">{{ sectionInfo()?.label }}</div>
@@ -277,14 +285,9 @@ export class SectionRendererComponent {
     const theme = this.theme();
     const bgImage = ms.backgroundImage;
     const hasBgImage = !!bgImage;
-    const isParallax = ms.backgroundAttachment === 'parallax' && !!bgImage;
-    const hasExplicitBgSize = !!ms.backgroundSize;
-    const bgSize = ms.backgroundSize === 'stretch' ? '100% 100%' : (ms.backgroundSize || (isParallax ? 'cover' : 'contain'));
-    const bgPos = ms.backgroundPosition || (isParallax ? 'top left' as const : 'center' as const);
-    // When user explicitly sets backgroundSize, use scroll attachment so sizing applies to the block, not the viewport
-    const bgAttach = hasExplicitBgSize ? 'scroll' as const : (isParallax ? 'fixed' as const : (ms.backgroundAttachment === 'fixed' ? 'fixed' as const : 'scroll' as const));
-
-    if (hasBgImage) console.log('[Renderer] style output:', { bgSize, bgPos, bgAttach, hasExplicitBgSize });
+    const isFixed = hasBgImage && (ms.backgroundAttachment === 'fixed' || ms.backgroundAttachment === 'parallax');
+    const bgSize = ms.backgroundSize === 'stretch' ? '100% 100%' : (ms.backgroundSize || (isFixed ? 'cover' : 'contain'));
+    const bgPos = ms.backgroundPosition || 'center';
 
     return {
       position: 'relative' as const,
@@ -294,19 +297,42 @@ export class SectionRendererComponent {
       cursor: 'pointer',
       transition: 'border-color 0.15s ease',
       backgroundColor: ms.backgroundColor || (hasBgImage ? 'transparent' : theme?.colors.background || 'transparent'),
-      backgroundImage: hasBgImage ? bgImage : undefined,
-      backgroundSize: bgSize,
-      backgroundPosition: bgPos,
-      backgroundRepeat: 'no-repeat' as const,
-      backgroundAttachment: bgAttach,
+      backgroundImage: hasBgImage && !isFixed ? bgImage : undefined,
+      backgroundSize: !isFixed ? bgSize : undefined,
+      backgroundPosition: !isFixed ? bgPos : undefined,
+      backgroundRepeat: !isFixed ? 'no-repeat' as const : undefined,
       overflow: 'hidden' as const,
+      clipPath: isFixed ? 'inset(0)' as const : undefined,
       flex: 1,
       width: '100%',
       height: '100%',
-      padding: isParallax ? '0' : (ms.padding || theme?.spacing.sectionPadding || '0'),
+      padding: ms.padding || theme?.spacing.sectionPadding || '0',
       textAlign: ms.textAlign || 'left',
       fontFamily: theme?.typography.bodyFont || 'inherit',
       color: ms.color || theme?.colors.text || 'inherit',
+    };
+  });
+
+  fixedBgStyle = computed(() => {
+    const ms = this.mergedStyle();
+    const hasBgImage = !!ms.backgroundImage;
+    const isFixed = hasBgImage && (ms.backgroundAttachment === 'fixed' || ms.backgroundAttachment === 'parallax');
+    if (!isFixed) return null;
+
+    const bgSize = ms.backgroundSize === 'stretch' ? '100% 100%' : (ms.backgroundSize || 'cover');
+    const bgPos = ms.backgroundPosition || 'center';
+
+    return {
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      backgroundImage: ms.backgroundImage,
+      backgroundSize: bgSize,
+      backgroundPosition: bgPos,
+      backgroundRepeat: 'no-repeat' as const,
+      pointerEvents: 'none' as const,
     };
   });
 
