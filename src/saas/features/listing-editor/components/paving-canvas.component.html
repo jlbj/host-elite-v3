@@ -54,7 +54,7 @@
 
       <div #canvasRef
         class="paving-canvas"
-        [style.height.px]="_canvasHeight()"
+        [style.min-height.px]="_canvasHeight()"
         [style.cursor]="_activeEdge() ? (_activeEdge()!.orientation === 'V' ? 'col-resize' : 'row-resize') : 'default'"
         (mousedown)="onMouseDown($event)"
         (mousemove)="onMouseMove($event)"
