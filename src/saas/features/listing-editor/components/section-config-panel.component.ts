@@ -16,6 +16,100 @@ const ANIMATION_PRESETS = [
   { id: 'lift', label: 'Lift', hover: 'lift', scroll: 'fade-up' },
 ];
 
+interface StylePreset {
+  id: string;
+  label: string;
+  icon: string;
+  description: string;
+  style: Partial<SectionStyle>;
+}
+
+const SECTION_PRESETS: Record<string, StylePreset[]> = {
+  hero: [
+    { id: 'hero-full', label: 'Fullscreen Cover', icon: '🖼️', description: 'Full-width background with centered content', style: { textAlign: 'center', padding: '6rem 2rem', backgroundColor: undefined, backgroundImage: undefined } },
+    { id: 'hero-split', label: 'Split Layout', icon: '↔️', description: 'Side-by-side text and media', style: { textAlign: 'left', padding: '4rem 2rem' } },
+    { id: 'hero-minimal', label: 'Minimal', icon: '◇', description: 'Clean, simple header with minimal padding', style: { textAlign: 'center', padding: '2rem 2rem' } },
+  ],
+  photos: [
+    { id: 'photos-grid', label: 'CSS Grid', icon: '⊞', description: 'Clean multi-column grid — auto-fill, uniform cells', style: { galleryStyle: 'grid' } },
+    { id: 'photos-masonry', label: 'Masonry', icon: '▦', description: 'Pinterest-style brick wall — CSS columns', style: { galleryStyle: 'masonry' } },
+    { id: 'photos-justified', label: 'Justified Row', icon: '▬', description: 'Flickr-style flex fill — variable widths, fixed height', style: { galleryStyle: 'justified' } },
+    { id: 'photos-scroll', label: 'Scroll Snap', icon: '◀▶', description: 'Pure CSS scroll-snap horizontal carousel', style: { galleryStyle: 'carousel-scroll' } },
+    { id: 'photos-interactive', label: 'Interactive Carousel', icon: '▶⏸', description: 'JS-driven carousel with prev/next + dot navigation', style: { galleryStyle: 'carousel-interactive' } },
+    { id: 'photos-marquee', label: 'Infinite Marquee', icon: '∞', description: 'Auto-scrolling horizontal banner with pause on hover', style: { galleryStyle: 'marquee' } },
+  ],
+  description: [
+    { id: 'desc-single', label: 'Single Column', icon: '📄', description: 'Clean single-column text, left-aligned', style: { textAlign: 'left', padding: '1rem 0' } },
+    { id: 'desc-centered', label: 'Centered', icon: '☰', description: 'Centered text with comfortable margins', style: { textAlign: 'center', padding: '2rem' } },
+    { id: 'desc-featured', label: 'Featured', icon: '⭐', description: 'Emphasized text with accent styling', style: { textAlign: 'center', padding: '3rem 2rem', color: undefined, backgroundColor: undefined } },
+  ],
+  contact: [
+    { id: 'contact-inline', label: 'Inline', icon: '➡️', description: 'Horizontal contact details in a row', style: { textAlign: 'center', padding: '1.5rem' } },
+    { id: 'contact-card', label: 'Card Style', icon: '🔲', description: 'Bordered card with padded contact info', style: { textAlign: 'left', padding: '2rem' } },
+    { id: 'contact-minimal', label: 'Minimal', icon: '·', description: 'Clean, borderless contact block', style: { textAlign: 'left', padding: '1rem' } },
+  ],
+  price: [
+    { id: 'price-large', label: 'Large Display', icon: '💰', description: 'Big prominent price with accent color', style: { textAlign: 'center', padding: '2rem' } },
+    { id: 'price-inline', label: 'Inline', icon: '↔️', description: 'Price inline with label, compact', style: { textAlign: 'left', padding: '1rem' } },
+    { id: 'price-highlight', label: 'Highlighted', icon: '🔶', description: 'Price on an accent background badge', style: { textAlign: 'center', padding: '1.5rem', backgroundColor: undefined } },
+  ],
+  header: [
+    { id: 'header-center', label: 'Centered', icon: '☰', description: 'Centered logo and navigation', style: { textAlign: 'center', padding: '0.75rem' } },
+    { id: 'header-left', label: 'Left Aligned', icon: '≡', description: 'Logo left, nav right', style: { textAlign: 'left', padding: '0.75rem' } },
+  ],
+  characteristics: [
+    { id: 'chars-grid', label: 'Grid Layout', icon: '⊞', description: 'Features in a 2-column grid', style: { textAlign: 'left', padding: '1.5rem' } },
+    { id: 'chars-inline', label: 'Inline Row', icon: '➡️', description: 'All characteristics in a single row', style: { textAlign: 'center', padding: '1rem' } },
+    { id: 'chars-icons', label: 'With Icons', icon: '🎯', description: 'Icon-accented characteristic badges', style: { textAlign: 'center', padding: '1.5rem' } },
+  ],
+  otherProperties: [
+    { id: 'other-grid', label: 'Card Grid', icon: '⊞', description: 'Properties as a grid of cards', style: { textAlign: 'left', padding: '1.5rem' } },
+    { id: 'other-list', label: 'Simple List', icon: '📋', description: 'Compact property list', style: { textAlign: 'left', padding: '1rem' } },
+  ],
+  bottom: [
+    { id: 'bottom-center', label: 'Centered', icon: '⊟', description: 'Centered footer content', style: { textAlign: 'center', padding: '2rem 1rem' } },
+    { id: 'bottom-split', label: 'Split Layout', icon: '↔️', description: 'Content split left and right', style: { textAlign: 'left', padding: '1.5rem' } },
+  ],
+  closeTo: [
+    { id: 'close-grid', label: 'Grid Layout', icon: '⊞', description: 'Nearby places in a grid', style: { textAlign: 'left', padding: '1rem' } },
+    { id: 'close-list', label: 'List Layout', icon: '📋', description: 'Nearby places as a bullet list', style: { textAlign: 'left', padding: '1rem' } },
+  ],
+  amenities: [
+    { id: 'amen-grid', label: 'Grid', icon: '⊞', description: 'Amenities in a multi-column grid', style: { textAlign: 'left', padding: '1.5rem' } },
+    { id: 'amen-list', label: 'List', icon: '📋', description: 'Simple vertical list', style: { textAlign: 'left', padding: '1rem' } },
+    { id: 'amen-compact', label: 'Compact Tags', icon: '🏷️', description: 'Small badge-style chips', style: { textAlign: 'left', padding: '0.75rem' } },
+  ],
+  map: [
+    { id: 'map-full', label: 'Full Height', icon: '🗺️', description: 'Large full-height map', style: { padding: '0' } },
+    { id: 'map-compact', label: 'Compact', icon: '📍', description: 'Small map with address overlay', style: { padding: '0' } },
+  ],
+  facilities: [
+    { id: 'fac-grid', label: 'Grid Layout', icon: '⊞', description: 'Facilities in a grid', style: { textAlign: 'left', padding: '1.5rem' } },
+    { id: 'fac-list', label: 'List Layout', icon: '📋', description: 'Facilities as a list', style: { textAlign: 'left', padding: '1rem' } },
+  ],
+  floorPlan: [
+    { id: 'floor-full', label: 'Full Width', icon: '🖼️', description: 'Full-width floor plan image', style: { textAlign: 'center', padding: '1rem' } },
+    { id: 'floor-side', label: 'Side by Side', icon: '↔️', description: 'Image and room labels side by side', style: { textAlign: 'left', padding: '1rem' } },
+  ],
+  rules: [
+    { id: 'rules-list', label: 'Bullet List', icon: '📋', description: 'Rules as bullet points', style: { textAlign: 'left', padding: '1rem' } },
+    { id: 'rules-icons', label: 'Icon List', icon: '🎯', description: 'Rules with icon markers', style: { textAlign: 'left', padding: '1.5rem' } },
+  ],
+  testimonials: [
+    { id: 'testim-carousel', label: 'Carousel', icon: '◀▶', description: 'Rotating testimonial cards', style: { textAlign: 'center', padding: '2rem' } },
+    { id: 'testim-grid', label: 'Grid', icon: '⊞', description: 'Testimonials in a grid layout', style: { textAlign: 'left', padding: '1.5rem' } },
+    { id: 'testim-featured', label: 'Featured', icon: '⭐', description: 'Large featured testimonial', style: { textAlign: 'center', padding: '3rem' } },
+  ],
+  location: [
+    { id: 'loc-full', label: 'Full Layout', icon: '🌍', description: 'Map with description and nearby places', style: { textAlign: 'left', padding: '1.5rem' } },
+    { id: 'loc-compact', label: 'Compact', icon: '📍', description: 'Minimal location display', style: { textAlign: 'left', padding: '1rem' } },
+  ],
+  recap: [
+    { id: 'recap-table', label: 'Table Layout', icon: '⊟', description: 'Key details in a structured table', style: { textAlign: 'left', padding: '1.5rem' } },
+    { id: 'recap-inline', label: 'Inline', icon: '↔️', description: 'Compact inline details', style: { textAlign: 'center', padding: '1rem' } },
+  ],
+};
+
 @Component({
   selector: 'app-section-config-panel',
   standalone: true,
@@ -148,11 +242,26 @@ const ANIMATION_PRESETS = [
             }
             @case ('photos') {
               <div class="config-field">
-                <label>Image URLs (one per line)</label>
-                <textarea
-                  [ngModel]="imageListText()"
-                  (ngModelChange)="updateImageList($event)"
-                  rows="4"></textarea>
+                <label>Title</label>
+                <input type="text" [ngModel]="section.content['title']" (ngModelChange)="updateContent('title', $event)" placeholder="Photo Gallery" />
+              </div>
+              <div class="config-field">
+                <label>Property Photos</label>
+                @let selectedUrls = sectionPhotos();
+                <div class="photo-grid">
+                  @for (photo of store.photos(); track photo.id) {
+                    <div
+                      class="photo-grid-item"
+                      [class.selected]="selectedUrls.includes(photo.url)"
+                      (click)="togglePhoto(photo.url)"
+                      [style.background-image]="'url(' + photo.url + ')'"
+                      [title]="(selectedUrls.includes(photo.url) ? 'Remove' : 'Add') + ' photo'">
+                      @if (selectedUrls.includes(photo.url)) {
+                        <span class="photo-check">✓</span>
+                      }
+                    </div>
+                  }
+                </div>
               </div>
             }
             @case ('amenities') {
@@ -297,6 +406,27 @@ const ANIMATION_PRESETS = [
         }
 
         @if (activeTab() === 'style') {
+          <div style="font-size:10px;color:#6366f1;padding:4px 0;">
+            Type: {{ section.type }} | Presets: {{ sectionPresets().length }}
+          </div>
+          @if (sectionPresets().length > 0) {
+            <div class="config-style-section">
+              <label class="config-field-label">Presets</label>
+              <div class="preset-grid">
+                @for (preset of sectionPresets(); track preset.id) {
+                  <button
+                    class="preset-card"
+                    [class.active]="activePresetId() === preset.id"
+                    (click)="applyPreset(preset)">
+                    <span class="preset-icon">{{ preset.icon }}</span>
+                    <span class="preset-label">{{ preset.label }}</span>
+                    <span class="preset-desc">{{ preset.description }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
           <div class="config-style-section">
             <label class="config-field-label">Background Type</label>
             <div class="btn-group">
@@ -376,6 +506,22 @@ const ANIMATION_PRESETS = [
               </div>
             }
           </div>
+
+          @if (section.type === 'photos') {
+          <div class="config-style-section">
+            <label class="config-field-label">Gallery Style</label>
+            <div class="config-field">
+              <select [ngModel]="effectiveStyle().galleryStyle || 'grid'" (ngModelChange)="updateStyle({ galleryStyle: $event })">
+                <option value="grid">CSS Grid — clean multi-column</option>
+                <option value="masonry">Masonry — Pinterest style</option>
+                <option value="justified">Justified Row — Flickr style</option>
+                <option value="carousel-scroll">Scroll Snap Carousel</option>
+                <option value="carousel-interactive">Interactive Carousel</option>
+                <option value="marquee">Infinite Marquee</option>
+              </select>
+            </div>
+          </div>
+          }
 
           <div class="config-style-section">
             <label class="config-field-label">Text Color</label>
@@ -479,10 +625,38 @@ export class SectionConfigPanelComponent {
     return { ...(s?.style || {}), ...(block?.blockStyle || {}) };
   });
 
-  imageListText = computed(() => {
+  sectionPhotos = computed(() => {
     const images = this.section()?.content['images'];
-    return Array.isArray(images) ? images.map((i: unknown) => typeof i === 'object' && i !== null ? (i as {url?: string}).url || '' : String(i)).join('\n') : '';
+    return Array.isArray(images) ? images.map((i: unknown) => typeof i === 'object' && i !== null ? (i as {url?: string}).url || '' : String(i)).filter(Boolean) : [];
   });
+
+  sectionPresets = computed(() => {
+    const sec = this.section();
+    if (!sec) return [];
+    const presets = SECTION_PRESETS[sec.type] || [];
+    console.log('[Presets] section type:', sec.type, 'presets found:', presets.length);
+    return presets;
+  });
+
+  activePresetId = computed(() => {
+    const presets = this.sectionPresets();
+    const style = this.effectiveStyle();
+    for (const preset of presets) {
+      const matches = Object.keys(preset.style).every(key => {
+        const k = key as keyof SectionStyle;
+        return style[k] === preset.style[k];
+      });
+      if (matches) return preset.id;
+    }
+    return null;
+  });
+
+  applyPreset(preset: StylePreset): void {
+    const sec = this.section();
+    if (!sec) return;
+    if (this.activePresetId() === preset.id) return;
+    this.updateStyle(preset.style);
+  }
 
   updateContent(key: string, value: unknown): void {
     const sec = this.section();
@@ -490,6 +664,12 @@ export class SectionConfigPanelComponent {
     this.store.updateSection(sec.id, {
       content: { ...sec.content, [key]: value },
     });
+  }
+
+  togglePhoto(url: string): void {
+    const current = this.sectionPhotos();
+    const next = current.includes(url) ? current.filter(u => u !== url) : [...current, url];
+    this.updateContent('images', next.map(u => ({ url: u, caption: '' })));
   }
 
   updateStyle(styleUpdate: Partial<SectionStyle>): void {

@@ -5,8 +5,8 @@ import { AIProviderType, AIServiceConfig, DEFAULT_MODELS } from './ai-provider.i
 @Injectable({ providedIn: 'root' })
 export class AIConfigService {
     private config = signal<AIServiceConfig>({
-        activeProvider: 'gemini',
-        activeModel: DEFAULT_MODELS['gemini']
+        activeProvider: 'openai',
+        activeModel: DEFAULT_MODELS['openai']
     });
 
     constructor(private supabaseService: SupabaseService) {}
@@ -21,8 +21,8 @@ export class AIConfigService {
                 if (!provider || !validProviders.includes(provider)) {
                     console.warn('[AIConfig] Invalid provider from database, using default');
                     this.config.set({
-                        activeProvider: 'gemini',
-                        activeModel: DEFAULT_MODELS['gemini']
+                        activeProvider: 'openai',
+                        activeModel: DEFAULT_MODELS['openai']
                     });
                     return;
                 }
@@ -30,7 +30,7 @@ export class AIConfigService {
                 this.config.set({
                     activeProvider: provider,
                     activeModel: data.model || DEFAULT_MODELS[provider] || DEFAULT_MODELS['gemini'],
-                    fallbackProvider: data.fallback_provider,
+                    fallbackProvider: data.fallback_provider || 'openai',
                     apiKeys: {} as Record<AIProviderType, string>
                 });
             }
@@ -65,16 +65,40 @@ export class AIConfigService {
         });
     }
 
-    async fetchApiKey(provider?: AIProviderType): Promise<string | null> {
+async fetchApiKey(provider?: AIProviderType): Promise<string | null> {
         const providerToUse = provider || this.activeProvider;
-        const { data, error } = await this.supabaseService.supabase.rpc(
-            'get_ai_api_key',
-            { p_provider: providerToUse }
-        );
-        if (error) {
-            console.error('[AIConfig] Error fetching API key:', error);
-            return null;
+
+        // First try: fetch from Supabase (production setup)
+        try {
+            const { data, error } = await this.supabaseService.supabase.rpc(
+                'get_ai_api_key',
+                { p_provider: providerToUse }
+            );
+
+            if (!error && data) {
+                return data;
+            }
+
+            if (error) {
+                console.warn('[AIConfig] Supabase API key fetch failed, trying fallback:', error.message);
+            }
+        } catch (e) {
+            console.warn('[AIConfig] Supabase not available, trying fallback');
         }
-        return data;
+
+        // Fallback: use environment configuration (for development/local testing)
+        try {
+            const { environment } = await import('@/environment');
+            // Select the correct key based on provider
+            const apiKey = providerToUse === 'openai' ? environment.openaiApiKey : environment.geminiApiKey;
+            if (apiKey) {
+                console.log(`[AIConfig] Using ${providerToUse} API key from environment configuration`);
+                return apiKey;
+            }
+        } catch (e) {
+            console.warn('[AIConfig] No environment fallback available');
+        }
+
+        return null;
     }
 }

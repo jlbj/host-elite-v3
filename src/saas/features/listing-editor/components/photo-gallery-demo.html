@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo Gallery Suite</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+    background: #0f0f0f;
+    color: #f1f1f1;
+    line-height: 1.5;
+  }
+  .page-header {
+    text-align: center;
+    padding: 60px 20px 40px;
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+  }
+  .page-header h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.02em; }
+  .page-header p { color: #94a3b8; margin-top: 8px; font-size: 1.05rem; }
+  .section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .section-header h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+  .section-header .badge {
+    font-size: 0.75rem;
+    background: #6366f1;
+    color: #fff;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+  .section-divider { border: none; height: 1px; background: #1e293b; margin: 0; }
+
+  /* ── 1. CSS Grid ── */
+  .grid-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .grid-gallery img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 8px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+  }
+  .grid-gallery img:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(99,102,241,0.25);
+  }
+
+  /* ── 2. Masonry ── */
+  .masonry {
+    column-count: 3;
+    column-gap: 12px;
+  }
+  .masonry-item {
+    break-inside: avoid;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  .masonry-item:hover { transform: scale(1.01); }
+  .masonry-item img { width: 100%; display: block; }
+  @media (max-width: 768px) { .masonry { column-count: 2; } }
+  @media (max-width: 480px) { .masonry { column-count: 1; } }
+
+  /* ── 3. Justified Row ── */
+  .justified-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .justified-row .jr-img {
+    flex: 1 1 auto;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    min-width: 80px;
+  }
+  .justified-row .jr-img:hover { opacity: 0.85; }
+  .justified-row .jr-img-wide { flex: 2 1 auto; }
+  .justified-row .jr-img-tall { height: 300px; }
+  @media (max-width: 600px) { .justified-row .jr-img { height: 140px; } }
+
+  /* ── 4. CSS Scroll Snap Carousel ── */
+  .scroll-carousel {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 0;
+  }
+  .scroll-carousel::-webkit-scrollbar { height: 6px; }
+  .scroll-carousel::-webkit-scrollbar-track { background: #1e293b; border-radius: 3px; }
+  .scroll-carousel::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 3px; }
+  .scroll-carousel .sc-slide {
+    flex: 0 0 80%;
+    scroll-snap-align: center;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+  .scroll-carousel .sc-slide img { width: 100%; height: 400px; object-fit: cover; display: block; }
+  .scroll-carousel .sc-slide .sc-label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 16px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  @media (max-width: 600px) { .scroll-carousel .sc-slide { flex: 0 0 90%; } .scroll-carousel .sc-slide img { height: 260px; } }
+
+  /* ── 5. Interactive Carousel ── */
+  .carousel-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    background: #1a1a2e;
+  }
+  .carousel-track {
+    display: flex;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .carousel-track .c-slide {
+    flex: 0 0 100%;
+    position: relative;
+  }
+  .carousel-track .c-slide img { width: 100%; height: 420px; object-fit: cover; display: block; }
+  .carousel-track .c-slide .c-caption {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 20px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: #fff;
+  }
+  .carousel-track .c-slide .c-caption h3 { font-size: 1.2rem; margin-bottom: 4px; }
+  .carousel-track .c-slide .c-caption p { font-size: 0.85rem; color: #cbd5e1; }
+  .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 44px; height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.2s;
+    backdrop-filter: blur(4px);
+  }
+  .carousel-btn:hover { background: rgba(99,102,241,0.8); }
+  .carousel-btn:active { transform: translateY(-50%) scale(0.92); }
+  .carousel-prev { left: 12px; }
+  .carousel-next { right: 12px; }
+  .carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 0 6px;
+  }
+  .carousel-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: none;
+    background: #334155;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .carousel-dot.active { background: #6366f1; transform: scale(1.3); }
+  .carousel-dot:hover { background: #475569; }
+  @media (max-width: 600px) { .carousel-track .c-slide img { height: 260px; } }
+
+  /* ── 6. Lightbox ── */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.92);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(8px);
+  }
+  .lightbox.open { opacity: 1; pointer-events: auto; }
+  .lightbox img {
+    max-width: 90vw;
+    max-height: 85vh;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    transform: scale(0.92);
+    transition: transform 0.3s ease;
+  }
+  .lightbox.open img { transform: scale(1); }
+  .lightbox-close {
+    position: absolute;
+    top: 20px; right: 24px;
+    width: 44px; height: 44px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  .lightbox-close:hover { background: rgba(239,68,68,0.6); }
+  .lightbox-caption {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  /* ── 7. Infinite Marquee ── */
+  .marquee-wrap {
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  }
+  .marquee-track {
+    display: flex;
+    gap: 12px;
+    width: max-content;
+    animation: marquee-scroll 30s linear infinite;
+  }
+  .marquee-track img {
+    height: 200px;
+    width: auto;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+  .marquee-track:hover { animation-play-state: paused; }
+  @keyframes marquee-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @media (max-width: 600px) { .marquee-track img { height: 140px; } }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Photo Gallery Suite</h1>
+  <p>Seven gallery layouts — all vanilla, all responsive, all yours.</p>
+</header>
+
+<!-- 1. CSS Grid -->
+<hr class="section-divider">
+<section class="section">
+  <div class="section-header">
+    <h2>CSS Grid</h2>
+    <span class="badge">auto-fill minmax</span>
+  </div>
+  <div class="grid-gallery" id="gridGallery">
+    <img src="https://picsum.photos/seed/g1/600/450" alt="Gallery 1" loading="lazy">
+    <img src="https://picsum.photos/seed/g2/600/450" alt="Gallery 2" loading="lazy">
+    <img src="https://picsum.photos/seed/g3/600/450" alt="Gallery 3" loading="lazy">
+    <img src="https://picsum.photos/seed/g4/600/450" alt="Gallery 4" loading="lazy">
+    <img src="https://picsum.photos/seed/g5/600/450" alt="Gallery 5" loading="lazy">
+    <img src="https://picsum.photos/seed/g6/600/450" alt="Gallery 6" loading="lazy">
+  </div>
+</section>
+
+<!-- 2. Masonry -->
+<hr class="section-divider">
+<section class="section">
+  <div class="section-header">
+    <h2>Masonry</h2>
+    <span class="badge">CSS columns</span>
+  </div>
+  <div class="masonry" id="masonryGallery">
+    <div class="masonry-item"><img src="https://picsum.photos/seed/m1/400/600" alt="Masonry 1" loading="lazy"></div>
+    <div class="masonry-item"><img src="https://picsum.photos/seed/m2/400/300" alt="Masonry 2" loading="lazy"></div>
+    <div class="masonry-item"><img src="https://picsum.photos/seed/m3/400/500" alt="Masonry 3" loading="lazy"></div>
+    <div class="masonry-item"><img src="https://picsum.photos/seed/m4/400/350" alt="Masonry 4" loading="lazy"></div>
+    <div class="masonry-item"><img src="https://picsum.photos/seed/m5/400/700" alt="Masonry 5" loading="lazy"></div>
+    <div class="masonry-item"><img src="https://picsum.photos/seed/m6/400/280" alt="Masonry 6" loading="lazy"></div>
+    <div class="masonry-item"><img src="https://picsum.photos/seed/m7/400/450" alt="Masonry 7" loading="lazy"></div>
+    <div class="masonry-item"><img src="https://picsum.photos/seed/m8/400/550" alt="Masonry 8" loading="lazy"></div>
+  </div>
+</section>
+
+<!-- 3. Justified Row -->
+<hr class="section-divider">
+<section class="section">
+  <div class="section-header">
+    <h2>Justified Row</h2>
+    <span class="badge">flex fill</span>
+  </div>
+  <div class="justified-row" id="justifiedGallery">
+    <img class="jr-img jr-img-wide" src="https://picsum.photos/seed/j1/800/600" alt="Justified 1" loading="lazy">
+    <img class="jr-img jr-img-tall" src="https://picsum.photos/seed/j2/500/700" alt="Justified 2" loading="lazy">
+    <img class="jr-img" src="https://picsum.photos/seed/j3/400/400" alt="Justified 3" loading="lazy">
+    <img class="jr-img jr-img-wide" src="https://picsum.photos/seed/j4/900/500" alt="Justified 4" loading="lazy">
+    <img class="jr-img" src="https://picsum.photos/seed/j5/300/400" alt="Justified 5" loading="lazy">
+    <img class="jr-img jr-img-tall" src="https://picsum.photos/seed/j6/500/800" alt="Justified 6" loading="lazy">
+  </div>
+</section>
+
+<!-- 4. CSS Scroll Snap Carousel -->
+<hr class="section-divider">
+<section class="section">
+  <div class="section-header">
+    <h2>Scroll Snap Carousel</h2>
+    <span class="badge">pure CSS</span>
+  </div>
+  <div class="scroll-carousel" id="scrollCarousel">
+    <div class="sc-slide">
+      <img src="https://picsum.photos/seed/s1/1200/600" alt="Snap 1" loading="lazy">
+      <div class="sc-label">Beach sunrise — scroll-snap-align: center</div>
+    </div>
+    <div class="sc-slide">
+      <img src="https://picsum.photos/seed/s2/1200/600" alt="Snap 2" loading="lazy">
+      <div class="sc-label">Mountain trail at golden hour</div>
+    </div>
+    <div class="sc-slide">
+      <img src="https://picsum.photos/seed/s3/1200/600" alt="Snap 3" loading="lazy">
+      <div class="sc-label">City skyline at dusk</div>
+    </div>
+    <div class="sc-slide">
+      <img src="https://picsum.photos/seed/s4/1200/600" alt="Snap 4" loading="lazy">
+      <div class="sc-label">Forest canopy from above</div>
+    </div>
+    <div class="sc-slide">
+      <img src="https://picsum.photos/seed/s5/1200/600" alt="Snap 5" loading="lazy">
+      <div class="sc-label">Desert dunes in motion</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Interactive Carousel -->
+<hr class="section-divider">
+<section class="section">
+  <div class="section-header">
+    <h2>Interactive Carousel</h2>
+    <span class="badge">JS controls</span>
+  </div>
+  <div class="carousel-container" id="interactiveCarousel">
+    <div class="carousel-track" id="carouselTrack">
+      <div class="c-slide">
+        <img src="https://picsum.photos/seed/c1/1200/650" alt="Carousel 1" loading="lazy">
+        <div class="c-caption"><h3>Venice Canals</h3><p>Golden light reflecting off historic waterways</p></div>
+      </div>
+      <div class="c-slide">
+        <img src="https://picsum.photos/seed/c2/1200/650" alt="Carousel 2" loading="lazy">
+        <div class="c-caption"><h3>Northern Lights</h3><p>Aurora borealis dancing over a frozen lake</p></div>
+      </div>
+      <div class="c-slide">
+        <img src="https://picsum.photos/seed/c3/1200/650" alt="Carousel 3" loading="lazy">
+        <div class="c-caption"><h3>Tokyo Nights</h3><p>Neon-lit streets of Shibuya after midnight</p></div>
+      </div>
+      <div class="c-slide">
+        <img src="https://picsum.photos/seed/c4/1200/650" alt="Carousel 4" loading="lazy">
+        <div class="c-caption"><h3>Scottish Highlands</h3><p>Misty peaks at dawn near Glen Coe</p></div>
+      </div>
+    </div>
+    <button class="carousel-btn carousel-prev" id="carouselPrev" aria-label="Previous">‹</button>
+    <button class="carousel-btn carousel-next" id="carouselNext" aria-label="Next">›</button>
+    <div class="carousel-dots" id="carouselDots"></div>
+  </div>
+</section>
+
+<!-- 6. Lightbox -->
+<hr class="section-divider">
+<section class="section">
+  <div class="section-header">
+    <h2>Lightbox</h2>
+    <span class="badge">click any thumb</span>
+  </div>
+  <div class="grid-gallery" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));" id="lightboxGrid">
+    <img src="https://picsum.photos/seed/l1/400/300" data-full="https://picsum.photos/seed/l1/1200/900" alt="Lightbox 1" loading="lazy">
+    <img src="https://picsum.photos/seed/l2/400/300" data-full="https://picsum.photos/seed/l2/1200/900" alt="Lightbox 2" loading="lazy">
+    <img src="https://picsum.photos/seed/l3/400/300" data-full="https://picsum.photos/seed/l3/1200/900" alt="Lightbox 3" loading="lazy">
+    <img src="https://picsum.photos/seed/l4/400/300" data-full="https://picsum.photos/seed/l4/1200/900" alt="Lightbox 4" loading="lazy">
+    <img src="https://picsum.photos/seed/l5/400/300" data-full="https://picsum.photos/seed/l5/1200/900" alt="Lightbox 5" loading="lazy">
+    <img src="https://picsum.photos/seed/l6/400/300" data-full="https://picsum.photos/seed/l6/1200/900" alt="Lightbox 6" loading="lazy">
+  </div>
+</section>
+
+<!-- 7. Infinite Marquee -->
+<hr class="section-divider">
+<section class="section">
+  <div class="section-header">
+    <h2>Infinite Marquee</h2>
+    <span class="badge">CSS animation</span>
+  </div>
+  <div class="marquee-wrap">
+    <div class="marquee-track" id="marqueeTrack">
+      <img src="https://picsum.photos/seed/a1/300/200" alt="Marquee 1" loading="lazy">
+      <img src="https://picsum.photos/seed/a2/300/200" alt="Marquee 2" loading="lazy">
+      <img src="https://picsum.photos/seed/a3/300/200" alt="Marquee 3" loading="lazy">
+      <img src="https://picsum.photos/seed/a4/300/200" alt="Marquee 4" loading="lazy">
+      <img src="https://picsum.photos/seed/a5/300/200" alt="Marquee 5" loading="lazy">
+      <img src="https://picsum.photos/seed/a6/300/200" alt="Marquee 6" loading="lazy">
+      <img src="https://picsum.photos/seed/a7/300/200" alt="Marquee 7" loading="lazy">
+      <img src="https://picsum.photos/seed/a8/300/200" alt="Marquee 8" loading="lazy">
+      <!-- duplicated for seamless loop -->
+      <img src="https://picsum.photos/seed/a1/300/200" alt="Marquee 1" loading="lazy">
+      <img src="https://picsum.photos/seed/a2/300/200" alt="Marquee 2" loading="lazy">
+      <img src="https://picsum.photos/seed/a3/300/200" alt="Marquee 3" loading="lazy">
+      <img src="https://picsum.photos/seed/a4/300/200" alt="Marquee 4" loading="lazy">
+      <img src="https://picsum.photos/seed/a5/300/200" alt="Marquee 5" loading="lazy">
+      <img src="https://picsum.photos/seed/a6/300/200" alt="Marquee 6" loading="lazy">
+      <img src="https://picsum.photos/seed/a7/300/200" alt="Marquee 7" loading="lazy">
+      <img src="https://picsum.photos/seed/a8/300/200" alt="Marquee 8" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<!-- Lightbox Overlay -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" id="lightboxClose">✕</button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-caption" id="lightboxCaption"></div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── Interactive Carousel ──
+  const track = document.getElementById('carouselTrack');
+  const prevBtn = document.getElementById('carouselPrev');
+  const nextBtn = document.getElementById('carouselNext');
+  const dotsContainer = document.getElementById('carouselDots');
+  const slides = track.querySelectorAll('.c-slide');
+  let currentIndex = 0;
+
+  slides.forEach((_, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    dot.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+    dot.addEventListener('click', () => goTo(i));
+    dotsContainer.appendChild(dot);
+  });
+
+  function goTo(index) {
+    currentIndex = Math.max(0, Math.min(index, slides.length - 1));
+    track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+    document.querySelectorAll('.carousel-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === currentIndex);
+    });
+  }
+
+  prevBtn.addEventListener('click', () => goTo(currentIndex - 1));
+  nextBtn.addEventListener('click', () => goTo(currentIndex + 1));
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowLeft') goTo(currentIndex - 1);
+    if (e.key === 'ArrowRight') goTo(currentIndex + 1);
+  });
+
+  let touchStartX = 0;
+  let touchEndX = 0;
+  const carouselContainer = document.getElementById('interactiveCarousel');
+  carouselContainer.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+  carouselContainer.addEventListener('touchend', function(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) goTo(currentIndex + 1);
+      else goTo(currentIndex - 1);
+    }
+  }, { passive: true });
+
+  // ── Lightbox ──
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCaption = document.getElementById('lightboxCaption');
+  const lightboxClose = document.getElementById('lightboxClose');
+  const lightboxThumbs = document.querySelectorAll('#lightboxGrid img');
+
+  lightboxThumbs.forEach(function(img) {
+    img.addEventListener('click', function() {
+      lightboxImg.src = this.dataset.full || this.src;
+      lightboxCaption.textContent = this.alt || '';
+      lightbox.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+  });
+})();
+</script>
+</body>
+</html>

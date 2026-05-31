@@ -350,3 +350,224 @@ export function getMarketsByCountry(country: Country): MarketData[] {
 export function getMarketByName(name: string): MarketData | undefined {
     return MARKET_DATA.find(m => m.marketName === name);
 }
+
+/**
+ * Fuzzy-match an address string to the closest known market.
+ * Uses keyword matching against known city/region names for each market.
+ *
+ * Examples:
+ *   "Calle Mayor, Madrid, Spain"            -> "Madrid Centre"
+ *   "12 Rue de Rivoli, Paris, France"       -> "Paris Central"
+ *   "Somewhere in the Cotswolds, UK"        -> "Cotswolds Villages"
+ *   "Calle de la Mar, Barcelona, Spain"     -> "Barcelona Beach"
+ *   "Unknown Village, Nowhere"              -> undefined
+ */
+export function findClosestMarket(address: string): MarketData | undefined {
+  if (!address) return undefined;
+
+  const addr = address.toLowerCase();
+
+  // Priority-ordered keywords map: each entry maps a market name to its identifying keywords.
+  // More specific/unique keywords should come before generic ones.
+  const marketKeywords: Array<{ name: string; keywords: string[] }> = [
+    // ── FRANCE ──
+    {
+      name: 'Paris Central',
+      keywords: ['paris', 'ile de france', 'île-de-france', 'arrondissement'],
+    },
+    {
+      name: 'French Alps Ski',
+      keywords: [
+        'alps', 'alpes', 'chamonix', 'courchevel', 'val thorens',
+        'méribel', 'meribel', 'megève', 'megeve', 'tignes',
+        "val d'isère", 'val disere', 'les arcs', 'savoie', 'haute-savoie',
+      ],
+    },
+    {
+      name: 'Cote d Azur',
+      keywords: [
+        "côte d'azur", 'cote d azur', 'nice', 'cannes', 'saint-tropez',
+        'antibes', 'monaco', 'monte carlo', 'villefranche', 'menton',
+        'eze', 'grasse',
+      ],
+    },
+    {
+      name: 'Provence Rural',
+      keywords: [
+        'provence', 'aix-en-provence', 'aix en provence', 'avignon',
+        'arles', 'apt', 'gordes', 'roussillon', 'lourmarin',
+        'vaucluse', 'luberon',
+      ],
+    },
+    {
+      name: 'Dordogne Valley',
+      keywords: ['dordogne', 'périgord', 'perigord', 'sarlat', 'bergerac'],
+    },
+    {
+      name: 'Brittany Coast',
+      keywords: [
+        'brittany', 'bretagne', 'rennes', 'brest', 'saint-malo',
+        'lorient', 'vannes', 'quimper', 'dinard', "côtes d'armor",
+        'cotes d armor', 'finistère', 'finistere', 'morbihan',
+      ],
+    },
+    {
+      name: 'Bordeaux Wine',
+      keywords: [
+        'bordeaux', 'saint-émilion', 'saint emilion', 'médoc',
+        'medoc', 'pomerol', 'graves', 'entre-deux-mers',
+      ],
+    },
+    {
+      name: 'Lyon Gastronomy',
+      keywords: ['lyon', 'rhône', 'rhone', 'villeurbanne'],
+    },
+    {
+      name: 'Biarritz Surf',
+      keywords: [
+        'biarritz', 'bayonne', 'basque', 'pays basque', 'anglet',
+        'saint-jean-de-luz', 'hendaye',
+      ],
+    },
+    {
+      name: 'Montpellier Growth',
+      keywords: [
+        'montpellier', 'languedoc', 'sète', 'sete', 'nîmes', 'nimes',
+        'hérault', 'herault',
+      ],
+    },
+
+    // ── SPAIN ──
+    {
+      name: 'Madrid Centre',
+      keywords: ['madrid'],
+    },
+    {
+      name: 'Barcelona Beach',
+      keywords: ['barcelona', 'catalunya', 'cataluña', 'catalonia', 'sitges'],
+    },
+    {
+      name: 'Marbella Premium',
+      keywords: ['marbella', 'puerto banús', 'puerto banus', 'estepona', 'mijas'],
+    },
+    {
+      name: 'Costa del Sol',
+      keywords: [
+        'costa del sol', 'costa de la luz', 'málaga', 'malaga', 'torremolinos',
+        'fuengirola', 'benalmádena', 'benalmadena', 'chiclana',
+        'cadiz', 'cádiz', 'conil', 'vejer', 'san fernando',
+        'puerto real', 'el puerto de santa maría', 'rota', 'chipiona',
+        'sanlúcar', 'sanlucar',
+      ],
+    },
+    {
+      name: 'Balearic Islands',
+      keywords: [
+        'balearic', 'baleares', 'mallorca', 'ibiza', 'menorca',
+        'palma', 'mahón', 'mahon',
+      ],
+    },
+    {
+      name: 'Canary Islands',
+      keywords: [
+        'canary', 'canarias', 'tenerife', 'gran canaria',
+        'lanzarote', 'fuerteventura', 'la palma',
+      ],
+    },
+    {
+      name: 'Valencia City',
+      keywords: ['valencia'],
+    },
+    {
+      name: 'Alicante Value',
+      keywords: ['alicante', 'costa blanca', 'benidorm', 'elche'],
+    },
+    {
+      name: 'San Sebastian',
+      keywords: ['san sebastian', 'donostia', 'san sebastián', 'san sebastian spain'],
+    },
+    {
+      name: 'Costa Brava',
+      keywords: [
+        'costa brava', 'girona', 'lloret', 'figueres',
+        'cadaqués', 'cadaques', 'roses', 'tossa de mar',
+      ],
+    },
+
+    // ── UK ──
+    {
+      name: 'London Zone 1',
+      keywords: [
+        'london', 'westminster', 'kensington', 'chelsea',
+        'mayfair', 'soho', 'city of london', 'covent garden',
+      ],
+    },
+    {
+      name: 'Cornwall Coastal',
+      keywords: [
+        'cornwall', 'st ives', 'newquay', 'penzance',
+        'falmouth', 'truro', 'padstow',
+      ],
+    },
+    {
+      name: 'Cotswolds Villages',
+      keywords: [
+        'cotswolds', 'cotswold', 'cheltenham',
+        'stow-on-the-wold', 'bourton-on-the-water', 'broadway',
+      ],
+    },
+    {
+      name: 'Scottish Highlands',
+      keywords: [
+        'highlands', 'scottish', 'inverness', 'loch ness',
+        'isle of skye', 'fort william', 'ben nevis',
+        'sutherland', 'caithness',
+      ],
+    },
+    {
+      name: 'Lake District',
+      keywords: [
+        'lake district', 'windermere', 'keswick', 'ambleside',
+        'cumbria', 'grasmere',
+      ],
+    },
+    {
+      name: 'Edinburgh City',
+      keywords: ['edinburgh'],
+    },
+    {
+      name: 'Manchester Tech',
+      keywords: ['manchester', 'salford'],
+    },
+    {
+      name: 'Birmingham Hub',
+      keywords: ['birmingham', 'west midlands'],
+    },
+    {
+      name: 'Brighton Pier',
+      keywords: ['brighton', 'hove', 'east sussex'],
+    },
+    {
+      name: 'Bath Heritage',
+      keywords: ['bath', 'bristol'],
+    },
+  ];
+
+  // Score each market by counting how many of its keywords appear in the address
+  let bestMatch: MarketData | undefined;
+  let bestScore = 0;
+
+  for (const entry of marketKeywords) {
+    const matchScore = entry.keywords.reduce((score, kw) => {
+      return score + (addr.includes(kw) ? 1 : 0);
+    }, 0);
+
+    if (matchScore > bestScore) {
+      bestScore = matchScore;
+      bestMatch = MARKET_DATA.find((m) => m.marketName === entry.name);
+    }
+  }
+
+  // Only return a match if at least one keyword was found
+  return bestScore > 0 ? bestMatch : undefined;
+}

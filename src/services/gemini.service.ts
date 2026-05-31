@@ -6,6 +6,7 @@ import { TranslationService } from './translation.service';
 import { AIService, AIProviderType } from './ai/ai.service';
 import { AIConfigService } from './ai/ai-config.service';
 import { LoggingService } from './logging.service';
+import { findClosestMarket } from './financial-engine/market-data';
 
 @Injectable({
   providedIn: 'root',
@@ -550,6 +551,53 @@ constructor() {
   }> {
     await this.enableNewProvider();
 
+    // ──────────────────────────────────────────────────────────────────────────
+    // Look up local market data from our curated market-data.ts
+    // ──────────────────────────────────────────────────────────────────────────
+    const matchedMarket = findClosestMarket(address);
+    let marketContextPrompt = '';
+    let marketADR = 0;       // daily rate in EUR (converted from cents)
+    let marketOccupancy = 0; // occupancy percentage (converted from 0-1)
+    let marketName = '';
+
+    if (matchedMarket) {
+      // baseADR and avgPrice2Bed are stored in cents (e.g., 24500 = €245.00)
+      marketADR = Math.round(matchedMarket.baseADR / 100);
+      marketOccupancy = Math.round(matchedMarket.baseOccupancy * 100);
+      marketName = matchedMarket.marketName;
+      const avgPrice2BedEur = Math.round(matchedMarket.avgPrice2Bed / 100);
+      const touristTaxEur = Math.round(matchedMarket.operationalCosts.avgTouristTax / 100);
+      const mgmtFeePct = Math.round(matchedMarket.operationalCosts.mgmtFeePct * 100);
+      const capitalGrowthPct = (matchedMarket.capitalGrowthEst * 100).toFixed(1);
+      const nightLimitStr = matchedMarket.nightLimit !== null ? String(matchedMarket.nightLimit) : 'None';
+
+      marketContextPrompt = `
+        LOCAL MARKET BENCHMARK DATA (from verified market research for ${marketName}):
+        - Matched Market: ${marketName} (${matchedMarket.country})
+        - Market Type: ${matchedMarket.type}
+        - Average 2-Bedroom Property Price: €${avgPrice2BedEur.toLocaleString()}
+        - Baseline ADR (Average Daily Rate): €${marketADR}
+        - Baseline Occupancy Rate: ${marketOccupancy}%
+        - Annual Capital Growth Estimate: ${capitalGrowthPct}%
+        - Night Limit (regulatory): ${nightLimitStr}
+        - Typical Tourist Tax: €${touristTaxEur}
+        - Typical Management Fee: ${mgmtFeePct}%
+
+        IMPORTANT INSTRUCTIONS FOR USING THIS DATA:
+        1. Use the Baseline ADR (€${marketADR}) as your CENTRAL ANCHOR for the nightly rate.
+        2. The final estimatedNightlyRate should be within ±40% of €${marketADR}
+           (i.e., between €${Math.round(marketADR * 0.6)} and €${Math.round(marketADR * 1.4)})
+           UNLESS the property has exceptional premium features justifying more.
+        3. The final estimatedOccupancy should be within ±15 percentage points of ${marketOccupancy}%
+           (i.e., between ${Math.max(0, marketOccupancy - 15)}% and ${Math.min(100, marketOccupancy + 15)}%).
+        4. Adjust UP for: swimming pool, luxury finishes, sea view, larger size, high-demand sub-location.
+        5. Adjust DOWN for: smaller size, older condition, less desirable sub-area, no amenities.
+        6. Use the Average 2-Bed Property Price (€${avgPrice2BedEur.toLocaleString()}) as a baseline
+           for estimatedPropertyPrice, scaled proportionally by property size and rooms.
+        7. IMPORTANT: This baseline ADR is for a 2-bedroom property. The property being analyzed has ${context?.rooms || 'unknown'} rooms. Scale the nightly rate accordingly — more rooms = higher rate, fewer rooms = lower rate.
+      `;
+    }
+
     const contextPrompt = context ? `
         PROPERTY CHARACTERISTICS:
         - Property Type: ${context.propertyType || 'Apartment'}
@@ -564,11 +612,20 @@ constructor() {
 
     const prompt = `
         You are an expert Real Estate Analyst specializing in global short-term rentals.
-        Target Location: \"${address}\"
+        Target Location: "${address}"
         ${contextPrompt}
+        ${marketContextPrompt}
 
         TASK: Estimate detailed market metrics for a property with these characteristics in this specific location.
-        1. Average Nightly Rate (EUR).
+
+        IMPORTANT — PRICING DEFINITION:
+        - "Average Nightly Rate" means the price for the ENTIRE property per night (not per room, not per person).
+        - The LOCAL MARKET BENCHMARK DATA below shows baseline ADR for a 2-bedroom property.
+        - If this property has MORE than 2 rooms, scale the nightly rate UP proportionally.
+        - If this property has FEWER than 2 rooms, scale accordingly.
+        - A 6-bedroom villa should have a significantly higher nightly rate than a 2-bedroom apartment in the same area.
+
+        1. Average Nightly Rate (EUR) — for the ENTIRE property.
         2. Average Occupancy Rate (%).
         3. Typical Concierge Commission (%).
         4. Average Cleaning Fee (EUR, per stay).
@@ -598,12 +655,36 @@ constructor() {
       return await this.aiService.generateJSON(prompt);
     } catch (error) {
       console.error('Error getting market analysis:', error);
+
+      // ──────────────────────────────────────────────────────────────────────
+      // Improved fallback using matched market data (if available)
+      // ──────────────────────────────────────────────────────────────────────
+      if (matchedMarket) {
+        // Calculate a reasonable cleaning fee from linen replacement cost
+        const cleaningFeeEst = Math.max(
+          35,
+          Math.round((matchedMarket.operationalCosts.linenReplacementRoom / 100) * 0.4)
+        );
+        const mgmtFeePct = Math.round(matchedMarket.operationalCosts.mgmtFeePct * 100);
+
+        return {
+          estimatedNightlyRate: marketADR,
+          estimatedOccupancy: marketOccupancy,
+          conciergeCommission: mgmtFeePct,
+          cleaningFees: cleaningFeeEst,
+          summary: `Market data for ${marketName} (AI unavailable). Using benchmark: €${marketADR}/night, ${marketOccupancy}% occupancy.`,
+        };
+      }
+
+      // ──────────────────────────────────────────────────────────────────────
+      // Original fallback (unchanged) — used when no market was matched
+      // ──────────────────────────────────────────────────────────────────────
       return {
         estimatedNightlyRate: 100,
         estimatedOccupancy: 65,
         conciergeCommission: 20,
         cleaningFees: 50,
-        summary: "Analysis unavailable (Service Error)."
+        summary: "Analysis unavailable (Service Error).",
       };
     }
   }

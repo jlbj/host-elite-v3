@@ -1,0 +1,1 @@
+/Users/josebermudez/dev/pi-custom/extensions/ext-minimal.ts

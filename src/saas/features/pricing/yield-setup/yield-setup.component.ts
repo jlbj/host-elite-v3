@@ -154,11 +154,11 @@ import { GeminiService } from '../../../../services/gemini.service';
 
                  <!-- Right Y-Axis (Price €) -->
                  <div class="absolute right-0 top-0 bottom-6 w-12 flex flex-col justify-between text-[9px] text-orange-400 font-mono pl-2 py-2">
-                     <span class="self-start">€{{ priceRange().max }}</span>
-                     <span class="self-start">€{{ priceRange().mid }}</span>
-                     <span class="self-start">€{{ priceRange().mid }}</span>
-                     <span class="self-start">€{{ priceRange().mid }}</span>
-                     <span class="self-start">€{{ priceRange().min }}</span>
+                     <span class="self-start">€{{ priceRange().tick1 }}</span>
+                     <span class="self-start">€{{ priceRange().tick2 }}</span>
+                     <span class="self-start">€{{ priceRange().tick3 }}</span>
+                     <span class="self-start">€{{ priceRange().tick4 }}</span>
+                     <span class="self-start">€{{ priceRange().tick5 }}</span>
                  </div>
 
                  <!-- Grid Lines -->
@@ -171,33 +171,23 @@ import { GeminiService } from '../../../../services/gemini.service';
                  </div>
 
                  <!-- Heatmap Bars -->
-                <div class="ml-10 mr-12 flex-1 flex items-end justify-between gap-1 md:gap-2 pb-6 relative">
+                <div class="ml-10 mr-12 flex-1 min-h-[200px] flex items-end justify-between gap-1 md:gap-2 pb-6 relative">
                     
-                    @if(isTier3()) {
-                        <!-- AI Projection Line Overlay -->
-                        <div class="absolute inset-x-0 bottom-6 h-[70%] pointer-events-none z-10">
+                    @if(isTier2()) {
+                        <!-- Projection Line Overlay -->
+                        <div class="absolute inset-x-0 bottom-6 top-0 pointer-events-none z-10">
                             <svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 100 100">
                                 <path [attr.d]="svgPath()" 
                                       fill="none" 
-                                      stroke="url(#gradient-ai)" 
-                                      stroke-width="2" 
-                                      stroke-dasharray="4,4" 
-                                      class="opacity-70 drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]"></path>
+                                      stroke="#818cf8" 
+                                      stroke-width="3" 
+                                      stroke-dasharray="6,4" 
+                                      class="drop-shadow-[0_0_8px_rgba(99,102,241,0.6)]"></path>
                                 <path [attr.d]="pricePath()" 
                                       fill="none" 
-                                      stroke="url(#gradient-price)" 
-                                      stroke-width="2" 
-                                      class="opacity-90 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]"></path>
-                                <defs>
-                                    <linearGradient id="gradient-ai" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" style="stop-color:#6366f1" />
-                                        <stop offset="100%" style="stop-color:#10b981" />
-                                    </linearGradient>
-                                    <linearGradient id="gradient-price" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" style="stop-color:#f59e0b" />
-                                        <stop offset="100%" style="stop-color:#ef4444" />
-                                    </linearGradient>
-                                </defs>
+                                      stroke="#fbbf24" 
+                                      stroke-width="3" 
+                                      class="drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]"></path>
                             </svg>
                         </div>
                         <div class="absolute top-0 right-0 flex flex-col gap-2 z-20">
@@ -215,12 +205,12 @@ import { GeminiService } from '../../../../services/gemini.service';
                     <!-- Bars -->
                     @for (month of forecast(); track month.name) {
                         <div class="flex-1 group/bar relative">
-                            <div class="w-full bg-opacity-20 transition-all duration-500 rounded-t-lg relative flex items-end overflow-hidden"
+                            <div class="w-full transition-all duration-500 rounded-t-lg relative flex items-end overflow-hidden"
                                  [style.height.%]="month.demand"
-                                 [class.bg-slate-700]="month.demand < 50"
-                                 [class.bg-emerald-500]="month.demand >= 50 && month.demand < 80"
-                                 [class.bg-amber-500]="month.demand >= 80"
-                                 [class.hover:bg-opacity-40]="true">
+                                 [class.bg-slate-500]="month.demand < 50"
+                                 [class.bg-emerald-400]="month.demand >= 50 && month.demand < 80"
+                                 [class.bg-amber-400]="month.demand >= 80"
+                                 [class.opacity-90]="true">
                                  <!-- Bar Animation Overlay -->
                                  <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                             </div>
@@ -315,6 +305,22 @@ export class YieldSetupComponent implements OnInit {
     /** Monthly prices directly from AI analysis (if available) for more accurate seasonal pricing. */
     monthlyPrices = signal<number[] | null>(null);
 
+    /** Number of bedrooms/rooms for the property. Used to scale pricing. */
+    propertyRooms = signal(2);
+
+    /**
+     * Room count multiplier for pricing.
+     * Market-data benchmarks (baseADR) are for 2-bedroom properties.
+     * Uses sqrt scaling (diminishing returns) which matches industry STR patterns.
+     * Examples: 1 room→0.71x, 2 rooms→1.00x, 3→1.22x, 4→1.41x, 6→1.73x
+     */
+    roomsMultiplier = computed(() => {
+        const rooms = this.propertyRooms();
+        const baseline = 2;
+        if (rooms <= 0) return 1;
+        return Math.sqrt(rooms / baseline);
+    });
+
     @Input() feature?: any;
     @Input() propertyDetails?: any;
     @Input() selectFeature?: (featureId: string) => void;
@@ -344,13 +350,10 @@ export class YieldSetupComponent implements OnInit {
     });
 
     pricePath = computed(() => {
-        const bp = this.basePrice();
-        const marginPct = this.margin();
+        const bounds = this.priceBounds();
         const effectivePrices = this.effectiveMonthlyPrices();
         const prices = effectivePrices.map((price, i) => {
-            const minPrice = bp * 0.5 * (1 + marginPct / 100);
-            const maxPrice = bp * 1.5 * (1 + marginPct / 100);
-            const normalizedY = ((price - minPrice) / (maxPrice - minPrice)) * 100;
+            const normalizedY = ((price - bounds.minRaw) / (bounds.maxRaw - bounds.minRaw)) * 100;
             return `${(i * 100) / 11},${100 - Math.max(0, Math.min(100, normalizedY))}`;
         });
         let d = `M ${prices[0]}`;
@@ -370,13 +373,27 @@ export class YieldSetupComponent implements OnInit {
         );
     });
 
-    priceRange = computed(() => {
+    /** Shared raw price bounds (unrounded) used by both pricePath() and priceRange(). */
+    priceBounds = computed(() => {
         const bp = this.basePrice();
         const marginPct = this.margin();
-        const minPrice = Math.floor(bp * 0.5 * (1 + marginPct / 100));
-        const maxPrice = Math.ceil(bp * 1.5 * (1 + marginPct / 100));
-        const midPrice = Math.floor((minPrice + maxPrice) / 2);
-        return { min: minPrice, mid: midPrice, max: maxPrice };
+        const minRaw = bp * 0.5 * (1 + marginPct / 100);
+        const maxRaw = bp * 1.5 * (1 + marginPct / 100);
+        return { minRaw, maxRaw };
+    });
+
+    priceRange = computed(() => {
+        const bounds = this.priceBounds();
+        const minPrice = Math.floor(bounds.minRaw);
+        const maxPrice = Math.ceil(bounds.maxRaw);
+        const step = (maxPrice - minPrice) / 4;
+        return {
+            tick1: maxPrice,
+            tick2: Math.round(maxPrice - step),
+            tick3: Math.round(maxPrice - 2 * step),
+            tick4: Math.round(maxPrice - 3 * step),
+            tick5: minPrice
+        };
     });
 
     recalculate() {
@@ -393,6 +410,7 @@ export class YieldSetupComponent implements OnInit {
         this.isLoadingMarket.set(true);
         try {
             const db = this.propertyDetails;
+            this.propertyRooms.set(db.rooms || db.bedrooms || 2);
             const context = {
                 propertyType: db.type || db.property_type || 'Apartment',
                 hostCountry: db.country || 'Spain',

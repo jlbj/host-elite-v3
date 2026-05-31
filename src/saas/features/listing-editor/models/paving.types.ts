@@ -14,6 +14,7 @@ export interface SectionStyle {
   backgroundSize?: 'cover' | 'contain' | 'auto' | 'stretch';
   backgroundPosition?: string;
   scrollEffect?: 'none' | 'parallax' | 'zoom-parallax' | 'translate-parallax';
+  galleryStyle?: 'grid' | 'masonry' | 'justified' | 'carousel-scroll' | 'carousel-interactive' | 'marquee';
   padding?: string;
 }
 

@@ -1,4 +1,4 @@
-import { Component, input, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import type { Section, Theme, SectionStyle } from '../models/paving.types';
 import { SECTION_TYPES } from '../constants/paving.constants';
@@ -24,10 +24,6 @@ import { SECTION_TYPES } from '../constants/paving.constants';
 
       @if (fixedBgStyle(); as bg) {
         <div class="section-bg-fixed" [style]="bg"></div>
-      }
-
-      @if (blockId()) {
-        <div class="section-label-badge">{{ sectionInfo()?.label }}</div>
       }
 
       <div class="section-content-wrapper">
@@ -98,15 +94,71 @@ import { SECTION_TYPES } from '../constants/paving.constants';
           }
           @case ('photos') {
             <div class="section-photos">
-              <h2 class="section-heading">Photo Gallery</h2>
+              @if (getTitle(); as title) {
+                <h2 class="section-heading">{{ title }}</h2>
+              }
               @if (photoList().length > 0) {
-                <div class="photos-grid">
-                  @for (img of photoList().slice(0, 9); track $index) {
-                    <div class="photo-item">
-                      <img [src]="img.url" [alt]="img.caption || ''" class="photo-img" />
+                @if (galleryStyle() === 'masonry') {
+                  <div class="gallery-masonry">
+                    @for (img of photoList(); track $index) {
+                      <div class="gallery-masonry-item" (click)="openLightbox(img.url, img.caption || '')">
+                        <img [src]="img.url" [alt]="img.caption || ''" loading="lazy" />
+                      </div>
+                    }
+                  </div>
+                } @else if (galleryStyle() === 'justified') {
+                  <div class="gallery-justified">
+                    @for (img of photoList(); track $index) {
+                      <img class="gallery-justified-img" [src]="img.url" [alt]="img.caption || ''" loading="lazy" (click)="openLightbox(img.url, img.caption || '')" />
+                    }
+                  </div>
+                } @else if (galleryStyle() === 'carousel-scroll') {
+                  <div class="gallery-carousel-scroll">
+                    @for (img of photoList(); track $index) {
+                      <div class="gallery-cs-slide" (click)="openLightbox(img.url, img.caption || '')">
+                        <img [src]="img.url" [alt]="img.caption || ''" loading="lazy" />
+                      </div>
+                    }
+                  </div>
+                } @else if (galleryStyle() === 'carousel-interactive') {
+                  <div class="gallery-carousel-interactive">
+                    <div class="gallery-ci-track" [style.transform]="'translateX(-' + carouselIndex() * 100 + '%)'">
+                      @for (img of photoList(); track $index) {
+                        <div class="gallery-ci-slide">
+                          <img [src]="img.url" [alt]="img.caption || ''" loading="lazy" (click)="openLightbox(img.url, img.caption || '')" />
+                        </div>
+                      }
                     </div>
-                  }
-                </div>
+                    @if (photoList().length > 1) {
+                      <button class="gallery-ci-btn gallery-ci-prev" (click)="prevCarousel(photoList().length)" aria-label="Previous">‹</button>
+                      <button class="gallery-ci-btn gallery-ci-next" (click)="nextCarousel(photoList().length)" aria-label="Next">›</button>
+                      <div class="gallery-ci-dots">
+                        @for (_ of photoList(); track $index) {
+                          <button class="gallery-ci-dot" [class.active]="$index === carouselIndex()" (click)="carouselIndex.set($index)" aria-label="Go to slide {{ $index + 1 }}"></button>
+                        }
+                      </div>
+                    }
+                  </div>
+                } @else if (galleryStyle() === 'marquee') {
+                  <div class="gallery-marquee-wrap">
+                    <div class="gallery-marquee-track">
+                      @for (img of photoList(); track $index) {
+                        <img [src]="img.url" [alt]="img.caption || ''" loading="lazy" (click)="openLightbox(img.url, img.caption || '')" />
+                      }
+                      @for (img of photoList(); track $index) {
+                        <img [src]="img.url" [alt]="img.caption || ''" loading="lazy" (click)="openLightbox(img.url, img.caption || '')" />
+                      }
+                    </div>
+                  </div>
+                } @else {
+                  <div class="gallery-grid">
+                    @for (img of photoList(); track $index) {
+                      <div class="gallery-grid-item" (click)="openLightbox(img.url, img.caption || '')">
+                        <img [src]="img.url" [alt]="img.caption || ''" loading="lazy" />
+                      </div>
+                    }
+                  </div>
+                }
               } @else {
                 <div class="empty-state">No photos available</div>
               }
@@ -246,6 +298,16 @@ import { SECTION_TYPES } from '../constants/paving.constants';
           }
         }
       </div>
+
+      @if (lightboxUrl(); as url) {
+        <div class="gallery-lightbox" (click)="closeLightbox()">
+          <button class="gallery-lightbox-close" (click)="closeLightbox()">✕</button>
+          <img [src]="url" [alt]="lightboxCaption()" class="gallery-lightbox-img" (click)="$event.stopPropagation()" />
+          @if (lightboxCaption()) {
+            <div class="gallery-lightbox-caption">{{ lightboxCaption() }}</div>
+          }
+        </div>
+      }
     </div>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -261,6 +323,35 @@ export class SectionRendererComponent {
   blockStyle = input<Partial<SectionStyle> | undefined>(undefined);
 
   sectionInfo = computed(() => SECTION_TYPES.find(s => s.type === this.section().type));
+
+  galleryStyle = computed(() => this.mergedStyle().galleryStyle || (this.section().content['layout'] as string) || 'grid');
+
+  carouselIndex = signal(0);
+  lightboxUrl = signal('');
+  lightboxCaption = signal('');
+
+  getTitle(): string | null {
+    const t = this.section().content['title'];
+    return (t && typeof t === 'string' && t.trim()) ? t : null;
+  }
+
+  openLightbox(url: string, caption: string): void {
+    this.lightboxUrl.set(url);
+    this.lightboxCaption.set(caption);
+  }
+
+  closeLightbox(): void {
+    this.lightboxUrl.set('');
+    this.lightboxCaption.set('');
+  }
+
+  prevCarousel(length: number): void {
+    this.carouselIndex.update(i => (i - 1 + length) % length);
+  }
+
+  nextCarousel(length: number): void {
+    this.carouselIndex.update(i => (i + 1) % length);
+  }
 
   mergedStyle = computed(() => {
     const s = this.section();
