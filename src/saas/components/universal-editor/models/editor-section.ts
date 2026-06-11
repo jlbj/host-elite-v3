@@ -51,6 +51,11 @@ export const LISTING_SECTIONS: EditorSection[] = [
                 { value: 'Loft', label: 'Loft' },
                 { value: 'Studio', label: 'Studio' },
             ]},
+            { key: 'rental_mode', label: 'BOOKLET.fields.rental_mode', type: 'select', options: [
+                { value: 'entire_place', label: 'Entire Place' },
+                { value: 'private_rooms', label: 'Private Rooms Only' },
+                { value: 'both', label: 'Both Entire Place & Rooms' },
+            ]},
             { key: 'bedrooms', label: 'BOOKLET.fields.bedrooms', type: 'text', placeholder: '2' },
             { key: 'bathrooms', label: 'BOOKLET.fields.bathrooms', type: 'text', placeholder: '1' },
             { key: 'max_guests', label: 'BOOKLET.fields.max_guests', type: 'text', placeholder: '4' },
@@ -103,6 +108,11 @@ export const WELCOME_BOOKLET_SECTIONS: EditorSection[] = [
                 { value: 'Cottage', label: 'Cottage' },
                 { value: 'Loft', label: 'Loft' },
                 { value: 'Studio', label: 'Studio' },
+            ]},
+            { key: 'rental_mode', label: 'BOOKLET.fields.rental_mode', type: 'select', options: [
+                { value: 'entire_place', label: 'Entire Place' },
+                { value: 'private_rooms', label: 'Private Rooms Only' },
+                { value: 'both', label: 'Both Entire Place & Rooms' },
             ]},
             { key: 'rooms', label: 'BOOKLET.fields.rooms', type: 'text', placeholder: '3' },
             { key: 'bedrooms', label: 'BOOKLET.fields.bedrooms', type: 'text', placeholder: '2' },

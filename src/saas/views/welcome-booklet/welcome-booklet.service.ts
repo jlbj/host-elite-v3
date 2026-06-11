@@ -36,7 +36,7 @@ export class WelcomeBookletService implements OnDestroy {
     activeWidgets = signal<Record<string, boolean>>({});
     propertyPhotos = signal<{ url: string, category: string }[]>([]);
     propertyEquipments = signal<string[]>([]);
-    propertyDetails = signal<{ bedrooms?: number, bathrooms?: number, maxGuests?: number }>({});
+    propertyDetails = signal<{ bedrooms?: number, bathrooms?: number, maxGuests?: number, rental_mode?: string, property_type?: string }>({});
 
     // FAQ Signal (derived from form)
     faqItems = signal<FaqItem[]>([]);
@@ -98,8 +98,12 @@ export class WelcomeBookletService implements OnDestroy {
             if (fields) {
                 const group: any = {};
                 for (const key in fields) {
-                    group[key] = [''];
-                    group[key + '_pdf'] = [''];
+                    if (key === 'rental_rooms') {
+                        group[key] = this.fb.array([]);
+                    } else {
+                        group[key] = [''];
+                        group[key + '_pdf'] = [''];
+                    }
                 }
                 (form as FormGroup).addControl(section.formGroupName, this.fb.group(group));
             }
@@ -127,7 +131,9 @@ export class WelcomeBookletService implements OnDestroy {
                 this.propertyDetails.set({
                     bedrooms: prop.bedrooms || 0,
                     bathrooms: prop.bathrooms || 0,
-                    maxGuests: prop.max_guests || 0
+                    maxGuests: prop.max_guests || 0,
+                    rental_mode: prop.rental_mode || 'entire_place',
+                    property_type: prop.property_type || '',
                 });
 
                 // Photos
@@ -144,6 +150,7 @@ export class WelcomeBookletService implements OnDestroy {
                     address: prop.address || '',
                     propertyDetails: {
                         property_type: prop.property_type || '',
+                        rental_mode: prop.rental_mode || 'entire_place',
                         rooms: prop.rooms || '',
                         bedrooms: prop.bedrooms || '',
                         bathrooms: prop.bathrooms || '',

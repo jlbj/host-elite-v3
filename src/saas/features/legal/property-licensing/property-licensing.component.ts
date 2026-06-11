@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core';
+import { Component, inject, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslationService } from '../../../../services/translation.service';
 import { TranslatePipe } from '../../../../pipes/translate.pipe';
@@ -16,6 +16,11 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
         <div>
           <h1 class="text-3xl font-bold text-white">{{ 'LEG_LAUNCH.LicensingTitle' | translate }}</h1>
           <p class="text-slate-400 mt-1">{{ 'LEG_LAUNCH.LicensingDesc' | translate }}</p>
+          @if (propertyDetails()?.rental_mode && propertyDetails()?.rental_mode !== 'entire_place') {
+            <span class="inline-block mt-2 px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-xs font-bold text-indigo-300">
+              {{ rentalModeLabel() }}
+            </span>
+          }
         </div>
       </div>
 
@@ -36,6 +41,16 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
 export class PropertyLicensingComponent {
   translate = inject(TranslationService);
   selectFeature = input<(featureId: string) => void | undefined>();
+  propertyDetails = input<any>();
+
+  rentalModeLabel = computed(() => {
+    const rm = this.propertyDetails()?.rental_mode;
+    switch (rm) {
+      case 'private_rooms': return 'Private Rooms';
+      case 'both': return 'Entire Place & Rooms';
+      default: return 'Entire Place';
+    }
+  });
 
   onStartCheck() {
     const callback = this.selectFeature();

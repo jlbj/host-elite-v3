@@ -1,6 +1,7 @@
-import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SectionRendererComponent } from './section-renderer.component';
+import { PavingStoreService } from '../services/paving-store.service';
 import type { Section, SectionType, SectionStyle } from '../models/paving.types';
 
 export interface PavingBlockSection {
@@ -94,6 +95,7 @@ export interface AdjacentEdges {
                 [section]="sectionObj()!"
                 [blockId]="block().id"
                 [blockStyle]="blockStyle()"
+                [rentalMode]="store.rentalMode()"
               />
             } @else {
               <div class="paving-block-label-wrapper">
@@ -136,6 +138,8 @@ export interface AdjacentEdges {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PavingBlockComponent {
+  private store = inject(PavingStoreService);
+
   constructor() {
     console.log('[PavingBlock] CONSTRUCTED');
   }

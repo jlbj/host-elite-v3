@@ -21,6 +21,11 @@ import { FormsModule } from '@angular/forms';
         <div>
           <h1 class="text-3xl font-extrabold text-white tracking-tight">{{ 'OCC.OccupancyOptimizer' | translate }}</h1>
           <p class="text-slate-400 mt-2 max-w-2xl">{{ 'OCC.StopLeavingMoneyOnThe' | translate }}</p>
+          @if (isRoomRental()) {
+            <span class="inline-block mt-2 px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-xs font-bold text-indigo-300">
+              {{ rentalModeLabel() }} — occupancy tracked per room
+            </span>
+          }
           
           <!-- Config Button -->
           <button (click)="isEditingUrl.set(!isEditingUrl())" class="mt-4 text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1">
@@ -191,8 +196,18 @@ export class OccupancyStatsComponent {
     session = inject(SessionStore);
     repository = inject(HostRepository);
 
-    // Inputs from parent (Angle View)
     propertyDetails = input<any>();
+
+    rentalMode = computed(() => this.propertyDetails()?.rental_mode || 'entire_place');
+    rentalModeLabel = computed(() => {
+        const rm = this.rentalMode();
+        switch (rm) {
+            case 'private_rooms': return 'Private Rooms';
+            case 'both': return 'Entire Place & Rooms';
+            default: return 'Entire Place';
+        }
+    });
+    isRoomRental = computed(() => this.rentalMode() !== 'entire_place');
 
     tier = computed(() => this.session.userProfile()?.plan || 'TIER_0');
     isTier0 = computed(() => this.tier() === 'TIER_0');

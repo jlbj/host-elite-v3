@@ -68,6 +68,14 @@ export class RoiSimulatorComponent {
     formValues = computed(() => this.form.value);
     propertyAddress = computed(() => this.propertyDetails()?.address || 'Generic Model');
     propertyType = computed(() => this.propertyDetails()?.type || 'Investment Property');
+    rentalModeLabel = computed(() => {
+        const rm = this.propertyDetails()?.rental_mode;
+        switch (rm) {
+            case 'private_rooms': return 'Private Rooms';
+            case 'both': return 'Entire Place & Rooms';
+            default: return 'Entire Place';
+        }
+    });
 
     constructor(private fb: FormBuilder) {
         effect(() => {

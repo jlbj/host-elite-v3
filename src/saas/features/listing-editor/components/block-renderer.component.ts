@@ -65,7 +65,7 @@ import type { Block, Theme } from '../models/paving.types';
           </div>
         }
         @if (section) {
-          <app-section-renderer [section]="section" [theme]="theme()" [blockId]="block().id" />
+          <app-section-renderer [section]="section" [theme]="theme()" [blockId]="block().id" [rentalMode]="store.rentalMode()" />
         } @else {
           <div class="paving-block-empty" [class.has-toolbar]="store.selectedBlockId() === block().id">
             Drop section here

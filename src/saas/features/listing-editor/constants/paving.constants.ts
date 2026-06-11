@@ -26,7 +26,7 @@ export const DEFAULT_SECTION_CONTENT: Record<SectionType, SectionContent> = {
   photos: { images: [], layout: 'grid', columns: 3 },
   description: { content: '' },
   contact: { email: '', phone: '', address: '' },
-  price: { minPrice: 0, currency: '\u20AC', period: 'night' },
+  price: { minPrice: 0, currency: '\u20AC', period: 'night', rooms: [] },
   header: { logo: '', menuItems: [] },
   characteristics: { sqm: 0, plotSqm: 0, rooms: 0, bathrooms: 0, beds: 0, guests: 0 },
   otherProperties: { properties: [] },

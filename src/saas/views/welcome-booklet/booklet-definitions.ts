@@ -31,7 +31,8 @@ export const WIDGET_DEFINITIONS: Record<string, { name: string, icon: string }> 
 export const CONTROL_LABELS: Record<string, Record<string, string>> = {
     'propertyDetails': {
         property_type: 'BOOKLET.fields.property_type',
-        rooms: 'BOOKLET.fields.rooms',
+        rental_mode: 'BOOKLET.fields.rental_mode',
+        rental_rooms: 'BOOKLET.fields.rental_rooms',
         bedrooms: 'BOOKLET.fields.bedrooms',
         bathrooms: 'BOOKLET.fields.bathrooms',
         surface_area: 'BOOKLET.fields.surface_area',

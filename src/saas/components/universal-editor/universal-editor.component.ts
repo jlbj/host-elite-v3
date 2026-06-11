@@ -558,7 +558,8 @@ export class UniversalEditorComponent {
             sections,
             content,
             photos: content['photo-gallery']?.['photos'] || content['photos'] || [],
-            propertyDetails: content['propertyDetails'] || {}
+            propertyDetails: content['propertyDetails'] || {},
+            rentalMode: content['propertyDetails']?.['rental_mode'] || 'entire_place'
         };
 
         const html = this.previewService.generateHtml(previewData);

@@ -57,6 +57,11 @@
                 <h1
                     class="text-4xl md:text-7xl font-extrabold text-white mb-6 drop-shadow-lg tracking-tight animate-fade-in-up">
                     {{ config.headline | translate }}</h1>
+                @if (propertyDetails?.rental_mode && propertyDetails?.rental_mode !== 'entire_place') {
+                    <div class="badge text-sm mb-4 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-white font-medium inline-block">
+                        {{ rentalModeLabel(propertyDetails?.rental_mode) }}
+                    </div>
+                }
                 <button [style.backgroundColor]="config.primaryColor"
                     class="px-8 md:px-10 py-3 md:py-4 rounded-full text-white font-bold text-lg shadow-xl transform transition hover:scale-105 hover:shadow-2xl border-2 border-white/20 backdrop-blur-sm animate-bounce-subtle">
                     {{ 'BOOKLET.book_stay' | translate }}

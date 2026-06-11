@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import type {
   PropertyData, PropertyPhoto, PageConfig, Section, SectionType,
   Theme, Layout, GridBlock, SectionStyle, EdgeDragState, BlockHistory,
@@ -143,6 +143,7 @@ export class PavingStoreService {
   readonly previousLayoutId = signal<string | null>(null);
   readonly editorMode = signal<EditorMode>('display');
   readonly isFullScreen = signal(false);
+  readonly rentalMode = computed(() => this.propertyData()?.rental_mode ?? 'entire_place');
 
   async loadProperty(propertyId: string): Promise<void> {
     this.isLoading.set(true);

@@ -308,17 +308,27 @@ export class YieldSetupComponent implements OnInit {
     /** Number of bedrooms/rooms for the property. Used to scale pricing. */
     propertyRooms = signal(2);
 
+    /** Rental mode: how this property is rented out. */
+    rentalMode = signal<string>('entire_place');
+
     /**
      * Room count multiplier for pricing.
+     * Only applies to 'entire_place' (whole-property pricing).
      * Market-data benchmarks (baseADR) are for 2-bedroom properties.
      * Uses sqrt scaling (diminishing returns) which matches industry STR patterns.
      * Examples: 1 room→0.71x, 2 rooms→1.00x, 3→1.22x, 4→1.41x, 6→1.73x
      */
     roomsMultiplier = computed(() => {
+        if (this.rentalMode() === 'private_rooms') return 1;
         const rooms = this.propertyRooms();
         const baseline = 2;
         if (rooms <= 0) return 1;
         return Math.sqrt(rooms / baseline);
+    });
+
+    /** Effective base price after accounting for rental mode and room count. */
+    effectiveBasePrice = computed(() => {
+        return Math.round(this.basePrice() * this.roomsMultiplier());
     });
 
     @Input() feature?: any;
@@ -366,7 +376,7 @@ export class YieldSetupComponent implements OnInit {
     effectiveMonthlyPrices = computed(() => {
         const aiPrices = this.monthlyPrices();
         if (aiPrices && aiPrices.length === 12) return aiPrices;
-        const bp = this.basePrice();
+        const bp = this.effectiveBasePrice();
         const m = this.margin();
         return this.forecast().map(month =>
             Math.round(bp * (0.5 + month.demand / 100) * (1 + m / 100))
@@ -375,7 +385,7 @@ export class YieldSetupComponent implements OnInit {
 
     /** Shared raw price bounds (unrounded) used by both pricePath() and priceRange(). */
     priceBounds = computed(() => {
-        const bp = this.basePrice();
+        const bp = this.effectiveBasePrice();
         const marginPct = this.margin();
         const minRaw = bp * 0.5 * (1 + marginPct / 100);
         const maxRaw = bp * 1.5 * (1 + marginPct / 100);
@@ -411,6 +421,7 @@ export class YieldSetupComponent implements OnInit {
         try {
             const db = this.propertyDetails;
             this.propertyRooms.set(db.rooms || db.bedrooms || 2);
+            this.rentalMode.set(db.rental_mode || 'entire_place');
             const context = {
                 propertyType: db.type || db.property_type || 'Apartment',
                 hostCountry: db.country || 'Spain',
@@ -419,6 +430,7 @@ export class YieldSetupComponent implements OnInit {
                 totalSize: db.size || db.surface_area || 80,
                 gardenSize: db.gardenSize || 0,
                 hasPool: db.hasPool || false,
+                rentalMode: db.rental_mode || 'entire_place',
                 additionalDetails: db.description || db.listing_description || ''
             };
 

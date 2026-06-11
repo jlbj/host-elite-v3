@@ -35,7 +35,12 @@ export class WelcomeBookletMicrositeComponent {
 
     // Computed properties for template
     viewDetails = computed(() => ({
-        property_equipments: this.service.propertyEquipments().map(name => ({ name }))
+        property_equipments: this.service.propertyEquipments().map(name => ({ name })),
+        rental_mode: this.service.propertyDetails().rental_mode || 'entire_place',
+        property_type: this.service.propertyDetails().property_type || '',
+        bedrooms: this.service.propertyDetails().bedrooms || 0,
+        bathrooms: this.service.propertyDetails().bathrooms || 0,
+        maxGuests: this.service.propertyDetails().maxGuests || 0,
     }));
 
     userEmail = computed(() => this.service.store.userProfile()?.email || '');

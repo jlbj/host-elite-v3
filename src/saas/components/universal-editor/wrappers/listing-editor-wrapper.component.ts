@@ -114,6 +114,7 @@ export class ListingEditorWrapperComponent {
                     },
                     'propertyDetails': {
                         'property_type': prop.property_type || 'Entire Home',
+                        'rental_mode': prop.rental_mode || 'entire_place',
                         'bedrooms': prop.bedrooms?.toString() || '',
                         'bathrooms': prop.bathrooms?.toString() || '',
                         'max_guests': prop.max_guests?.toString() || '',
@@ -185,6 +186,7 @@ export class ListingEditorWrapperComponent {
             },
             'propertyDetails': {
                 'property_type': 'Entire Home',
+                'rental_mode': 'entire_place',
                 'bedrooms': '2',
                 'bathrooms': '1',
                 'max_guests': '4',
@@ -236,10 +238,21 @@ export class ListingEditorWrapperComponent {
                 ? data.content['cover-image']?.['coverImageUrl']
                 : data.content['cover-image'];
 
+            const propertyDetails = typeof data.content['propertyDetails'] === 'object'
+                ? data.content['propertyDetails']
+                : {};
+
             await this.repository.updatePropertyData(prop.id, {
                 listing_title: title || prop.listing_title,
                 listing_description: description || prop.listing_description,
                 cover_image_url: coverImageUrl || prop.cover_image_url,
+                propertyDetails: {
+                    property_type: propertyDetails['property_type'] || prop.property_type || 'Entire Home',
+                    rental_mode: propertyDetails['rental_mode'] || prop.rental_mode || 'entire_place',
+                    bedrooms: propertyDetails['bedrooms'] || prop.bedrooms?.toString() || '',
+                    bathrooms: propertyDetails['bathrooms'] || prop.bathrooms?.toString() || '',
+                    max_guests: propertyDetails['max_guests'] || prop.max_guests?.toString() || '',
+                },
                 marketing: {
                     title: title,
                     description: description,

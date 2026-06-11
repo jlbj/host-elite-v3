@@ -1,5 +1,22 @@
 export type SectionType = 'hero' | 'photos' | 'description' | 'contact' | 'price' | 'header' | 'characteristics' | 'otherProperties' | 'bottom' | 'closeTo' | 'amenities' | 'map' | 'facilities' | 'floorPlan' | 'rules' | 'testimonials' | 'location' | 'recap' | 'ADAPTIVE' | 'FIXED';
 
+export type RentalMode = 'entire_place' | 'private_rooms' | 'both';
+
+export type BedType = 'king' | 'queen' | 'double' | 'twin' | 'bunk' | 'single' | 'sofa_bed' | 'crib';
+
+export interface RentableRoom {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  maxGuests: number;
+  bedType: BedType;
+  privateBathroom: boolean;
+  surface?: number;
+  amenities?: string[];
+  photos?: string[];
+}
+
 export interface SectionContent {
   [key: string]: unknown;
 }
@@ -67,6 +84,7 @@ export interface PropertyData {
   created_at: string;
   updated_at: string;
   property_type: string | null;
+  rental_mode: RentalMode;
   rooms: number | null;
   bedrooms: number | null;
   bathrooms: number | null;

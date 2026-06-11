@@ -30,6 +30,7 @@ const MOCK_PROPERTY: PropertyData = {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   property_type: 'house',
+  rental_mode: 'entire_place',
   rooms: 8,
   bedrooms: 4,
   bathrooms: 3,

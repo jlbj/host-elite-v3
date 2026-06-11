@@ -1,5 +1,5 @@
 import { TranslationService } from '../../../../services/translation.service';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Feature } from '../../../../types';
 import { SessionStore } from '../../../../state/session.store';
@@ -23,6 +23,11 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
               }
           </div>
           <p class="text-slate-400 mt-2 max-w-2xl">{{ 'REGCHECK.NeverFailAnInspectionStore' | translate }}</p>
+          @if (propertyDetails()?.rental_mode && propertyDetails()?.rental_mode !== 'entire_place') {
+            <span class="inline-block mt-2 px-3 py-1 bg-indigo-500/20 border border-indigo-500/30 rounded-full text-xs font-bold text-indigo-300">
+              {{ rentalModeLabel() }}
+            </span>
+          }
         </div>
         <div class="px-4 py-2 rounded-lg border text-xs font-mono uppercase tracking-wider"
              [ngClass]="{
@@ -169,11 +174,21 @@ import { TranslatePipe } from '../../../../pipes/translate.pipe';
 })
 export class RegulatoryChecklistComponent {
     translate = inject(TranslationService);
+    propertyDetails = input<any>();
     feature = computed(() => ({
         id: 'LEG_01',
         name: this.translate.instant('REGUCHEC.Title'),
         description: this.translate.instant('REGUCHEC.Description'),
     } as any));
+
+    rentalModeLabel = computed(() => {
+        const rm = this.propertyDetails()?.rental_mode;
+        switch (rm) {
+            case 'private_rooms': return 'Private Rooms';
+            case 'both': return 'Entire Place & Rooms';
+            default: return 'Entire Place';
+        }
+    });
 
     session = inject(SessionStore);
     tier = computed(() => this.session.userProfile()?.plan || 'Freemium');

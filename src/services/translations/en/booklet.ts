@@ -25,6 +25,8 @@ export const booklet = {
     'BOOKLET.fields.surface_area': 'Surface Area (m²)',
     'BOOKLET.fields.max_guests': 'Max Guests',
     'BOOKLET.fields.bed_count': 'Number of Beds',
+    'BOOKLET.fields.rental_mode': 'Rental Mode',
+    'BOOKLET.fields.rental_rooms': 'Rooms for Rent',
 
     // Fields - Welcome
     'BOOKLET.fields.welcomeMessage': 'Welcome Message / Description',

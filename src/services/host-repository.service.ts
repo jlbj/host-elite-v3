@@ -346,6 +346,7 @@ export class HostRepository {
             house_rules_text: formData.experience?.houseRules,
             emergency_contact_info: formData.experience?.emergencyContact,
             property_type: formData.propertyDetails?.property_type,
+            rental_mode: formData.propertyDetails?.rental_mode || 'entire_place',
             rooms: formData.propertyDetails?.rooms,
             bedrooms: formData.propertyDetails?.bedrooms,
             bathrooms: formData.propertyDetails?.bathrooms,

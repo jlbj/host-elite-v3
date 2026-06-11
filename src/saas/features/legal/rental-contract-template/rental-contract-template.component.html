@@ -91,6 +91,17 @@
             <label class="block text-slate-400 text-xs uppercase font-bold mb-1">{{ getTranslation('CONTRACT.PropertyAddress') }}</label>
             <input type="text" [(ngModel)]="contractData.propertyAddress" class="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-white text-sm" [placeholder]="getTranslation('CONTRACT.PropertyAddressPlaceholder')">
           </div>
+          @if (rentalRooms().length > 0) {
+          <div>
+            <label class="block text-slate-400 text-xs uppercase font-bold mb-1">{{ 'CONTRACT.RentedRoom' | translate }}</label>
+            <select [(ngModel)]="contractData.rentedRoom" class="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-white text-sm">
+              <option value="">{{ getTranslation('CONTRACT.EntireProperty') }}</option>
+              @for (room of rentalRooms(); track room.id) {
+                <option [value]="room.name">{{ room.name }} ({{ room.price || 0 }} {{ room.currency || '€' }}/{{ room.period || 'night' }})</option>
+              }
+            </select>
+          </div>
+          }
           <div>
             <label class="block text-slate-400 text-xs uppercase font-bold mb-1">{{ getTranslation('CONTRACT.PropertyDescription') }}</label>
             <textarea [(ngModel)]="contractData.propertyDescription" rows="2" class="w-full bg-black/30 border border-white/10 rounded px-3 py-2 text-white text-sm" [placeholder]="getTranslation('CONTRACT.PropertyDescriptionPlaceholder')"></textarea>
@@ -215,6 +226,9 @@
         <p class="mb-2"><strong>{{ getTranslation('CONTRACT.Address') }}:</strong> {{ contractData.propertyAddress || '[Property Address]' }}</p>
         <p class="mb-2 text-justify">{{ contractData.propertyDescription || '[Property Description]' }}</p>
         <p class="text-slate-600"><strong>{{ getTranslation('CONTRACT.Amenities') }}:</strong> {{ contractData.amenities || '[Amenities List]' }}</p>
+        @if (contractData.rentedRoom) {
+          <p class="mt-2 text-slate-600"><strong>{{ 'CONTRACT.RentedRoom' | translate }}:</strong> {{ contractData.rentedRoom }}</p>
+        }
       </div>
 
       <div class="mb-6">

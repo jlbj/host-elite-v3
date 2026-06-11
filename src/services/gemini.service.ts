@@ -925,7 +925,7 @@ constructor() {
   }
 
 
-  async checkCompliance(address: string, city: string): Promise<{
+  async checkCompliance(address: string, city: string, rentalMode?: string): Promise<{
     riskScore: number;
     riskLevel: string;
     riskStatus: string;
@@ -935,12 +935,17 @@ constructor() {
     await this.enableNewProvider();
     const lang = this.translationService.currentLang();
 
+    const rentalContext = rentalMode && rentalMode !== 'entire_place'
+      ? `\n        - Rental Type: ${rentalMode === 'private_rooms' ? 'Private Rooms only (not entire place)' : 'Both entire place and individual rooms'}
+        IMPORTANT: Room-by-room rentals may face different regulations than whole-property rentals in this jurisdiction. Consider both scenarios in your analysis.`
+      : '';
+
     const prompt = `
         You are a Legal Compliance Expert specialized in Short-Term Rental (STR) regulations and municipal zoning.
         
         TASK: Analyze the compliance risk for a potential Airbnb at the following location.
         - Address: ${address}
-        - City: ${city}
+        - City: ${city}${rentalContext}
 
         INSTRUCTIONS:
         1. Research or use your knowledge about STR laws in this city (e.g., Paris, Barcelona, London, NYC, etc.).

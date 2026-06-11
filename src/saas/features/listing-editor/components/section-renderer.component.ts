@@ -1,6 +1,6 @@
 import { Component, input, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import type { Section, Theme, SectionStyle } from '../models/paving.types';
+import type { Section, Theme, SectionStyle, RentableRoom } from '../models/paving.types';
 import { SECTION_TYPES } from '../constants/paving.constants';
 
 @Component({
@@ -60,14 +60,89 @@ import { SECTION_TYPES } from '../constants/paving.constants';
             </div>
           }
           @case ('price') {
+            @let rm = rentalMode();
+            @let currency = section().content['currency'] || '€';
+            @let period = section().content['period'] || 'night';
+            @let rooms = getRooms();
             <div class="section-price">
-              <div class="price-amount">{{ section().content['minPrice'] || 0 }} {{ section().content['currency'] || '€' }}</div>
-              <div class="price-period">/ {{ section().content['period'] || 'night' }}</div>
+              @if (rm === 'private_rooms' && rooms.length > 0) {
+                <div class="rooms-list">
+                  @for (room of rooms; track room.id) {
+                    <div class="room-card">
+                      @if (room.photos && room.photos.length > 0) {
+                        <div class="room-card-photos">
+                          @for (url of room.photos.slice(0, 3); track $index) {
+                            <img [src]="url" [alt]="room.name" class="room-card-photo" />
+                          }
+                        </div>
+                      }
+                      <div class="room-card-body">
+                        <div class="room-card-header">
+                          <h3 class="room-card-name">{{ room.name }}</h3>
+                          <div class="room-card-price">{{ room.price || 0 }} {{ currency }}<span class="room-card-period">/ {{ period }}</span></div>
+                        </div>
+                        <div class="room-card-meta">
+                          <span class="room-card-meta-item">👥 {{ room.maxGuests || 2 }} guests</span>
+                          <span class="room-card-meta-item">{{ bedTypeIcon(room.bedType) }} {{ room.bedType?.replace('_', ' ') || 'Queen' }}</span>
+                          @if (room.surface) {
+                            <span class="room-card-meta-item">📐 {{ room.surface }} m²</span>
+                          }
+                          @if (room.privateBathroom) {
+                            <span class="room-card-meta-item">🚿 Private bathroom</span>
+                          }
+                        </div>
+                        @if (room.description) {
+                          <p class="room-card-desc">{{ room.description }}</p>
+                        }
+                        @if (room.amenities && room.amenities.length > 0) {
+                          <div class="room-card-amenities">
+                            @for (amenity of room.amenities; track $index) {
+                              <span class="room-card-amenity-chip">{{ amenity }}</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else if (rm === 'both' && rooms.length > 0) {
+                <div class="price-amount">{{ section().content['minPrice'] || 0 }} {{ currency }}</div>
+                <div class="price-period">/ {{ period }}</div>
+                <div class="price-from-label">From (whole property)</div>
+                <div class="rooms-list" style="margin-top: 12px;">
+                  <div class="rooms-list-header">Or book a room:</div>
+                  @for (room of rooms; track room.id) {
+                    <div class="room-card room-card-compact">
+                      @if (room.photos && room.photos.length > 0) {
+                        <img [src]="room.photos[0]" [alt]="room.name" class="room-card-thumb" />
+                      }
+                      <div class="room-card-body">
+                        <div class="room-card-header">
+                          <span class="room-card-name">{{ room.name }}</span>
+                          <span class="room-card-price">{{ room.price || 0 }} {{ currency }}<span class="room-card-period">/ {{ period }}</span></span>
+                        </div>
+                        <div class="room-card-meta">
+                          <span>👥 {{ room.maxGuests || 2 }}</span>
+                          <span>{{ bedTypeIcon(room.bedType) }} {{ room.bedType?.replace('_', ' ') }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="price-amount">{{ section().content['minPrice'] || 0 }} {{ currency }}</div>
+                <div class="price-period">/ {{ period }}</div>
+              }
             </div>
           }
           @case ('characteristics') {
             <div class="section-characteristics">
               <h2 class="section-heading">Property Details</h2>
+              @if (rentalMode() !== 'entire_place') {
+                <div style="font-size: 0.85rem; font-weight: 600; color: #6366f1; margin-bottom: 8px;">
+                  {{ rentalMode() === 'private_rooms' ? '🔑 Private Rooms' : '🏠 Entire Place & Rooms' }}
+                </div>
+              }
               <div class="characteristics-grid">
                 <div class="characteristic-item">
                   <div class="char-icon">📐</div>
@@ -321,6 +396,7 @@ export class SectionRendererComponent {
   blockId = input<string | undefined>(undefined);
   theme = input<Theme | undefined>(undefined);
   blockStyle = input<Partial<SectionStyle> | undefined>(undefined);
+  rentalMode = input<string>('entire_place');
 
   sectionInfo = computed(() => SECTION_TYPES.find(s => s.type === this.section().type));
 
@@ -435,6 +511,16 @@ export class SectionRendererComponent {
     if (Array.isArray(photos) && photos.length > 0) return photos;
     return [];
   });
+
+  getRooms(): RentableRoom[] {
+    const rooms = this.section().content['rooms'];
+    return Array.isArray(rooms) ? rooms as RentableRoom[] : [];
+  }
+
+  bedTypeIcon(bedType: string | undefined): string {
+    const icons: Record<string, string> = { king: '👑', queen: '👑', double: '🛏️', twin: '🛌', bunk: '🪜', single: '🛌', sofa_bed: '🛋️', crib: '👶' };
+    return icons[bedType || ''] || '🛏️';
+  }
 
   getContentArray(key: string): unknown[] {
     const val = this.section()?.content?.[key];

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PavingStoreService } from '../services/paving-store.service';
 import { SECTION_TYPES } from '../constants/paving.constants';
-import type { Section, SectionType, SectionStyle } from '../models/paving.types';
+import type { Section, SectionType, SectionStyle, RentableRoom } from '../models/paving.types';
 
 type ConfigTab = 'content' | 'style' | 'animations';
 type BackgroundMode = 'color' | 'image';
@@ -189,10 +189,99 @@ const SECTION_PRESETS: Record<string, StylePreset[]> = {
               </div>
             }
             @case ('price') {
-              <div class="config-field">
-                <label>Min Price</label>
-                <input type="number" [ngModel]="section.content['minPrice']" (ngModelChange)="updateContent('minPrice', Number($event))" />
-              </div>
+              @let rm = store.rentalMode();
+              @if (rm === 'entire_place' || rm === 'both') {
+                <div class="config-field">
+                  <label>Min Price {{ rm === 'both' ? '(Whole Property)' : '' }}</label>
+                  <input type="number" [ngModel]="section.content['minPrice']" (ngModelChange)="updateContent('minPrice', Number($event))" />
+                </div>
+              }
+              @if (rm === 'private_rooms' || rm === 'both') {
+                <div class="config-field">
+                  <label>Rooms ({{ getRooms().length }})</label>
+                  <div class="room-editor-list">
+                    @for (room of getRooms(); track room.id; let idx = $index) {
+                      <div class="room-editor-card">
+                        <div class="room-editor-header">
+                          <span class="room-editor-title">{{ room.name || 'Room ' + (idx + 1) }}</span>
+                          <button class="array-remove" (click)="removeRoom(idx)" title="Remove room">✕</button>
+                        </div>
+                        <div class="room-editor-body">
+                          <div class="room-editor-row">
+                            <div class="room-editor-field flex-2">
+                              <label>Name</label>
+                              <input type="text" [ngModel]="room.name" (ngModelChange)="updateRoomField(idx, 'name', $event)" placeholder="e.g. Master Bedroom" />
+                            </div>
+                            <div class="room-editor-field flex-1">
+                              <label>Price/night</label>
+                              <input type="number" [ngModel]="room.price" (ngModelChange)="updateRoomField(idx, 'price', Number($event))" placeholder="0" />
+                            </div>
+                            <div class="room-editor-field flex-1">
+                              <label>Max Guests</label>
+                              <input type="number" [ngModel]="room.maxGuests" (ngModelChange)="updateRoomField(idx, 'maxGuests', Number($event))" placeholder="2" min="1" />
+                            </div>
+                          </div>
+                          <div class="room-editor-row">
+                            <div class="room-editor-field flex-1">
+                              <label>Bed Type</label>
+                              <select [ngModel]="room.bedType" (ngModelChange)="updateRoomField(idx, 'bedType', $event)">
+                                <option value="king">King</option>
+                                <option value="queen">Queen</option>
+                                <option value="double">Double</option>
+                                <option value="twin">Twin</option>
+                                <option value="bunk">Bunk</option>
+                                <option value="single">Single</option>
+                                <option value="sofa_bed">Sofa Bed</option>
+                                <option value="crib">Crib</option>
+                              </select>
+                            </div>
+                            <div class="room-editor-field flex-1">
+                              <label>Surface (m²)</label>
+                              <input type="number" [ngModel]="room.surface" (ngModelChange)="updateRoomField(idx, 'surface', Number($event))" placeholder="0" />
+                            </div>
+                            <div class="room-editor-field flex-1">
+                              <label class="checkbox-label">
+                                <input type="checkbox" [ngModel]="room.privateBathroom" (ngModelChange)="updateRoomField(idx, 'privateBathroom', $event)" />
+                                Private Bathroom
+                              </label>
+                            </div>
+                          </div>
+                          <div class="room-editor-field">
+                            <label>Description</label>
+                            <textarea [ngModel]="room.description" (ngModelChange)="updateRoomField(idx, 'description', $event)" rows="2" placeholder="Room features, view, notes..."></textarea>
+                          </div>
+                          <div class="room-editor-field">
+                            <label>Amenities (comma separated)</label>
+                            <input type="text" [ngModel]="(room.amenities || []).join(', ')" (ngModelChange)="updateRoomAmenities(idx, $event)" placeholder="TV, Air conditioning, Balcony" />
+                          </div>
+                          <div class="room-editor-field">
+                            <label>Room Photos</label>
+                            @let roomUrls = room.photos || [];
+                            @if (store.photos().length > 0) {
+                              <div class="photo-grid" style="margin-bottom: 6px;">
+                                @for (photo of store.photos(); track photo.id) {
+                                  <div
+                                    class="photo-grid-item photo-grid-item-sm"
+                                    [class.selected]="roomUrls.includes(photo.url)"
+                                    (click)="toggleRoomPhoto(idx, photo.url)"
+                                    [style.background-image]="'url(' + photo.url + ')'"
+                                    [title]="(roomUrls.includes(photo.url) ? 'Remove' : 'Add') + ' photo'">
+                                    @if (roomUrls.includes(photo.url)) {
+                                      <span class="photo-check">✓</span>
+                                    }
+                                  </div>
+                                }
+                              </div>
+                            }
+                            <input type="text" [ngModel]="roomExternalPhotosValue(idx)" (ngModelChange)="updateRoomExternalPhotos(idx, $event)" placeholder="Or paste external photo URLs, comma separated" class="room-editor-external-input" />
+                          </div>
+                        </div>
+                      </div>
+                    }
+                    <button class="array-add" (click)="addRoom()">+ Add Room</button>
+                  </div>
+                </div>
+              }
               <div class="config-field">
                 <label>Currency</label>
                 <select [ngModel]="section.content['currency']" (ngModelChange)="updateContent('currency', $event)">
@@ -702,6 +791,79 @@ export class SectionConfigPanelComponent {
     const urls = text.split('\n').filter(u => u.trim());
     const images = urls.map(url => ({ url: url.trim(), caption: '' }));
     this.updateContent('images', images);
+  }
+
+  getRooms(): RentableRoom[] {
+    const rooms = this.section()?.content['rooms'];
+    return Array.isArray(rooms) ? rooms as RentableRoom[] : [];
+  }
+
+  addRoom(): void {
+    const sec = this.section();
+    if (!sec) return;
+    const current = this.getRooms();
+    current.push({
+      id: `room_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+      name: '',
+      price: 0,
+      maxGuests: 2,
+      bedType: 'queen',
+      privateBathroom: true,
+      description: '',
+      amenities: [],
+      photos: [],
+    });
+    this.updateContent('rooms', current);
+  }
+
+  removeRoom(index: number): void {
+    const sec = this.section();
+    if (!sec) return;
+    const current = this.getRooms();
+    current.splice(index, 1);
+    this.updateContent('rooms', current);
+  }
+
+  updateRoomField(index: number, field: string, value: unknown): void {
+    const sec = this.section();
+    if (!sec) return;
+    const current = this.getRooms();
+    current[index] = { ...current[index], [field]: value };
+    this.updateContent('rooms', current);
+  }
+
+  updateRoomAmenities(index: number, raw: string): void {
+    const list = raw.split(',').map(s => s.trim()).filter(Boolean);
+    this.updateRoomField(index, 'amenities', list);
+  }
+
+  updateRoomPhotos(index: number, raw: string): void {
+    const list = raw.split('\n').map(s => s.trim()).filter(Boolean);
+    this.updateRoomField(index, 'photos', list);
+  }
+
+  toggleRoomPhoto(index: number, url: string): void {
+    const sec = this.section();
+    if (!sec) return;
+    const current = this.getRooms();
+    const photos = current[index]?.photos || [];
+    const next = photos.includes(url) ? photos.filter(u => u !== url) : [...photos, url];
+    current[index] = { ...current[index], photos: next };
+    this.updateContent('rooms', current);
+  }
+
+  roomExternalPhotosValue(index: number): string {
+    const room = this.getRooms()[index];
+    if (!room) return '';
+    const propUrls = this.store.photos().map((p: any) => p.url);
+    return (room.photos || []).filter((u: string) => !propUrls.includes(u)).join(', ');
+  }
+
+  updateRoomExternalPhotos(index: number, raw: string): void {
+    const external = raw.split(',').map(s => s.trim()).filter(Boolean);
+    const propPhotoUrls = this.store.photos().map((p: any) => p.url);
+    const existing = (this.getRooms()[index]?.photos || []).filter((u: string) => propPhotoUrls.includes(u));
+    this.updateRoomField(index, 'photos', [...existing, ...external]);
   }
 
   addArrayItem(key: string): void {
