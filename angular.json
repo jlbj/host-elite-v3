@@ -18,7 +18,8 @@
             },
             "styles": [
               "src/styles.css",
-              "src/saas/features/listing-editor/styles/paving-editor.css"
+              "node_modules/grapesjs/dist/css/grapes.min.css",
+              "node_modules/@grapesjs/studio-sdk/dist/style.css"
             ],
             "index": "src/index.html",
             "browser": "src/main.ts",

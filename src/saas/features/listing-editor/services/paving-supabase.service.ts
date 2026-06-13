@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { SUPABASE_CONFIG } from '../../../../supabase.config';
-import type { PropertyData, PropertyPhoto } from '../models/paving.types';
+import type { PropertyData, PropertyPhoto, SavedTemplate } from '../models/paving.types';
 
 export interface ListingLayout {
   id: string;
@@ -126,6 +126,18 @@ export class PavingSupabaseService {
 
   async fetchProperty(propertyId: string): Promise<PropertyData | null> {
     if (this.useMock || !this.supabaseClient) {
+      // In mock mode, check localStorage for any saved overrides
+      try {
+        const stored = localStorage.getItem('mock_property_config');
+        if (stored) {
+          const overrides = JSON.parse(stored);
+          if (overrides && overrides.id === propertyId) {
+            return overrides as PropertyData;
+          }
+        }
+      } catch (e) {
+        console.warn('[Mock] Failed to read localStorage:', e);
+      }
       return MOCK_PROPERTY;
     }
     const { data, error } = await this.supabaseClient
@@ -162,7 +174,15 @@ export class PavingSupabaseService {
 
   async savePropertyConfig(propertyId: string, pageConfig: unknown): Promise<void> {
     if (this.useMock || !this.supabaseClient) {
-      console.log('Mock save:', propertyId, pageConfig);
+      // In mock mode, persist the full property (with updated page_config) to localStorage
+      try {
+        const existing = localStorage.getItem('mock_property_config');
+        const base = existing ? JSON.parse(existing) : MOCK_PROPERTY;
+        const updated = { ...base, id: propertyId, page_config: pageConfig, updated_at: new Date().toISOString() };
+        localStorage.setItem('mock_property_config', JSON.stringify(updated));
+      } catch (e) {
+        console.warn('[Mock] Failed to write localStorage:', e);
+      }
       return;
     }
     const { error } = await this.supabaseClient
@@ -236,6 +256,82 @@ export class PavingSupabaseService {
 
     if (error) {
       console.error('Error deleting listing layout:', error);
+      return false;
+    }
+    return true;
+  }
+
+  async fetchTemplates(ownerId?: string): Promise<SavedTemplate[]> {
+    if (this.useMock || !this.supabaseClient) {
+      const stored = localStorage.getItem('saved_templates');
+      return stored ? JSON.parse(stored) : [];
+    }
+    const query = this.supabaseClient
+      .from('listing_templates')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (ownerId) {
+      query.eq('owner_id', ownerId);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error('Error fetching templates:', error);
+      return [];
+    }
+    return (data || []) as SavedTemplate[];
+  }
+
+  async saveTemplate(template: SavedTemplate): Promise<SavedTemplate | null> {
+    if (this.useMock || !this.supabaseClient) {
+      const stored = localStorage.getItem('saved_templates');
+      const templates: SavedTemplate[] = stored ? JSON.parse(stored) : [];
+      const idx = templates.findIndex(t => t.id === template.id);
+      if (idx >= 0) {
+        templates[idx] = { ...template, updated_at: new Date().toISOString() };
+      } else {
+        templates.push({ ...template, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+      }
+      localStorage.setItem('saved_templates', JSON.stringify(templates));
+      return template;
+    }
+    const { data, error } = await this.supabaseClient
+      .from('listing_templates')
+      .upsert({
+        id: template.id,
+        name: template.name,
+        description: template.description,
+        media: template.media,
+        html: template.html,
+        css: template.css,
+        components: template.components,
+        owner_id: template.owner_id,
+      } as never)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error saving template:', error);
+      return null;
+    }
+    return data as SavedTemplate;
+  }
+
+  async deleteTemplate(templateId: string): Promise<boolean> {
+    if (this.useMock || !this.supabaseClient) {
+      const stored = localStorage.getItem('saved_templates');
+      const templates: SavedTemplate[] = stored ? JSON.parse(stored) : [];
+      localStorage.setItem('saved_templates', JSON.stringify(templates.filter(t => t.id !== templateId)));
+      return true;
+    }
+    const { error } = await this.supabaseClient
+      .from('listing_templates')
+      .delete()
+      .eq('id', templateId);
+
+    if (error) {
+      console.error('Error deleting template:', error);
       return false;
     }
     return true;
