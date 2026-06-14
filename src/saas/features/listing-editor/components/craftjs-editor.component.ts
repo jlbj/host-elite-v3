@@ -1,15 +1,28 @@
-import { Component, input, output, inject, ElementRef, viewChild, AfterViewInit, OnDestroy, ChangeDetectionStrategy, signal, ChangeDetectorRef } from '@angular/core';
+import { Component, input, output, inject, ElementRef, viewChild, AfterViewInit, OnDestroy, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PavingStoreService } from '../services/paving-store.service';
+import { SessionStore } from '../../../../state/session.store';
 import { HostRepository } from '../../../../services/host-repository.service';
 import createStudioEditor from '@grapesjs/studio-sdk';
+import { TemplateManagerComponent } from './template-manager.component';
+import type { SavedTemplate } from '../models/paving.types';
 
 @Component({
   selector: 'app-craftjs-editor',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TemplateManagerComponent],
   template: `
     <div class="h-full flex flex-col bg-slate-900">
+      <!-- Info editing template banner -->
+      @if (editingTemplate(); as et) {
+        <div class="px-4 py-2.5 bg-indigo-950 border-b border-indigo-500/20 text-indigo-200 text-xs flex items-center justify-between shrink-0">
+          <span class="font-semibold flex items-center gap-1.5">
+            <span class="text-sm">✏️</span>
+            <span>Editing Template: <strong class="text-white font-bold">{{ et.name }}</strong></span>
+          </span>
+          <button (click)="exitTemplateEditMode()" class="px-2 py-0.5 bg-indigo-900 hover:bg-indigo-850 text-white rounded font-bold text-[10px] uppercase tracking-wider transition">Cancel Edit</button>
+        </div>
+      }
       <div class="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-slate-800/50" style="flex-shrink:0;">
         <div class="flex items-center gap-2">
           <span class="text-lg">⚡</span>
@@ -18,9 +31,12 @@ import createStudioEditor from '@grapesjs/studio-sdk';
         </div>
         <div class="flex items-center gap-2">
           <button (click)="openTemplates()" class="px-3 py-1.5 text-xs font-bold bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 border border-[#D4AF37]/30 rounded-lg transition">Choose Template</button>
-          <button (click)="saveAsTemplate()" class="px-3 py-1.5 text-xs font-bold bg-emerald-700/30 text-emerald-400 hover:bg-emerald-700/50 border border-emerald-700/30 rounded-lg transition">Save as Template</button>
-          <button (click)="openManageTemplates()" class="px-3 py-1.5 text-xs font-bold bg-amber-700/30 text-amber-400 hover:bg-amber-700/50 border border-amber-700/30 rounded-lg transition">Manage Templates</button>
-          <button (click)="save()" class="px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition">Save</button>
+          @if (isAdmin()) {
+            <button (click)="saveAsTemplate()" class="px-3 py-1.5 text-xs font-bold bg-emerald-700/30 text-emerald-400 hover:bg-emerald-700/50 border border-emerald-700/30 rounded-lg transition">Save as Template</button>
+          }
+          <button (click)="save()" class="px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition">
+            {{ editingTemplate() ? 'Save Template' : 'Save' }}
+          </button>
           <button (click)="close.emit()" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white transition">Close</button>
         </div>
       </div>
@@ -48,25 +64,8 @@ import createStudioEditor from '@grapesjs/studio-sdk';
       </div>
     }
 
-    @if (showManageDialog()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60" (click)="showManageDialog.set(false)">
-        <div class="bg-slate-800 rounded-xl p-6 w-[420px] shadow-2xl border border-white/10 max-h-[80vh] overflow-y-auto" (click)="$event.stopPropagation()">
-          <h3 class="text-white font-semibold text-base mb-1">Manage Templates</h3>
-          <p class="text-slate-400 text-xs mb-4">View and delete your saved templates.</p>
-          @if (store.templates().length === 0) {
-            <p class="text-slate-500 text-sm py-8 text-center">No saved templates yet.</p>
-          }
-          @for (t of store.templates(); track t.id) {
-            <div class="flex items-center justify-between py-2 px-3 bg-slate-700/50 rounded-lg mb-2">
-              <span class="text-white text-sm truncate flex-1">{{ t.name }}</span>
-              <button (click)="deleteTemplate(t.id)" class="px-2 py-1 text-xs text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded transition">Delete</button>
-            </div>
-          }
-          <div class="flex justify-end mt-4">
-            <button (click)="showManageDialog.set(false)" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white transition">Close</button>
-          </div>
-        </div>
-      </div>
+    @if (showTemplates()) {
+      <app-template-manager class="fixed inset-0 z-50" (select)="applyTemplateFromManager($event)" (edit)="loadTemplateForEditing($event)" (close)="showTemplates.set(false)" />
     }
   `,
   styles: [`
@@ -86,21 +85,67 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
 
   store = inject(PavingStoreService);
   private repository = inject(HostRepository);
-  private cdr = inject(ChangeDetectorRef);
+  private sessionStore = inject(SessionStore);
 
   private editor: any = null;
   private isPreviewActive = false;
   showSaveDialog = signal(false);
-  showManageDialog = signal(false);
+  showTemplates = signal(false);
   templateName = signal('');
 
-  async openManageTemplates(): Promise<void> {
+  // Track editing template context
+  editingTemplate = signal<SavedTemplate | null>(null);
+  private initialListingMeta: { html: string; css: string } | null = null;
+
+  // Determine if current user has admin permissions
+  isAdmin = computed(() => this.sessionStore.userProfile()?.role === 'admin');
+
+  async openTemplates(): Promise<void> {
     await this.store.loadTemplates();
-    this.showManageDialog.set(true);
+    this.showTemplates.set(true);
   }
 
-  async deleteTemplate(templateId: string): Promise<void> {
-    await this.store.deleteTemplate(templateId);
+  async loadTemplateForEditing(t: SavedTemplate): Promise<void> {
+    this.showTemplates.set(false);
+    if (!this.editor || !t) return;
+    try {
+      this.editingTemplate.set(t);
+      const fullHtml = t.html + (t.css ? '<style>' + t.css + '</style>' : '');
+      this.editor.setComponents(fullHtml);
+    } catch (err) {
+      console.error('[Editor] Failed to load template:', err);
+    }
+  }
+
+  async applyTemplateFromManager(t: SavedTemplate): Promise<void> {
+    this.showTemplates.set(false);
+    if (!this.editor || !t) return;
+    try {
+      await this.ensurePropertyLoaded();
+      const mapped = await this.mapTemplateToPropertyData(t.html, t.css || '');
+      this.editor.setComponents(mapped.html);
+      this.editor.setStyle(mapped.css);
+      this.initialListingMeta = { html: mapped.html, css: mapped.css || '' };
+      this.store.setToastMessage(`Template "${t.name}" applied successfully!`);
+    } catch (err) {
+      console.error('[Editor] Failed to apply template:', err);
+      this.store.setToastMessage('Error applying template.');
+    }
+  }
+
+  exitTemplateEditMode(): void {
+    this.editingTemplate.set(null);
+    this.reloadListingContent();
+  }
+
+  async reloadListingContent(): Promise<void> {
+    if (!this.editor || !this.initialListingMeta) return;
+    try {
+      this.editor.setComponents(this.initialListingMeta.html);
+      this.editor.setStyle(this.initialListingMeta.css);
+    } catch (err) {
+      console.warn('[Editor] Failed to reload listing content:', err);
+    }
   }
 
   async saveAsTemplate(): Promise<void> {
@@ -125,11 +170,15 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
       if (result) {
         this.showSaveDialog.set(false);
         this.templateName.set('');
+        this.store.setToastMessage('Template saved successfully!');
         // Force reload templates
         await this.store.loadTemplates();
+      } else {
+        this.store.setToastMessage('Failed to save template. Check if you are authorized.');
       }
     } catch (err) {
       console.error('[Template] Save failed:', err);
+      this.store.setToastMessage('Error saving template: ' + (err instanceof Error ? err.message : err));
     }
   }
 
@@ -164,7 +213,7 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
     const poolStatus = hasPool ? 'Heated' : 'No';
     const spaStatus = hasSpa ? 'Yes' : 'No';
 
-    // Amenities HTML
+    // Amenities HTML mapping using helper methods
     const getAmenityIcon = (name: string): string => {
       const n = name.toLowerCase();
       if (n.includes('pool-table') || n.includes('billard')) return 'pool-table';
@@ -221,7 +270,7 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
       garden: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C8 6 6 10 6 14a6 6 0 0 0 12 0c0-4-2-8-6-12z"/><path d="M12 22V14"/></svg>',
       parking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>',
       terrace: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M3 12h18"/><path d="M7 8V3"/><path d="M17 8V3"/></svg>',
-      beach: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 18h20"/><path d="M3 14c1-1 2-1 3 0s2 1 3 0 2-1 3 0 2 1 3 0 2-1 3 0 2 1 3 0"/><path d="M12 2L2 18"/></svg>',
+      beach: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 18h20"/><path d="M3 14c1-1 2-1 3 0s2 1 3 0 2-1 3 0 2-1 3 0 2-1 3 0 2 1 3 0"/><path d="M12 2L2 18"/></svg>',
       default: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>',
     };
 
@@ -246,14 +295,14 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
     let amenitiesHtml = '';
     if (equipments.length > 0) {
       amenitiesHtml = equipments.map((eq: any) => {
-        const symbol = getAmenityIcon(eq.name);
-        const svgContent = getIconSvg(symbol);
+        const symbol = this.getAmenityIcon(eq.name);
+        const svgContent = this.getIconSvg(symbol);
         return '<div class="luxury-amenity-item"><span class="luxury-amenity-icon" data-icon-family="outline" data-icon-symbol="' + symbol + '">' + svgContent + '</span><span>' + eq.name + '</span></div>';
       }).join('\n');
     } else {
       const symbols = ['pool', 'spa', 'cinema', 'wine', 'gym', 'ac'];
       const labels = ['Heated Swimming Pool', 'Spa, Hammam & Sauna', 'Private Cinema Room', 'Cigar Room & Bar', 'Fitness Room', 'Air Conditioning'];
-      amenitiesHtml = symbols.map((s, i) => '<div class="luxury-amenity-item"><span class="luxury-amenity-icon" data-icon-family="outline" data-icon-symbol="' + s + '">' + getIconSvg(s) + '</span><span>' + labels[i] + '</span></div>').join('\n');
+      amenitiesHtml = symbols.map((s, i) => '<div class="luxury-amenity-item"><span class="luxury-amenity-icon" data-icon-family="outline" data-icon-symbol="' + s + '">' + this.getIconSvg(s) + '</span><span>' + labels[i] + '</span></div>').join('\n');
     }
 
     // Price HTML
@@ -289,8 +338,8 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
     ];
     const featureNames = equipments.length > 0 ? equipments.map((e: any) => e.name) : defaultFeatures;
     const featureHtml = featureNames.slice(0, 6).map((f: string) => {
-      const symbol = getAmenityIcon(f);
-      return '<div class="lc-feature"><span class="lc-feature-icon">' + getIconSvg(symbol) + '</span>' + f + '</div>';
+      const symbol = this.getAmenityIcon(f);
+      return '<div class="lc-feature"><span class="lc-feature-icon">' + this.getIconSvg(symbol) + '</span>' + f + '</div>';
     }).join('');
 
     const roomsData = Array.from({length: Math.min(Number(bedrooms) || 6, 9)}, (_, i) => ({
@@ -360,15 +409,19 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
             const list = await fetchCommunityTemplates() || [];
             await this.store.loadTemplates();
             const savedTemplates = this.store.templates();
-            const savedTemplateEntries = savedTemplates.map(t => ({
+            const customSavedTemplates = savedTemplates.filter(t => !t.is_predefined);
+            const savedTemplateEntries = customSavedTemplates.map(t => ({
               id: t.id,
               name: t.name,
               media: t.media || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80',
               data: {
-                pages: [{ name: 'Home', component: t.html + '<style>' + t.css + '</style>' }]
+                pages: [{
+                  name: 'Home',
+                  component: (t.css ? '<style>' + t.css + '</style>' : '') + t.html
+                }]
               }
             }));
-            const myTemplatesHeader = savedTemplates.length > 0 ? [{
+            const myTemplatesHeader = customSavedTemplates.length > 0 ? [{
               id: '---my-templates-header---',
               name: '— My Saved Templates —',
               media: '',
@@ -661,7 +714,10 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               const am = this.editor.AssetManager;
               if (!am) return;
               // Disable upload so only property photos are shown
-              am.set('upload', false);
+              if (am && typeof am.getConfig === 'function') {
+                const config = am.getConfig();
+                if (config) config.upload = false;
+              }
               const assets = list.length > 0
                 ? list.map(p => ({ type: 'image', src: p.url, name: p.category || 'Property Photo' }))
                 : [{ type: 'image', src: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80', name: 'Placeholder' }];
@@ -696,6 +752,7 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           // Load saved editor state if it exists
           const savedMeta = this.store.pageConfig()?.grapesjsMeta;
           if (savedMeta && savedMeta.html) {
+            this.initialListingMeta = { html: savedMeta.html, css: savedMeta.css || '' };
             try {
               this.editor.setComponents(savedMeta.html);
               if (savedMeta.css) {
@@ -703,6 +760,79 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               }
             } catch (e) {
               console.warn('[Studio SDK] Failed to load saved state:', e);
+            }
+          } else {
+            // Apply a default template instead of showing a generic empty page
+            try {
+              const defaultHtml = `<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Sora:wght@100..800&display=swap" rel="stylesheet">
+<style>
+.luxury-template { font-family: 'Sora', sans-serif; color: #202020; background-color: #ffffff; line-height: 1.6; }
+.luxury-serif { font-family: 'Playfair Display', serif; }
+.luxury-hero { position: relative; height: 75vh; background-image: url('${coverImage}'); background-size: cover; background-position: center; display: flex; align-items: flex-end; padding: 60px 4%; }
+.luxury-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.6)); }
+.luxury-hero-content { position: relative; z-index: 10; color: #ffffff; }
+.luxury-hero-title { font-size: 3.5rem; font-weight: 400; margin: 0 0 10px; letter-spacing: -0.02em; }
+.luxury-hero-subtitle { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.9; }
+.luxury-bar { border-bottom: 1px solid #eaeaea; padding: 24px 4%; display: flex; gap: 40px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.08em; color: #757575; background: #fafafa; }
+.luxury-bar span strong { color: #202020; }
+.luxury-container { max-width: 1200px; margin: 60px auto; padding: 0 4%; display: grid; grid-template-columns: 1.6fr 1fr; gap: 60px; }
+@media(max-width: 992px) { .luxury-container { grid-template-columns: 1fr; gap: 40px; } }
+.luxury-story-title { font-size: 2rem; font-weight: 400; margin: 0 0 24px; line-height: 1.3; }
+.luxury-story-text { font-size: 1.05rem; color: #4c4c4c; margin-bottom: 30px; line-height: 1.7; }
+.luxury-booking-card { border: 1px solid #eaeaea; border-radius: 4px; padding: 32px; position: sticky; top: 100px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); background: #ffffff; }
+.luxury-price-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: #757575; }
+.luxury-price { font-size: 1.8rem; font-weight: 500; color: #202020; margin: 4px 0 24px; }
+.luxury-btn { width: 100%; padding: 16px; background-color: #202020; color: #ffffff; border: none; border-radius: 2px; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background-color 0.2s; }
+.luxury-btn:hover { background-color: #000000; }
+.luxury-amenities-section { border-top: 1px solid #eaeaea; padding-top: 40px; margin-top: 40px; }
+.luxury-section-title { font-size: 1.4rem; font-weight: 400; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.08em; }
+.luxury-amenities-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 40px; }
+.luxury-amenity-item { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; color: #4c4c4c; }
+.luxury-amenity-icon { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; }
+.luxury-gallery { max-width: 1200px; margin: 80px auto; padding: 0 4%; }
+</style>
+<div class="luxury-template">
+  <div class="luxury-hero">
+    <div class="luxury-hero-content">
+      <span class="luxury-hero-subtitle">Exclusive Rental</span>
+      <h1 class="luxury-hero-title luxury-serif">${title}</h1>
+      <span class="luxury-hero-subtitle">${location}</span>
+    </div>
+  </div>
+  <div class="luxury-bar">
+    <span>Guests <strong>${guests}</strong></span>
+    <span>Bedrooms <strong>${bedrooms}</strong></span>
+    <span>Bathrooms <strong>${bathrooms}</strong></span>
+    <span>Pool <strong>${poolStatus}</strong></span>
+    <span>Spa & Hamam <strong>${spaStatus}</strong></span>
+  </div>
+  <div class="luxury-container">
+    <div>
+      <h2 class="luxury-story-title luxury-serif">A luxury retreat built with exceptional refinement.</h2>
+      <div class="luxury-story-text">${description}</div>
+      <div class="luxury-amenities-section">
+        <h3 class="luxury-section-title luxury-serif">Premium Amenities</h3>
+        <div class="luxury-amenities-grid">${amenitiesHtml}</div>
+      </div>
+    </div>
+    <div>
+      <div class="luxury-booking-card">
+        ${priceHtml}
+        <button class="luxury-btn">Inquire About Stay</button>
+        <div style="margin-top: 20px; font-size: 0.8rem; color: #757575; text-align: center;">Concierge Services & In-House Staff Included</div>
+      </div>
+    </div>
+  </div>
+  <div class="luxury-gallery">
+    <h3 class="luxury-section-title luxury-serif" style="margin-bottom:32px;">The Property Gallery</h3>
+    ${galleryHtml}
+  </div>
+</div>`;
+              this.editor.setStyle('');
+              this.editor.setComponents(defaultHtml);
+              this.initialListingMeta = { html: defaultHtml, css: '' };
+            } catch (err) {
+              console.warn('[Studio SDK] Failed to load default starting template:', err);
             }
           }
         }
@@ -723,26 +853,29 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  openTemplates(): void {
-    if (this.editor) {
-      try {
-        this.editor.runCommand('studio:layoutToggle', {
-          id: 'templates-dialog-panel',
-          header: false,
-          placer: { type: 'dialog', title: 'Choose a starting template', size: 'l' },
-          layout: { type: 'panelTemplates' },
-        });
-      } catch (e) {
-        console.error('[Studio SDK] Failed to trigger templates layout panel:', e);
-      }
-    }
-  }
+
 
   async save(): Promise<void> {
     if (!this.editor) return;
     try {
       const html = this.editor.getHtml();
       const css = this.editor.getCss();
+
+      const currentTemplate = this.editingTemplate();
+      if (currentTemplate) {
+        const updatedTemplate: SavedTemplate = {
+          ...currentTemplate,
+          html,
+          css,
+          updated_at: new Date().toISOString(),
+        };
+        const result = await this.store.updateTemplate(updatedTemplate);
+        if (result) {
+          this.editingTemplate.set(null);
+          this.store.setToastMessage('Template saved successfully!');
+        }
+        return;
+      }
 
       const prop = await this.repository.getPropertyByName(this.propertyName());
       if (!prop?.id) {
@@ -761,7 +894,7 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
       this.close.emit();
     } catch (err) {
       console.error('[GrapesJS Studio Editor] Save failed:', err);
-      alert('Failed to save listing changes: ' + (err instanceof Error ? err.message : err));
+      alert('Failed to save changes: ' + (err instanceof Error ? err.message : err));
     }
   }
 
@@ -892,5 +1025,296 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
     "><div class="scatter-bg-canvas" style="position:absolute; inset:0; pointer-events:none; overflow:hidden;"></div><div class="scatter-content-grid" style="position:relative; z-index:10;"><div class="scatter-menu">${scatterMenuItems}</div><div class="scatter-preview"><img class="scatter-preview-image" src="${photos[0] || ''}" alt="Preview" /></div></div></div>`;
 
     return `${styleBlock}${lookbookHtml}${filmstripHtml}${curtainHtml}${scatterHtml}`;
+  }
+
+  private getAmenityIcon(name: string): string {
+    const n = name.toLowerCase();
+    if (n.includes('pool-table') || n.includes('billard')) return 'pool-table';
+    if (n.includes('pool') || n.includes('piscine')) return 'pool';
+    if (n.includes('jacuzzi') || n.includes('bain') || n.includes('hot tub') || n.includes('hottub')) return 'jacuzzi';
+    if (n.includes('spa') || n.includes('sauna') || n.includes('hammam')) return 'spa';
+    if (n.includes('gym') || n.includes('fitness') || n.includes('sport') || n.includes('salle de sport')) return 'gym';
+    if (n.includes('cinema') || n.includes('film') || n.includes('projection')) return 'cinema';
+    if (n.includes('tv') || n.includes('télévision') || n.includes('television')) return 'tv';
+    if (n.includes('audio') || n.includes('son') || n.includes('speaker') || n.includes('enceinte')) return 'audio';
+    if (n.includes('bar') || n.includes('cigar') || n.includes('wine') || n.includes('cave')) return 'wine';
+    if (n.includes('golf') || n.includes('green')) return 'golf';
+    if (n.includes('tennis') || n.includes('padel') || n.includes('paddle')) return 'tennis';
+    if (n.includes('bbq') || n.includes('barbecue') || n.includes('grill') || n.includes('cuisine extérieure') || n.includes('outdoor kitchen')) return 'bbq';
+    if (n.includes('workspace') || n.includes('bureau') || n.includes('travail') || n.includes('desk')) return 'workspace';
+    if (n.includes('lake') || n.includes('lac') || n.includes('bord de l\'eau') || n.includes('waterfront') || n.includes('rivière') || n.includes('river')) return 'lake';
+    if (n.includes('mountain') || n.includes('montagne') || n.includes('ski')) return 'mountain';
+    if (n.includes('concierge') || n.includes('service') || n.includes('personnel') || n.includes('staff')) return 'concierge';
+    if (n.includes('wardrobe') || n.includes('dressing')) return 'wardrobe';
+    if (n.includes('baby') || n.includes('bébé') || n.includes('crib')) return 'baby';
+    if (n.includes('helipad') || n.includes('hélisurface')) return 'helipad';
+    if (n.includes('wifi') || n.includes('wi-fi') || n.includes('internet')) return 'wifi';
+    if (n.includes('garden') || n.includes('jardin') || n.includes('park')) return 'garden';
+    if (n.includes('terrace') || n.includes('terrasse') || n.includes('balcon')) return 'terrace';
+    if (n.includes('coffee') || n.includes('café') || n.includes('breakfast') || n.includes('petit déjeuner')) return 'coffee';
+    if (n.includes('bed') || n.includes('lit') || n.includes('chambre')) return 'bed';
+    if (n.includes('bath') || n.includes('baignoire') || n.includes('salle de bain')) return 'bath';
+    if (n.includes('laundry') || n.includes('lave-linge')) return 'laundry';
+    if (n.includes('dishwasher') || n.includes('lave-vaisselle')) return 'dishwasher';
+    if (n.includes('kitchen') || n.includes('cuisine') || n.includes('chef')) return 'kitchen';
+    if (n.includes('air conditioning') || n.includes('clim')) return 'ac';
+    if (n.includes('parking') || n.includes('garage')) return 'parking';
+    if (n.includes('fireplace') || n.includes('cheminée')) return 'fireplace';
+    if (n.includes('beach') || n.includes('plage') || n.includes('sea') || n.includes('mer')) return 'beach';
+    if (n.includes('pet') || n.includes('animal')) return 'pets';
+    if (n.includes('security') || n.includes('sécurité') || n.includes('safe')) return 'security';
+    if (n.includes('ev') || n.includes('recharge') || n.includes('borne') || n.includes('électrique')) return 'ev-charger';
+    if (n.includes('elevator') || n.includes('ascenseur')) return 'elevator';
+    if (n.includes('view') || n.includes('vue')) return 'view';
+    return 'default';
+  }
+
+  private iconSvgMap: Record<string, string> = {
+    pool: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 16c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M12 2v10"/><path d="M8 6h8"/></svg>',
+    spa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12c0-2 2-4 4-4s4 2 4 4"/><path d="M12 12c0-2 2-4 4-4s4 2 4 4"/><path d="M4 20c0-2 2-4 4-4"/><path d="M16 16c2 0 4 2 4 4"/></svg>',
+    cinema: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M9 8v8l6-4z"/></svg>',
+    wine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v12"/><path d="M8 14h8v8H8z"/><path d="M6 10c0-3 2-5 6-5s6 2 6 5"/></svg>',
+    gym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 6l4 4"/><path d="M14 14l4 4"/><path d="M2 12h20"/><path d="M12 2v20"/></svg>',
+    ac: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2v20"/><path d="M4 12h16"/><path d="M7 7l5 5 5-5"/><path d="M7 17l5-5 5 5"/></svg>',
+    jacuzzi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12c0-2 2-4 4-4s4 2 4 4"/><path d="M12 12c0-2 2-4 4-4s4 2 4 4"/><path d="M4 20c0-2 2-4 4-4"/><path d="M16 16c2 0 4 2 4 4"/></svg>',
+    view: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s4-8 10-8 10 8 10 8-4 8-10 8-10-8-10-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    kitchen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9v12h18V9"/><path d="M3 9l9-7 9 7"/><path d="M9 21V12h6v9"/></svg>',
+    wifi: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 8.5C5 5 9 3 12 3s7 2 10 5.5"/><path d="M5 12c2-2 4.5-3 7-3s5 1 7 3"/><path d="M8.5 15.5c1-1 2.5-1.5 3.5-1.5s2.5.5 3.5 1.5"/><circle cx="12" cy="19" r="1"/></svg>',
+    garden: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2C8 6 6 10 6 14a6 6 0 0 0 12 0c0-4-2-8-6-12z"/><path d="M12 22V14"/></svg>',
+    parking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/></svg>',
+    terrace: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M3 12h18"/><path d="M7 8V3"/><path d="M17 8V3"/></svg>',
+    beach: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 18h20"/><path d="M3 14c1-1 2-1 3 0s2 1 3 0 2-1 3 0 2-1 3 0 2-1 3 0 2-1 3 0 2-1 3 0"/><path d="M12 2L2 18"/></svg>',
+    default: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>',
+  };
+
+  private getIconSvg(symbol: string): string {
+    return this.iconSvgMap[symbol] || this.iconSvgMap['default'];
+  }
+
+  async mapTemplateToPropertyData(html: string, css: string): Promise<{ html: string; css: string }> {
+    const propData = this.store.propertyData();
+    const photos = this.store.photos() || [];
+    const fullProp = await this.repository.getPropertyByName(this.propertyName());
+    const equipments = fullProp?.property_equipments || [];
+
+    const title = propData?.listing_title || propData?.name || 'The Luxury Estate';
+    const location = propData?.address || 'Location, Country';
+    const description = propData?.listing_description || 'This prestigious property blends refined luxury with serene surroundings...';
+    const coverImage = propData?.cover_image_url || (photos.length > 0 ? photos[0].url : 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80');
+    const guestsVal = String(propData?.max_guests || 12);
+    const bedroomsVal = String(propData?.bedrooms || 6);
+    const bathroomsVal = String(propData?.bathrooms || 6);
+
+    const hasPool = equipments.some((eq: any) => eq.name.toLowerCase().includes('pool') || eq.name.toLowerCase().includes('piscine'));
+    const hasSpa = equipments.some((eq: any) => eq.name.toLowerCase().includes('spa') || eq.name.toLowerCase().includes('sauna') || eq.name.toLowerCase().includes('hammam') || eq.name.toLowerCase().includes('jacuzzi'));
+    const poolStatus = hasPool ? 'Heated' : 'No';
+    const spaStatus = hasSpa ? 'Yes' : 'No';
+
+    // 1. Parse HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    // 2. Map Headings / Titles
+    const h1s = doc.querySelectorAll('h1');
+    h1s.forEach(h1 => {
+      h1.textContent = title;
+    });
+
+    const titleElements = doc.querySelectorAll('.brand, .hero-title, .luxury-hero-title, .serenity-hero-title, .serenity-brand');
+    titleElements.forEach(el => {
+      el.textContent = title;
+    });
+
+    // 3. Map Subtitles / Locations
+    const subtitleElements = doc.querySelectorAll('.luxury-hero-subtitle, .serenity-hero-subtitle, .hero-loc, .section-tag');
+    subtitleElements.forEach(el => {
+      const txt = el.textContent || '';
+      if (/Amalfi Coast|Italy|Location|Country/i.test(txt) || el.classList.contains('hero-loc') || el.classList.contains('luxury-hero-subtitle')) {
+        el.textContent = location;
+      }
+    });
+
+    // 4. Map Description
+    const descElements = doc.querySelectorAll('.luxury-story-text, .serenity-desc, .ov-desc');
+    descElements.forEach(el => {
+      el.textContent = description;
+    });
+    if (descElements.length === 0) {
+      const ps = Array.from(doc.querySelectorAll('p'));
+      if (ps.length > 0) {
+        let longestP = ps[0];
+        ps.forEach(p => {
+          if ((p.textContent || '').length > (longestP.textContent || '').length) {
+            longestP = p;
+          }
+        });
+        if ((longestP.textContent || '').length > 40) {
+          longestP.textContent = description;
+        }
+      }
+    }
+
+    // 5. Map Stats / Bar Characteristics
+    const allElements = doc.querySelectorAll('span, div, p, strong, td, th');
+    allElements.forEach(el => {
+      const text = el.textContent || '';
+      if (/guests/i.test(text)) {
+        const strong = el.querySelector('strong');
+        if (strong) strong.textContent = guestsVal;
+      }
+      if (/bedrooms/i.test(text)) {
+        const strong = el.querySelector('strong');
+        if (strong) strong.textContent = bedroomsVal;
+      }
+      if (/bathrooms/i.test(text)) {
+        const strong = el.querySelector('strong');
+        if (strong) strong.textContent = bathroomsVal;
+      }
+      if (/pool/i.test(text)) {
+        const strong = el.querySelector('strong');
+        if (strong) strong.textContent = poolStatus;
+      }
+      if (/spa/i.test(text)) {
+        const strong = el.querySelector('strong');
+        if (strong) strong.textContent = spaStatus;
+      }
+    });
+
+    // Handle serenity-stats style explicitly
+    const statVals = doc.querySelectorAll('.serenity-stat-val');
+    statVals.forEach(val => {
+      const lbl = val.nextElementSibling;
+      if (lbl && lbl.classList.contains('serenity-stat-lbl')) {
+        const txt = lbl.textContent || '';
+        if (/guests/i.test(txt)) val.textContent = guestsVal;
+        if (/bedrooms/i.test(txt)) val.textContent = bedroomsVal;
+        if (/bathrooms/i.test(txt)) val.textContent = bathroomsVal;
+      }
+    });
+
+    // 6. Map Images (src attribute)
+    const imgs = doc.querySelectorAll('img');
+    imgs.forEach((img, idx) => {
+      const src = img.getAttribute('src') || '';
+      if (src.startsWith('data:image/svg+xml') || src.endsWith('.svg') || src.includes('/icons/')) {
+        return;
+      }
+      if (photos.length > 0) {
+        img.setAttribute('src', photos[idx % photos.length].url);
+      }
+    });
+
+    // 7. Map inline element style background images
+    const elementsWithStyle = doc.querySelectorAll('[style]');
+    elementsWithStyle.forEach(el => {
+      const style = el.getAttribute('style') || '';
+      if (/background(-image)?:\s*url\(/i.test(style)) {
+        const newStyle = style.replace(/url\(['"]?[^'")]+['"]?\)/gi, `url('${coverImage}')`);
+        el.setAttribute('style', newStyle);
+      }
+    });
+
+    // 8. Map Dynamic Amenities Grid
+    let amenitiesHtml = '';
+    if (equipments.length > 0) {
+      amenitiesHtml = equipments.map((eq: any) => {
+        const symbol = this.getAmenityIcon(eq.name);
+        const svgContent = this.getIconSvg(symbol);
+        return '<div class="luxury-amenity-item"><span class="luxury-amenity-icon" data-icon-family="outline" data-icon-symbol="' + symbol + '">' + svgContent + '</span><span>' + eq.name + '</span></div>';
+      }).join('\n');
+    } else {
+      const symbols = ['pool', 'spa', 'cinema', 'wine', 'gym', 'ac'];
+      const labels = ['Heated Swimming Pool', 'Spa, Hammam & Sauna', 'Private Cinema Room', 'Cigar Room & Bar', 'Fitness Room', 'Air Conditioning'];
+      amenitiesHtml = symbols.map((s, i) => '<div class="luxury-amenity-item"><span class="luxury-amenity-icon" data-icon-family="outline" data-icon-symbol="' + s + '">' + this.getIconSvg(s) + '</span><span>' + labels[i] + '</span></div>').join('\n');
+    }
+
+    const luxuryAmenitiesGrid = doc.querySelector('.luxury-amenities-grid');
+    if (luxuryAmenitiesGrid) {
+      luxuryAmenitiesGrid.innerHTML = amenitiesHtml;
+    }
+
+    const amGrid = doc.querySelector('.am-grid');
+    if (amGrid && equipments.length > 0) {
+      const serenityAmenitiesHtml = equipments.map((eq: any) => {
+        const symbol = this.getAmenityIcon(eq.name);
+        const svgContent = this.getIconSvg(symbol);
+        return `<div class="am-card"><div class="am-icon">${svgContent}</div><h3 class="am-title">${eq.name}</h3><p class="am-desc">Premium quality property amenity</p></div>`;
+      }).join('\n');
+      amGrid.innerHTML = serenityAmenitiesHtml;
+    }
+
+    // 9. Map Gallery Container
+    const luxuryGallery = doc.querySelector('.luxury-gallery-container');
+    if (luxuryGallery && photos.length > 0) {
+      const newGalleryHtml = this.generateGalleryHtml(this.galleryMode(), photos.map(p => p.url));
+      const tempDiv = doc.createElement('div');
+      tempDiv.innerHTML = newGalleryHtml;
+      if (tempDiv.firstElementChild) {
+        luxuryGallery.parentNode?.replaceChild(tempDiv.firstElementChild, luxuryGallery);
+      }
+    }
+
+    const galGrid = doc.querySelector('.gal-grid');
+    if (galGrid && photos.length > 0) {
+      const displayPhotos = photos.map(p => p.url);
+      const villaPhotos = displayPhotos.length >= 6 ? displayPhotos.slice(0, 6) : [...displayPhotos, 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1600573472550-8090b5e0745e?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=800&q=80', 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=800&q=80'];
+      const htmlContent = villaPhotos.map((u, i) => '<div class="gal-item' + (i === 0 ? ' featured' : '') + '"><img src="' + u + '" alt="Photo ' + (i+1) + '" loading="lazy" /></div>').join('');
+      galGrid.innerHTML = htmlContent;
+    }
+
+    // 10. Map Price HTML Block in luxury booking card
+    let priceAmount = 0;
+    let priceCurrency = '€';
+    let pricePeriod = 'night';
+    const priceSection = this.store.pageConfig().sections?.find(s => s.type === 'price');
+    if (priceSection && priceSection.content) {
+      const c = priceSection.content;
+      priceAmount = typeof c['minPrice'] === 'number' ? c['minPrice'] : (Number(c['minPrice']) || 0);
+      priceCurrency = (c['currency'] as string) || '€';
+      pricePeriod = (c['period'] as string) || 'night';
+    }
+
+    const bookingCard = doc.querySelector('.luxury-booking-card');
+    if (bookingCard) {
+      const priceLabel = bookingCard.querySelector('.luxury-price-label');
+      const priceVal = bookingCard.querySelector('.luxury-price');
+      if (priceLabel && priceVal) {
+        if (priceAmount > 0) {
+          if (pricePeriod === 'night') {
+            const weeklyPrice = priceAmount * 7;
+            priceLabel.textContent = 'Weekly Price From';
+            priceVal.innerHTML = priceCurrency + weeklyPrice.toLocaleString() + ' <span style="font-size:0.9rem; font-weight:400; color:#757575;">/ week</span>';
+            let subtext = bookingCard.querySelector('.luxury-price-subtext');
+            if (!subtext) {
+              subtext = doc.createElement('div');
+              subtext.className = 'luxury-price-subtext';
+              subtext.setAttribute('style', 'font-size: 0.8rem; color: #757575; margin-top: -16px; margin-bottom: 24px; text-align: center;');
+              priceVal.parentNode?.insertBefore(subtext, priceVal.nextSibling);
+            }
+            subtext.textContent = `(${priceCurrency}${priceAmount.toLocaleString()} / night)`;
+          } else {
+            priceLabel.textContent = `${pricePeriod === 'week' ? 'Weekly' : 'Stay'} Price From`;
+            priceVal.innerHTML = priceCurrency + priceAmount.toLocaleString() + ' <span style="font-size:0.9rem; font-weight:400; color:#757575;">/ ' + pricePeriod + '</span>';
+            bookingCard.querySelector('.luxury-price-subtext')?.remove();
+          }
+        }
+      }
+    }
+
+    // 11. CSS background-image updates
+    let mappedCss = css;
+    mappedCss = mappedCss.replace(/url\(['"]?([^'")]+)['"]?\)/gi, (match, url) => {
+      if (url.startsWith('data:') || url.endsWith('.woff') || url.endsWith('.woff2') || url.endsWith('.ttf') || url.endsWith('.svg')) {
+        return match;
+      }
+      return `url('${coverImage}')`;
+    });
+
+    const bodyContent = doc.body ? doc.body.innerHTML : doc.documentElement.innerHTML;
+
+    return {
+      html: bodyContent,
+      css: mappedCss
+    };
   }
 }

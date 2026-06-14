@@ -13,6 +13,55 @@ export interface ListingLayout {
   created_at: string;
 }
 
+class IndexedDbHelper {
+  private dbPromise: Promise<IDBDatabase> | null = null;
+
+  constructor() {
+    if (typeof window !== 'undefined' && window.indexedDB) {
+      this.dbPromise = new Promise((resolve, reject) => {
+        const request = indexedDB.open('host-elite-templates-db', 1);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains('keyvalue')) {
+            db.createObjectStore('keyvalue');
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+  }
+
+  async getItem(key: string): Promise<string | null> {
+    if (!this.dbPromise) return null;
+    try {
+      const db = await this.dbPromise;
+      return new Promise<string | null>((resolve, reject) => {
+        const tx = db.transaction('keyvalue', 'readonly');
+        const store = tx.objectStore('keyvalue');
+        const req = store.get(key);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    } catch (e) {
+      console.warn('IndexedDB getItem failed:', e);
+      return null;
+    }
+  }
+
+  async setItem(key: string, value: string): Promise<void> {
+    if (!this.dbPromise) throw new Error('IndexedDB not supported');
+    const db = await this.dbPromise;
+    return new Promise<void>((resolve, reject) => {
+      const tx = db.transaction('keyvalue', 'readwrite');
+      const store = tx.objectStore('keyvalue');
+      const req = store.put(value, key);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+}
+
 const MOCK_PROPERTY: PropertyData = {
   id: 'demo-property-1',
   owner_id: 'user-1',
@@ -104,9 +153,59 @@ const MOCK_PHOTOS: PropertyPhoto[] = [
 export class PavingSupabaseService {
   private supabaseClient: SupabaseClient | null = null;
   private useMock = false;
+  private fallbackTemplatesToLocalStorage = false;
+  private dbHelper = new IndexedDbHelper();
 
   constructor() {
     this.init();
+  }
+
+  private async getSavedTemplatesFromFallback(): Promise<SavedTemplate[]> {
+    const stored = await this.dbHelper.getItem('saved_templates');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return [];
+      }
+    }
+    // Migrate legacy localStorage data
+    try {
+      const legacy = localStorage.getItem('saved_templates');
+      if (legacy) {
+        await this.dbHelper.setItem('saved_templates', legacy);
+        localStorage.removeItem('saved_templates');
+        return JSON.parse(legacy);
+      }
+    } catch (e) {
+      console.warn('Failed to migrate templates from localStorage:', e);
+    }
+    return [];
+  }
+
+  private async saveSavedTemplatesToFallback(templates: SavedTemplate[]): Promise<void> {
+    const value = JSON.stringify(templates);
+    await this.dbHelper.setItem('saved_templates', value);
+    try {
+      localStorage.setItem('saved_templates', value);
+    } catch (e) {
+      console.warn('LocalStorage save skipped (quota exceeded), safely stored in IndexedDB.');
+    }
+  }
+
+  private isMissingTableError(error: any): boolean {
+    if (!error) return false;
+    const msg = error.message || '';
+    const code = error.code || '';
+    const status = error.status || 0;
+    return (
+      msg.includes('does not exist') ||
+      msg.includes('schema cache') ||
+      msg.includes('relation') ||
+      code === '42P01' ||
+      code.startsWith('PGRST') ||
+      status === 404
+    );
   }
 
   private init(): void {
@@ -262,9 +361,8 @@ export class PavingSupabaseService {
   }
 
   async fetchTemplates(ownerId?: string): Promise<SavedTemplate[]> {
-    if (this.useMock || !this.supabaseClient) {
-      const stored = localStorage.getItem('saved_templates');
-      return stored ? JSON.parse(stored) : [];
+    if (this.useMock || !this.supabaseClient || this.fallbackTemplatesToLocalStorage) {
+      return await this.getSavedTemplatesFromFallback();
     }
     const query = this.supabaseClient
       .from('listing_templates')
@@ -278,22 +376,26 @@ export class PavingSupabaseService {
     const { data, error } = await query;
     if (error) {
       console.error('Error fetching templates:', error);
+      if (this.isMissingTableError(error)) {
+        console.warn('listing_templates table does not exist. Falling back to IndexedDB/localStorage.');
+        this.fallbackTemplatesToLocalStorage = true;
+        return await this.getSavedTemplatesFromFallback();
+      }
       return [];
     }
     return (data || []) as SavedTemplate[];
   }
 
   async saveTemplate(template: SavedTemplate): Promise<SavedTemplate | null> {
-    if (this.useMock || !this.supabaseClient) {
-      const stored = localStorage.getItem('saved_templates');
-      const templates: SavedTemplate[] = stored ? JSON.parse(stored) : [];
+    if (this.useMock || !this.supabaseClient || this.fallbackTemplatesToLocalStorage) {
+      const templates = await this.getSavedTemplatesFromFallback();
       const idx = templates.findIndex(t => t.id === template.id);
       if (idx >= 0) {
         templates[idx] = { ...template, updated_at: new Date().toISOString() };
       } else {
         templates.push({ ...template, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
       }
-      localStorage.setItem('saved_templates', JSON.stringify(templates));
+      await this.saveSavedTemplatesToFallback(templates);
       return template;
     }
     const { data, error } = await this.supabaseClient
@@ -313,16 +415,20 @@ export class PavingSupabaseService {
 
     if (error) {
       console.error('Error saving template:', error);
+      if (this.isMissingTableError(error)) {
+        console.warn('listing_templates table does not exist. Falling back to IndexedDB/localStorage.');
+        this.fallbackTemplatesToLocalStorage = true;
+        return await this.saveTemplate(template);
+      }
       return null;
     }
     return data as SavedTemplate;
   }
 
   async deleteTemplate(templateId: string): Promise<boolean> {
-    if (this.useMock || !this.supabaseClient) {
-      const stored = localStorage.getItem('saved_templates');
-      const templates: SavedTemplate[] = stored ? JSON.parse(stored) : [];
-      localStorage.setItem('saved_templates', JSON.stringify(templates.filter(t => t.id !== templateId)));
+    if (this.useMock || !this.supabaseClient || this.fallbackTemplatesToLocalStorage) {
+      const templates = await this.getSavedTemplatesFromFallback();
+      await this.saveSavedTemplatesToFallback(templates.filter(t => t.id !== templateId));
       return true;
     }
     const { error } = await this.supabaseClient
@@ -332,6 +438,11 @@ export class PavingSupabaseService {
 
     if (error) {
       console.error('Error deleting template:', error);
+      if (this.isMissingTableError(error)) {
+        console.warn('listing_templates table does not exist. Falling back to IndexedDB/localStorage.');
+        this.fallbackTemplatesToLocalStorage = true;
+        return await this.deleteTemplate(templateId);
+      }
       return false;
     }
     return true;

@@ -119,6 +119,7 @@ export interface SavedTemplate {
   owner_id?: string;
   created_at: string;
   updated_at: string;
+  is_predefined?: boolean;
 }
 
 export interface Theme {

@@ -5,6 +5,7 @@ import type {
   ViewMode, EditorMode, SplitDirection, SavedLayout, ListingLayout, SavedTemplate,
 } from '../models/paving.types';
 import { THEMES, LAYOUTS, DEFAULT_SECTION_CONTENT, generateId, DEFAULT_SECTION_TYPES } from '../constants/paving.constants';
+import { PREDEFINED_TEMPLATES } from '../constants/default-templates';
 import { PavingSupabaseService } from './paving-supabase.service';
 import { GridUtilsService } from './grid-utils.service';
 
@@ -919,25 +920,48 @@ export class PavingStoreService {
   async loadTemplates(): Promise<void> {
     const pd = this.propertyData();
     const ownerId = pd?.owner_id;
-    const templates = await this.supabase.fetchTemplates(ownerId);
-    this.templates.set(templates);
+    const dbTemplates = await this.supabase.fetchTemplates(ownerId);
+    
+    const customTemplates = (dbTemplates || []).map(t => ({
+      ...t,
+      is_predefined: false
+    }));
+    const customIds = new Set(customTemplates.map(t => t.id));
+    
+    const markedPredefined = PREDEFINED_TEMPLATES.map(pt => ({
+      ...pt,
+      is_predefined: true
+    }));
+    
+    const filteredPredefined = markedPredefined.filter(pt => !customIds.has(pt.id));
+    
+    this.templates.set([...filteredPredefined, ...customTemplates]);
   }
 
-  async saveTemplate(name: string, html: string, css: string, components?: string): Promise<SavedTemplate | null> {
+  async saveTemplate(name: string, html: string, css: string, components?: string, media?: string): Promise<SavedTemplate | null> {
     const pd = this.propertyData();
     const existing = this.templates().find(t => t.name === name);
     const template: SavedTemplate = existing
-      ? { ...existing, html, css, components, updated_at: new Date().toISOString() }
+      ? { ...existing, html, css, components, media: media || existing.media, updated_at: new Date().toISOString() }
       : {
           id: `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           name,
           html,
           css,
           components,
+          media,
           owner_id: pd?.owner_id || '',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
+    const saved = await this.supabase.saveTemplate(template);
+    if (saved) {
+      await this.loadTemplates();
+    }
+    return saved;
+  }
+
+  async updateTemplate(template: SavedTemplate): Promise<SavedTemplate | null> {
     const saved = await this.supabase.saveTemplate(template);
     if (saved) {
       await this.loadTemplates();
