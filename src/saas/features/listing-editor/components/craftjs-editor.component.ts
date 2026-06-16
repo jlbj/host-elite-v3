@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { PavingStoreService } from '../services/paving-store.service';
 import { SessionStore } from '../../../../state/session.store';
 import { HostRepository } from '../../../../services/host-repository.service';
-import createStudioEditor from '@grapesjs/studio-sdk';
+import grapesjs from 'grapesjs';
+import gjsPresetWebpage from 'grapesjs-preset-webpage';
 import { TemplateManagerComponent } from './template-manager.component';
 import type { SavedTemplate } from '../models/paving.types';
 
@@ -28,6 +29,7 @@ import type { SavedTemplate } from '../models/paving.types';
           <span class="text-lg">⚡</span>
           <span class="text-sm font-bold text-white">Listing Editor</span>
           <span class="px-1.5 py-0.5 bg-[#D4AF37]/20 text-[#D4AF37] text-[9px] font-bold rounded">PREMIUM</span>
+          <span class="text-[10px] text-slate-500 hidden md:inline">💡 Double-click any image to pick from property photos</span>
         </div>
         <div class="flex items-center gap-2">
           <button (click)="openTemplates()" class="px-3 py-1.5 text-xs font-bold bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 border border-[#D4AF37]/30 rounded-lg transition">Choose Template</button>
@@ -37,6 +39,7 @@ import type { SavedTemplate } from '../models/paving.types';
           <button (click)="save()" class="px-3 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition">
             {{ editingTemplate() ? 'Save Template' : 'Save' }}
           </button>
+          <button (click)="preview()" class="px-3 py-1.5 text-xs font-bold bg-sky-600/30 text-sky-300 hover:bg-sky-600/50 border border-sky-500/30 rounded-lg transition">👁 Preview</button>
           <button (click)="close.emit()" class="px-3 py-1.5 text-xs text-slate-400 hover:text-white transition">Close</button>
         </div>
       </div>
@@ -70,8 +73,84 @@ import type { SavedTemplate } from '../models/paving.types';
   `,
   styles: [`
     :host { display: block; height: calc(100vh - 220px); min-height: 550px; }
-    :host ::ng-deep .gjs-editor { background: #e8e2da; }
-    :host ::ng-deep .gjs-cv-canvas { background: #e8e2da; }
+    :host ::ng-deep .gjs-editor { background: #1e293b; }
+    :host ::ng-deep .gjs-cv-canvas { background: #f8f6f0; }
+    :host ::ng-deep .gjs-pn-panel { background: #0f172a; border-color: #1e293b; }
+    :host ::ng-deep .gjs-pn-btn { fill: #94a3b8; color: #94a3b8; }
+    :host ::ng-deep .gjs-pn-btn:hover { fill: #e2e8f0; color: #e2e8f0; background: rgba(255,255,255,0.05); }
+    :host ::ng-deep .gjs-pn-active { fill: #e2e8f0; color: #e2e8f0; background: rgba(255,255,255,0.08); }
+    :host ::ng-deep .gjs-pn-views { background: #0f172a; border-left: 1px solid #1e293b; }
+    :host ::ng-deep .gjs-pn-views .gjs-pn-btn { border-bottom: 1px solid #1e293b; }
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="layers"] .gjs-sm-sectors,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="layers"] .gjs-blocks-cs,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="layers"] .gjs-trt-traits,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="layers"] .gjs-clm-tags,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="layers"] .gjs-clm-sels-info,
+    :host ::ng-deep .gjs-pn-views[data-active-view="layers"] .gjs-clm-tags,
+    :host ::ng-deep .gjs-pn-views[data-active-view="layers"] .gjs-clm-sels-info { display: none !important; }
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="styles"] .gjs-layers,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="styles"] .gjs-blocks-cs { display: none !important; }
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="blocks"] .gjs-sm-sectors,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="blocks"] .gjs-layers,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="blocks"] .gjs-trt-traits,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="blocks"] .gjs-clm-tags,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="blocks"] .gjs-clm-sels-info { display: none !important; }
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="traits"] .gjs-sm-sectors,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="traits"] .gjs-blocks-cs,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="traits"] .gjs-layers,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="traits"] .gjs-clm-tags,
+    :host ::ng-deep .gjs-pn-views-container[data-active-view="traits"] .gjs-clm-sels-info { display: none !important; }
+    :host ::ng-deep .gjs-clm-tag { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+    :host ::ng-deep .gjs-clm-tags { background: #0f172a; }
+    :host ::ng-deep .gjs-clm-sels-info { color: #94a3b8; }
+    :host ::ng-deep .gjs-sm-field { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+    :host ::ng-deep .gjs-sm-label { color: #94a3b8; }
+    :host ::ng-deep .gjs-sm-sector { background: #0f172a; border-color: #1e293b; color: #e2e8f0; }
+    :host ::ng-deep .gjs-sm-sector-title { background: #1e293b; border-bottom: 1px solid #334155; }
+    :host ::ng-deep .gjs-sm-sector-title:hover { background: #334155; }
+    :host ::ng-deep .gjs-layer { background: #0f172a; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+    :host ::ng-deep .gjs-layer-item { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; }
+    :host ::ng-deep .gjs-layer-name { color: #e2e8f0; }
+    :host ::ng-deep .gjs-layer-selected { background: #1e3a5f !important; border-left: 3px solid #D4AF37 !important; }
+    :host ::ng-deep .gjs-layer-item.selected { background: #D4AF37 !important; color: #000 !important; border-left: 3px solid #0f172a !important; text-decoration: none !important; }
+    :host ::ng-deep .gjs-layer.selected { background: #D4AF37 !important; color: #000 !important; border-left: 3px solid #0f172a !important; text-decoration: none !important; }
+    :host ::ng-deep .gjs-layers [class*="selected"] { background: #D4AF37 !important; color: #000 !important; text-decoration: none !important; }
+    :host ::ng-deep .gjs-layer-active { background: #1e293b; border-left: 3px solid #3b82f6 !important; }
+    :host ::ng-deep .gjs-layer-title { background: #0f172a; border-bottom: 1px solid #1e293b; color: #e2e8f0; }
+    :host ::ng-deep .gjs-layer-title:hover { background: #1e293b; }
+    :host ::ng-deep .gjs-blocks-c { background: #0f172a; }
+    :host ::ng-deep .gjs-block { background: #1e293b; border: 1px solid #334155; color: #cbd5e1; }
+    :host ::ng-deep .gjs-block:hover { border-color: #475569; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    :host ::ng-deep .gjs-block-label { color: #94a3b8; }
+    :host ::ng-deep .gjs-traits-c { background: #0f172a; }
+    :host ::ng-deep .gjs-traits-label { color: #94a3b8; }
+    :host ::ng-deep .gjs-traits-field { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+    :host ::ng-deep .gjs-select option { background: #1e293b; color: #e2e8f0; }
+    :host ::ng-deep .gjs-am-assets { background: #0f172a; }
+    :host ::ng-deep .gjs-am-asset { background: #1e293b; border: 1px solid #334155; }
+    :host ::ng-deep .gjs-am-asset:hover { border-color: #475569; }
+    :host ::ng-deep .gjs-am-meta { color: #94a3b8; }
+    :host ::ng-deep .gjs-am-close { color: #94a3b8; }
+    :host ::ng-deep .gjs-am-close:hover { color: #e2e8f0; }
+    :host ::ng-deep .gjs-am-file-uploader { background: #0f172a; border-color: #334155; color: #94a3b8; }
+    :host ::ng-deep .gjs-field { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+    :host ::ng-deep .gjs-field input { background: #1e293b; color: #e2e8f0; }
+    :host ::ng-deep .gjs-field select { background: #1e293b; color: #e2e8f0; }
+    :host ::ng-deep .gjs-field textarea { background: #1e293b; color: #e2e8f0; }
+    :host ::ng-deep .gjs-modal { background: rgba(0,0,0,0.7); }
+    :host ::ng-deep .gjs-modal-dialog { background: #0f172a; border: 1px solid #1e293b; }
+    :host ::ng-deep .gjs-modal-header { background: #1e293b; border-bottom: 1px solid #334155; color: #e2e8f0; }
+    :host ::ng-deep .gjs-modal-body { color: #cbd5e1; }
+    :host ::ng-deep .gjs-btn-prim { background: #3b82f6; color: #fff; }
+    :host ::ng-deep .gjs-btn-prim:hover { background: #2563eb; }
+    :host ::ng-deep .gjs-composites { background: #0f172a; }
+    :host ::ng-deep .gjs-category { background: #0f172a; border-bottom: 1px solid #1e293b; }
+    :host ::ng-deep .gjs-category-title { color: #e2e8f0; background: #1e293b; }
+    :host ::ng-deep .gjs-category-title:hover { background: #334155; }
+    :host ::ng-deep .gjs-category-open { border-bottom: 1px solid #334155; }
+    :host ::ng-deep [data-no-select] img { pointer-events: none; user-select: none; }
+    :host ::ng-deep [data-no-select] * { user-select: none; }
+
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -351,420 +430,707 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
       '<div class="lc-room"><div class="lc-room-name">' + r.name + '</div><div class="lc-room-bed">' + r.bed + '</div><div class="lc-room-details">' + r.features.map(t => '<span class="lc-room-tag">' + t + '</span>').join('') + '</div></div>'
     ).join('');
 
-    // Initialize GrapesJS Studio SDK
+    // Initialize GrapesJS core with preset-webpage plugin
     try {
-      this.editor = await createStudioEditor({
-        licenseKey: '',
-        root: el,
-        theme: 'dark',
-        assets: {
-          onUpload: async () => {
-            throw new Error('Upload is disabled. Please use the property photo library.');
+      const config: Record<string, any> = {
+        container: el,
+        plugins: [gjsPresetWebpage],
+        storageManager: false,
+        assetManager: {
+          upload: false,
+          noAssets: 'No property images available. Please add photos to the property first.',
+        },
+        allowScripts: true,
+      };
+      this.editor = grapesjs.init(config as any);
+
+      const setEditorMode = () => {
+        const frame = this.editor?.Canvas?.getFrameEl();
+        if (frame) {
+          if (frame.contentDocument && frame.contentDocument.body) {
+            frame.contentDocument.body.setAttribute('data-editor-mode', 'true');
+          }
+          if (frame.contentWindow) {
+            (frame.contentWindow as any).isGjsPreview = () => this.isPreviewActive;
+          }
+        }
+      };
+      setEditorMode();
+      this.editor.on('canvas:frame:load', setEditorMode);
+
+      const originalStates = new Map<any, any>();
+      this.editor.on('run:preview', () => {
+        this.isPreviewActive = true;
+        this.editor.select(null);
+        originalStates.clear();
+        this.editor.getWrapper().find('*').forEach((cmp: any) => {
+          originalStates.set(cmp, { selectable: cmp.get('selectable'), hoverable: cmp.get('hoverable'), draggable: cmp.get('draggable'), editable: cmp.get('editable') });
+          cmp.set('selectable', false);
+          cmp.set('hoverable', false);
+          cmp.set('draggable', false);
+          cmp.set('editable', false);
+        });
+        const frame = this.editor.Canvas.getFrameEl();
+        if (frame && frame.contentDocument && frame.contentDocument.body) {
+          frame.contentDocument.body.setAttribute('data-preview-mode', 'true');
+        }
+      });
+      this.editor.on('stop:preview', () => {
+        this.isPreviewActive = false;
+        originalStates.forEach((state, cmp) => {
+          cmp.set('selectable', state.selectable);
+          cmp.set('hoverable', state.hoverable);
+          cmp.set('draggable', state.draggable);
+          cmp.set('editable', state.editable);
+        });
+        const frame = this.editor.Canvas.getFrameEl();
+        if (frame && frame.contentDocument && frame.contentDocument.body) {
+          frame.contentDocument.body.removeAttribute('data-preview-mode');
+        }
+      });
+
+      this.editor.on('load', () => {
+        this.editor.setDevice('desktop');
+
+        // Inject gallery type CSS and body reset into the canvas
+        const galleryCss = document.createElement('style');
+        galleryCss.textContent = `
+          body { margin: 0 !important; padding: 0 !important; }
+          .luxury-gallery-container .gallery-lookbook,
+          .luxury-gallery-container .gallery-filmstrip,
+          .luxury-gallery-container .gallery-curtain,
+          .luxury-gallery-container .gallery-scatter,
+          .luxury-gallery-container .gallery-carousel { display: none !important; }
+          .luxury-gallery-container[data-gallery-type="lookbook"] .gallery-lookbook { display: grid !important; }
+          .luxury-gallery-container[data-gallery-type="filmstrip"] .gallery-filmstrip { display: block !important; }
+          .luxury-gallery-container[data-gallery-type="grid"] .gallery-grid { display: grid !important; }
+          .luxury-gallery-container[data-gallery-type="curtain"] .gallery-curtain { display: block !important; }
+          .luxury-gallery-container[data-gallery-type="scatter"] .gallery-scatter { display: block !important; }
+          .luxury-gallery-container[data-gallery-type="carousel"] .gallery-carousel { display: block !important; }
+          .gallery-lookbook { background: #fcfbfa; padding: 60px 5%; display: grid; grid-template-columns: repeat(12,1fr); gap: 32px; }
+          .gallery-lookbook > div:nth-child(4n+1) { grid-column: 1 / span 7; }
+          .gallery-lookbook > div:nth-child(4n+2) { grid-column: 9 / span 4; margin-top: 80px; }
+          .gallery-lookbook > div:nth-child(4n+3) { grid-column: 2 / span 5; margin-top: -40px; }
+          .gallery-lookbook > div:nth-child(4n) { grid-column: 8 / span 5; margin-top: 50px; }
+          .gallery-lookbook img, .gallery-filmstrip img, .gallery-grid img, .gallery-curtain img, .gallery-carousel img { width: 100%; display: block; }
+          .gallery-lookbook img { height: 100%; object-fit: cover; }
+          .gallery-filmstrip { background: #0d0d0d; padding: 40px 0; overflow: hidden; }
+          .filmstrip-track { display: flex; gap: 40px; overflow-x: auto; padding: 20px 8%; }
+          .filmstrip-track > div { width: 350px; height: 260px; overflow: hidden; background: #1a1a1a; flex-shrink: 0; }
+          .filmstrip-track img { width: 100%; height: 100%; object-fit: cover; }
+          .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 20px 4%; }
+          .gallery-grid img { height: 250px; border-radius: 4px; object-fit: cover; }
+          .gallery-curtain { background: #0d0d0d; padding: 20px; }
+          .gallery-curtain img { height: 100%; object-fit: cover; border-radius: 6px; }
+          .gallery-scatter { background: #fcfbfa; padding: 20px; min-height: 400px; }
+          .gallery-scatter img { border-radius: 8px; margin-bottom: 16px; }
+          .gallery-carousel { background: #0d0d0d; padding: 40px 5%; }
+          .carousel-track { display: flex; gap: 24px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 20px 0; cursor: grab; }
+          .carousel-track > div { min-width: 320px; height: 400px; flex-shrink: 0; scroll-snap-align: start; overflow: hidden; border-radius: 8px; background: #1a1a1a; }
+          .carousel-track img { width: 100%; height: 100%; object-fit: cover; }
+        `;
+        const frameEl = this.editor.Canvas.getFrameEl();
+        if (frameEl && frameEl.contentDocument?.head) {
+          frameEl.contentDocument.head.appendChild(galleryCss);
+        }
+        this.editor.on('canvas:frame:load', () => {
+          const fr = this.editor.Canvas.getFrameEl();
+          if (fr && fr.contentDocument?.head && !fr.contentDocument.querySelector('.he-gallery-styles')) {
+            const c = galleryCss.cloneNode(true) as HTMLStyleElement;
+            c.className = 'he-gallery-styles';
+            fr.contentDocument.head.appendChild(c);
+          }
+        });
+
+        // Open the right-side panel with Style Manager by default for element properties
+        this.editor.runCommand('open-sm');
+
+        // Inject CSS directly into document head
+        const viewCssId = 'he-view-isolation-css';
+        if (!document.getElementById(viewCssId)) {
+          const style = document.createElement('style');
+          style.id = viewCssId;
+          style.textContent = `
+            .gjs-pn-views-container[data-active-view="layers"] .gjs-sm-sectors,
+            .gjs-pn-views-container[data-active-view="layers"] .gjs-blocks-cs,
+            .gjs-pn-views-container[data-active-view="layers"] .gjs-trt-traits,
+            .gjs-pn-views-container[data-active-view="layers"] .gjs-clm-tags,
+            .gjs-pn-views-container[data-active-view="layers"] .gjs-clm-sels-info,
+            .gjs-pn-views[data-active-view="layers"] .gjs-clm-tags,
+            .gjs-pn-views[data-active-view="layers"] .gjs-clm-sels-info { display: none !important; }
+            .gjs-pn-views-container[data-active-view="styles"] .gjs-layers,
+            .gjs-pn-views-container[data-active-view="styles"] .gjs-blocks-cs { display: none !important; }
+            .gjs-pn-views-container[data-active-view="blocks"] .gjs-sm-sectors,
+            .gjs-pn-views-container[data-active-view="blocks"] .gjs-layers,
+            .gjs-pn-views-container[data-active-view="blocks"] .gjs-trt-traits,
+            .gjs-pn-views-container[data-active-view="blocks"] .gjs-clm-tags,
+            .gjs-pn-views-container[data-active-view="blocks"] .gjs-clm-sels-info { display: none !important; }
+            .gjs-pn-views-container[data-active-view="traits"] .gjs-sm-sectors,
+            .gjs-pn-views-container[data-active-view="traits"] .gjs-blocks-cs,
+            .gjs-pn-views-container[data-active-view="traits"] .gjs-layers,
+            .gjs-pn-views-container[data-active-view="traits"] .gjs-clm-tags,
+            .gjs-pn-views-container[data-active-view="traits"] .gjs-clm-sels-info { display: none !important; }
+          `;
+          document.head.appendChild(style);
+        }
+
+        // Update data-active-view AND directly enforce visibility
+        const updateActiveView = () => {
+          try {
+            const viewsPanel: any = this.editor.Panels.getPanel('views');
+            if (!viewsPanel) return;
+            const btns: any = viewsPanel.get('buttons');
+            if (!btns) return;
+            const container = document.querySelector('.gjs-pn-views-container');
+            const views = document.querySelector('.gjs-pn-views');
+            if (!container && !views) return;
+            let activeId = '';
+            btns.models.forEach((b: any) => {
+              if (b.get('active')) activeId = b.get('id');
+            });
+            const viewMap: Record<string, string> = {
+              'open-styles': 'styles',
+              'open-layers': 'layers',
+              'open-blocks': 'blocks',
+              'open-traits': 'traits',
+              'open-sm': 'styles',
+              'open-tm': 'traits',
+            };
+            const val = viewMap[activeId] || '';
+            if (val) {
+              if (container) container.setAttribute('data-active-view', val);
+              if (views) views.setAttribute('data-active-view', val);
+            } else {
+              if (container) container.removeAttribute('data-active-view');
+              if (views) views.removeAttribute('data-active-view');
+            }
+
+            // --- Direct JavaScript enforcement (bypasses CSS selector issues) ---
+            // Use .gjs-pn-views as root because the class manager (.gjs-clm-tags) lives OUTSIDE the container
+            const root = views || container || document;
+            const allContent = root.querySelectorAll('.gjs-clm-tags, .gjs-clm-sels-info, .gjs-sm-sectors, .gjs-layers, .gjs-blocks-cs, .gjs-trt-traits');
+            allContent.forEach((el: Element) => {
+              (el as HTMLElement).style.setProperty('display', 'none', 'important');
+            });
+            // Show only the active view's content
+            if (val === 'layers') {
+              const layersEl = root.querySelector('.gjs-layers');
+              if (layersEl) (layersEl as HTMLElement).style.setProperty('display', '', 'important');
+              // Force-highlight the selected layer if any
+              const selectedCmp = this.editor.getSelected();
+              if (selectedCmp) {
+                const layerItems = root.querySelectorAll('.gjs-layer-item, .gjs-layer');
+                layerItems.forEach((item: Element) => {
+                  (item as HTMLElement).classList.remove('he-layer-selected');
+                  (item as HTMLElement).style.removeProperty('background');
+                  (item as HTMLElement).style.removeProperty('border-left');
+                });
+                // Try to find and highlight the selected component's layer
+                const id = selectedCmp.get('id') || selectedCmp.ccid;
+                root.querySelectorAll(`[data-id="${id}"], [gjs-cid="${id}"]`).forEach((el: Element) => {
+                  (el as HTMLElement).style.setProperty('background', '#D4AF37', 'important');
+                  (el as HTMLElement).style.setProperty('color', '#000', 'important');
+                  (el as HTMLElement).style.setProperty('border-left', '3px solid #0f172a', 'important');
+                  (el as HTMLElement).style.setProperty('text-decoration', 'none', 'important');
+                });
+              }
+            } else if (val === 'blocks') {
+              const blocksEl = root.querySelector('.gjs-blocks-cs');
+              if (blocksEl) (blocksEl as HTMLElement).style.setProperty('display', '', 'important');
+            } else if (val === 'styles') {
+              const smEl = root.querySelector('.gjs-sm-sectors');
+              const clmEl = root.querySelector('.gjs-clm-tags');
+              const infoEl = root.querySelector('.gjs-clm-sels-info');
+              if (smEl) (smEl as HTMLElement).style.setProperty('display', '', 'important');
+              if (clmEl) (clmEl as HTMLElement).style.setProperty('display', '', 'important');
+              if (infoEl) (infoEl as HTMLElement).style.setProperty('display', '', 'important');
+            } else if (val === 'traits') {
+              const traitsEl = root.querySelector('.gjs-trt-traits');
+              if (traitsEl) (traitsEl as HTMLElement).style.setProperty('display', '', 'important');
+            }
+            console.log('[ViewIsolation] active:', activeId, 'view:', val);
+          } catch (e) {}
+        };
+
+        const viewsPanelInstance: any = this.editor.Panels.getPanel('views');
+        if (viewsPanelInstance) {
+          const btns: any = viewsPanelInstance.get('buttons');
+          if (btns) btns.on('change:active', updateActiveView);
+        }
+        this.editor.on('component:selected', () => setTimeout(updateActiveView, 50));
+        setInterval(updateActiveView, 200);
+        setTimeout(updateActiveView, 200);
+
+        // Ensure hoverable matches selectable for ALL components to prevent hover/selection mismatch
+        const syncHoverAndSelect = () => {
+          try {
+            this.editor.getWrapper().find('*').forEach((cmp: any) => {
+              const s = cmp.get('selectable');
+              const h = cmp.get('hoverable');
+              if (h !== s) cmp.set('hoverable', s);
+            });
+          } catch (e) {}
+        };
+        this.editor.on('component:selected', () => setTimeout(syncHoverAndSelect, 20));
+        setInterval(syncHoverAndSelect, 3000);
+
+        // Refresh canvas highlights when sidebar visibility changes (resize issue)
+        let lastCanvasWidth = 0;
+        setInterval(() => {
+          const cv = document.querySelector('.gjs-cv-canvas') as HTMLElement | null;
+          if (cv && cv.offsetWidth !== lastCanvasWidth) {
+            lastCanvasWidth = cv.offsetWidth;
+            try { (this.editor as any).Canvas.refresh({ all: true }); } catch (e) {}
+          }
+        }, 200);
+
+        // Register comprehensive block library matching Studio SDK capabilities
+        const B = (id: string, opts: any) => this.editor.Blocks.add(id, opts);
+        const s = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%">';
+
+        // ── Basic Blocks ──
+        B('he-heading', { label: 'Heading', category: 'Basic', media: s+'<path d="M4 6h16M4 12h10M4 18h14"/></svg>', content: '<h1 style="font-size:2.5rem;font-weight:700;margin:0 0 16px;font-family:Playfair Display,serif;color:#202020">Section Heading</h1>' });
+        B('he-text', { label: 'Text', category: 'Basic', media: s+'<path d="M4 6h16M4 12h16M4 18h12"/></svg>', content: '<p style="font-size:1.05rem;line-height:1.7;color:#4c4c4c;margin:0 0 16px">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>' });
+        B('he-image', { label: 'Image', category: 'Basic', media: s+'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>', content: '<img src="" style="width:100%;border-radius:4px;display:block" alt="Property Photo" data-property-photo="true" />' });
+        B('he-button', { label: 'Button', category: 'Basic', media: s+'<rect x="4" y="8" width="16" height="8" rx="2"/></svg>', content: '<button style="padding:14px 32px;background:#202020;color:#fff;border:none;border-radius:2px;font-size:0.9rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer">Learn More</button>' });
+        B('he-divider', { label: 'Divider', category: 'Basic', media: s+'<line x1="3" x2="21" y1="12" y2="12"/></svg>', content: '<hr style="border:none;border-top:1px solid #eaeaea;margin:24px 0" />' });
+        B('he-spacer', { label: 'Spacer', category: 'Basic', media: s+'<rect x="8" y="3" width="8" height="18" rx="1"/></svg>', content: '<div style="height:48px"></div>' });
+        B('he-link', { label: 'Link', category: 'Basic', media: s+'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>', content: '<a href="#" style="color:#1a6b73;text-decoration:underline;font-size:1rem">Read more →</a>' });
+
+        // ── Layout Blocks ──
+        B('he-columns-1', { label: '1 Column', category: 'Layout', media: s+'<rect x="4" y="4" width="16" height="16" rx="1"/></svg>', content: '<div style="padding:40px 4%"><div style="background:#fafafa;padding:40px;border:1px dashed #d9d2c7;text-align:center;color:#757575;border-radius:4px">Content Area</div></div>' });
+        B('he-columns-2', { label: '2 Columns', category: 'Layout', media: s+'<rect x="3" y="4" width="8" height="16" rx="1"/><rect x="13" y="4" width="8" height="16" rx="1"/></svg>', content: '<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:20px 4%"><div style="background:#fafafa;padding:24px;border:1px dashed #d9d2c7;text-align:center;color:#757575;border-radius:4px">Column 1</div><div style="background:#fafafa;padding:24px;border:1px dashed #d9d2c7;text-align:center;color:#757575;border-radius:4px">Column 2</div></div>' });
+        B('he-columns-3', { label: '3 Columns', category: 'Layout', media: s+'<rect x="2" y="4" width="6" height="16" rx="1"/><rect x="9" y="4" width="6" height="16" rx="1"/><rect x="16" y="4" width="6" height="16" rx="1"/></svg>', content: '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;padding:20px 4%"><div style="background:#fafafa;padding:20px;border:1px dashed #d9d2c7;text-align:center;color:#757575;border-radius:4px">Col 1</div><div style="background:#fafafa;padding:20px;border:1px dashed #d9d2c7;text-align:center;color:#757575;border-radius:4px">Col 2</div><div style="background:#fafafa;padding:20px;border:1px dashed #d9d2c7;text-align:center;color:#757575;border-radius:4px">Col 3</div></div>' });
+        B('he-columns-70-30', { label: '70/30 Columns', category: 'Layout', media: s+'<rect x="2" y="4" width="12" height="16" rx="1"/><rect x="16" y="4" width="6" height="16" rx="1"/></svg>', content: '<div style="display:grid;grid-template-columns:2.4fr 1fr;gap:24px;padding:20px 4%"><div style="background:#fafafa;padding:24px;border:1px dashed #d9d2c7;text-align:center;color:#757575;border-radius:4px">Main Content</div><div style="background:#fafafa;padding:24px;border:1px dashed #d9d2c7;text-align:center;color:#757575;border-radius:4px">Sidebar</div></div>' });
+
+        // ── Media Blocks ──
+        B('he-media-video', { label: 'Video', category: 'Media', media: s+'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 9v6l5-3z"/></svg>', content: '<div style="position:relative;padding-bottom:56.25%;height:0;background:#1a1a1a;border-radius:4px;overflow:hidden;margin:20px 0"><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:3rem;opacity:0.6">▶</div></div>' });
+        B('he-media-gallery', { label: 'Image Grid', category: 'Media', media: s+'<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>', content: '<div data-property-gallery="true" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:20px 4%"><img src="" style="width:100%;border-radius:4px;display:block" /><img src="" style="width:100%;border-radius:4px;display:block" /><img src="" style="width:100%;border-radius:4px;display:block" /><img src="" style="width:100%;border-radius:4px;display:block" /></div>' });
+
+        // ── Content Blocks ──
+        B('he-cta', { label: 'Call to Action', category: 'Content', media: s+'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M12 10v4M10 12h4"/></svg>', content: '<div data-cta-title="Ready to Experience Luxury?" data-cta-text="Book your stay today and discover unparalleled comfort." data-cta-btn="Book Now" style="background:#1e2a35;padding:60px 4%;text-align:center;color:#fff;margin:20px 0"><h2 style="font-size:2rem;font-family:Playfair Display,serif;margin:0 0 12px">Ready to Experience Luxury?</h2><p style="opacity:0.8;margin:0 0 24px;font-size:1.05rem">Book your stay today and discover unparalleled comfort.</p><button style="padding:14px 40px;background:#c9975b;color:#fff;border:none;border-radius:2px;font-size:0.9rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer">Book Now</button></div>' });
+        B('he-list', { label: 'List', category: 'Content', media: s+'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>', content: '<ul style="list-style:none;padding:0;color:#4c4c4c;line-height:2.2;font-size:1rem"><li>✓ Premium feature one</li><li>✓ Premium feature two</li><li>✓ Premium feature three</li><li>✓ Premium feature four</li></ul>' });
+        B('he-quote', { label: 'Quote', category: 'Content', media: s+'<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2"/></svg>', content: '<blockquote style="border-left:4px solid #c9975b;padding:16px 24px;margin:20px 0;background:#fafafa;border-radius:0 4px 4px 0"><p style="font-style:italic;font-size:1.15rem;color:#4c4c4c;margin:0;line-height:1.6">"An absolutely magical experience. The villa exceeded every expectation."</p><cite style="display:block;margin-top:12px;font-style:normal;font-weight:600;color:#202020">— Elizabeth Mitchell</cite></blockquote>' });
+
+        // ── Form Blocks ──
+        B('he-form-contact', { label: 'Contact Form', category: 'Form', media: s+'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 3l9 9 9-9"/></svg>', content: '<div style="max-width:500px;margin:20px auto;padding:32px;border:1px solid #eaeaea;border-radius:4px"><h3 style="font-size:1.2rem;margin:0 0 20px;font-family:Playfair Display,serif">Send a Message</h3><input placeholder="Your Name" style="width:100%;padding:12px;margin-bottom:12px;border:1px solid #d9d2c7;border-radius:4px;font-size:0.95rem;box-sizing:border-box" /><input placeholder="Email" style="width:100%;padding:12px;margin-bottom:12px;border:1px solid #d9d2c7;border-radius:4px;font-size:0.95rem;box-sizing:border-box" /><textarea placeholder="Message" rows="4" style="width:100%;padding:12px;margin-bottom:16px;border:1px solid #d9d2c7;border-radius:4px;font-size:0.95rem;resize:vertical;box-sizing:border-box"></textarea><button style="padding:12px 32px;background:#202020;color:#fff;border:none;border-radius:2px;font-size:0.85rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer">Send</button></div>' });
+
+        // ── Property Listing Blocks ──
+        B('he-hero', { label: 'Hero', category: 'Property', media: s+'<rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 12h20"/></svg>', content: '<div class="luxury-hero" data-hero-title="Property Title" data-hero-subtitle="Exclusive Rental" data-hero-bg="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80" style="position:relative;height:70vh;background-image:url(https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80);background-size:cover;background-position:center;display:flex;align-items:flex-end;padding:60px 4%"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.6))"></div><div style="position:relative;z-index:10;color:#fff"><span style="font-size:1.1rem;text-transform:uppercase;letter-spacing:0.15em;opacity:0.9">Exclusive Rental</span><h1 style="font-size:3.5rem;font-weight:400;margin:0 0 10px;letter-spacing:-0.02em;font-family:Playfair Display,serif">Property Title</h1><span style="font-size:1.1rem;text-transform:uppercase;letter-spacing:0.15em;opacity:0.9">Location</span></div></div>' });
+        B('he-stats', { label: 'Stats Bar', category: 'Property', media: s+'<path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/></svg>', content: '<div class="luxury-bar" data-guests="12" data-bedrooms="6" data-bathrooms="6" style="border-bottom:1px solid #eaeaea;padding:24px 4%;display:flex;gap:40px;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.08em;color:#757575;background:#fafafa"><span>Guests <strong>12</strong></span><span>Bedrooms <strong>6</strong></span><span>Bathrooms <strong>6</strong></span><span>Pool <strong>Heated</strong></span></div>' });
+        B('he-description', { label: 'Description', category: 'Property', media: s+'<path d="M4 6h16M4 12h16M4 18h12"/></svg>', content: '<div style="max-width:1200px;margin:60px auto;padding:0 4%"><h2 style="font-size:2rem;font-weight:400;margin:0 0 24px;line-height:1.3;font-family:Playfair Display,serif">A luxury retreat built with exceptional refinement.</h2><p style="font-size:1.05rem;color:#4c4c4c;margin-bottom:30px;line-height:1.7">This prestigious property blends refined luxury with serene surroundings. Nestled on a coastal hillside, the estate offers complete privacy, scenic panoramas, and customized concierge services.</p></div>' });
+        B('he-amenities', { label: 'Amenities', category: 'Property', media: s+'<path d="M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 16c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg>', content: '<div style="border-top:1px solid #eaeaea;padding-top:40px;margin:40px 0"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:24px;text-transform:uppercase;letter-spacing:0.08em">Premium Amenities</h3><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px 40px"><div style="display:flex;align-items:center;gap:12px;font-size:0.95rem;color:#4c4c4c"><span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%"><path d="M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 16c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M12 2v10"/><path d="M8 6h8"/></svg></span><span>Heated Pool</span></div><div style="display:flex;align-items:center;gap:12px;font-size:0.95rem;color:#4c4c4c"><span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%"><path d="M4 12c0-2 2-4 4-4s4 2 4 4"/><path d="M12 12c0-2 2-4 4-4s4 2 4 4"/><path d="M4 20c0-2 2-4 4-4"/><path d="M16 16c2 0 4 2 4 4"/></svg></span><span>Spa & Sauna</span></div><div style="display:flex;align-items:center;gap:12px;font-size:0.95rem;color:#4c4c4c"><span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M9 8v8l6-4z"/></svg></span><span>Cinema Room</span></div><div style="display:flex;align-items:center;gap:12px;font-size:0.95rem;color:#4c4c4c"><span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%"><path d="M12 2v12"/><path d="M8 14h8v8H8z"/><path d="M6 10c0-3 2-5 6-5s6 2 6 5"/></svg></span><span>Wine Cellar</span></div></div></div>' });
+        B('he-gallery', { label: 'Gallery', category: 'Property', media: s+'<rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="4" rx="1"/><rect x="2" y="14" width="4" height="8" rx="1"/><rect x="10" y="14" width="12" height="8" rx="1"/></svg>', content: '<div class="luxury-gallery-container" data-gallery-type="lookbook" style="max-width:1200px;margin:80px auto;padding:0 4%"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:32px;text-transform:uppercase;letter-spacing:0.08em">Gallery</h3><style>.luxury-gallery-container .gallery-lookbook{display:none}.luxury-gallery-container .gallery-filmstrip{display:none}.luxury-gallery-container .gallery-grid{display:none}.luxury-gallery-container[data-gallery-type=lookbook] .gallery-lookbook{display:grid!important}.luxury-gallery-container[data-gallery-type=filmstrip] .gallery-filmstrip{display:block!important}.luxury-gallery-container[data-gallery-type=grid] .gallery-grid{display:grid!important}.gallery-lookbook{background:#fcfbfa;padding:60px 5%;display:grid;grid-template-columns:repeat(12,1fr);gap:32px}.gallery-lookbook>div:nth-child(4n+1){grid-column:1/span 7}.gallery-lookbook>div:nth-child(4n+2){grid-column:9/span 4;margin-top:80px}.gallery-lookbook>div:nth-child(4n+3){grid-column:2/span 5;margin-top:-40px}.gallery-lookbook>div:nth-child(4n){grid-column:8/span 5;margin-top:50px}.gallery-lookbook img{width:100%;object-fit:cover;display:block}.gallery-filmstrip{background:#0d0d0d;padding:40px 0;overflow:hidden}.filmstrip-track{display:flex;gap:40px;overflow-x:auto;padding:20px 8%}.filmstrip-track>div{width:350px;aspect-ratio:3/4;overflow:hidden;background:#1a1a1a}.filmstrip-track img{width:100%;height:100%;object-fit:cover}.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:20px 4%}.gallery-grid img{width:100%;height:250px;object-fit:cover;border-radius:4px}</style><div class="gallery-lookbook"><div><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" /></div><div><img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80" /></div><div><img src="https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=600&q=80" /></div><div><img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80" /></div></div><div class="gallery-filmstrip"><div class="filmstrip-track"><div><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" /></div><div><img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80" /></div><div><img src="https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=600&q=80" /></div></div></div><div class="gallery-grid"><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" /><img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80" /><img src="https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=600&q=80" /><img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80" /><img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=600&q=80" /><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80" /></div></div>' });
+        B('he-booking', { label: 'Booking Card', category: 'Property', media: s+'<rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>', content: '<div class="luxury-booking-card" data-price="62515" data-currency="€" data-period="week" style="border:1px solid #eaeaea;border-radius:4px;padding:32px;box-shadow:0 10px 30px rgba(0,0,0,0.03);background:#fff;max-width:400px;margin:40px auto"><div style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.1em;color:#757575">Weekly Price From</div><div style="font-size:1.8rem;font-weight:500;color:#202020;margin:4px 0 24px">€62,515 <span style="font-size:0.9rem;font-weight:400;color:#757575">/ week</span></div><button style="width:100%;padding:16px;background-color:#202020;color:#fff;border:none;border-radius:2px;font-size:0.9rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer">Inquire</button></div>' });
+        B('he-contact', { label: 'Contact', category: 'Property', media: s+'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>', content: '<div style="max-width:600px;margin:40px auto;padding:0 4%;text-align:center"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:24px;text-transform:uppercase;letter-spacing:0.08em;font-family:Playfair Display,serif">Get In Touch</h3><p style="color:#4c4c4c;margin-bottom:8px">📍 123 Ocean Drive, Malibu, CA</p><p style="color:#4c4c4c;margin-bottom:8px">📞 +1 (310) 555-0123</p><p style="color:#4c4c4c">✉️ concierge@theluxuryestate.com</p></div>' });
+        B('he-testimonials', { label: 'Testimonials', category: 'Property', media: s+'<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2"/></svg>', content: '<div style="max-width:1200px;margin:60px auto;padding:0 4%"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:32px;text-transform:uppercase;letter-spacing:0.08em;text-align:center">Guest Reviews</h3><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px"><div style="background:#fafafa;padding:24px;border-radius:8px"><p style="font-style:italic;color:#4c4c4c;line-height:1.6;font-size:0.95rem">&ldquo;An absolutely magical experience. The villa exceeded every expectation.&rdquo;</p><p style="font-weight:600;margin-top:16px;color:#202020">Elizabeth Mitchell</p></div><div style="background:#fafafa;padding:24px;border-radius:8px"><p style="font-style:italic;color:#4c4c4c;line-height:1.6;font-size:0.95rem">&ldquo;Pure perfection. From the private chef dinner to sunset yoga.&rdquo;</p><p style="font-weight:600;margin-top:16px;color:#202020">Sophie Laurent</p></div><div style="background:#fafafa;padding:24px;border-radius:8px"><p style="font-style:italic;color:#4c4c4c;line-height:1.6;font-size:0.95rem">&ldquo;The perfect family getaway. Kids loved the pool!&rdquo;</p><p style="font-weight:600;margin-top:16px;color:#202020">The Anderson Family</p></div></div></div>' });
+        B('he-rules', { label: 'House Rules', category: 'Property', media: s+'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>', content: '<div style="max-width:800px;margin:40px auto;padding:0 4%"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:24px;text-transform:uppercase;letter-spacing:0.08em">House Rules</h3><ul style="list-style:none;padding:0;color:#4c4c4c;line-height:2.2"><li>✓ Check-in: 4:00 PM - 10:00 PM</li><li>✓ Check-out: 11:00 AM</li><li>✓ No smoking indoors</li><li>✓ Pets considered on request</li><li>✓ Quiet hours after 10:00 PM</li><li>✓ Maximum 12 guests</li></ul></div>' });
+        B('he-location', { label: 'Location', category: 'Property', media: s+'<path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>', content: '<div style="max-width:1200px;margin:60px auto;padding:0 4%"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:24px;text-transform:uppercase;letter-spacing:0.08em">Location</h3><div style="background:#f0f0f0;height:300px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#757575;font-size:1.1rem"><span>📍 Amalfi Coast, Italy</span></div><div style="margin-top:24px;display:grid;grid-template-columns:repeat(2,1fr);gap:16px;color:#4c4c4c;font-size:0.95rem"><div><strong>Airport:</strong> Naples (40 min)</div><div><strong>Beach:</strong> 5 min walk</div></div></div>' });
+        B('he-header', { label: 'Nav Header', category: 'Property', media: s+'<path d="M3 12h18M3 6h18M3 18h14"/></svg>', content: '<div style="display:flex;align-items:center;justify-content:space-between;padding:20px 4%;border-bottom:1px solid #eaeaea;background:#fff"><span style="font-family:Playfair Display,serif;font-size:1.25rem;font-weight:bold;color:#202020">The Luxury Estate</span><div style="display:flex;gap:24px;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.08em;color:#757575"><span>The Villa</span><span>Amenities</span><span>Gallery</span></div></div>' });
+
+        // ── Register component types with custom traits (properties panel) ──
+        const DC = this.editor.DomComponents;
+        DC.addType('he-gallery-component', {
+          isComponent: (el: any) => el.classList && el.classList.contains('luxury-gallery-container'),
+          model: {
+            defaults: {
+              traits: [
+                {
+                  type: 'select',
+                  name: 'data-gallery-type',
+                  label: 'Gallery Type',
+                  options: [
+                    { value: 'lookbook', name: 'Lookbook' },
+                    { value: 'filmstrip', name: 'Filmstrip' },
+                    { value: 'curtain', name: 'Curtain' },
+                    { value: 'scatter', name: 'Scatter' },
+                    { value: 'grid', name: 'Grid' },
+                    { value: 'carousel', name: 'Carousel' },
+                  ],
+                },
+              ],
+            },
           },
-          // Project assets (saved with the project)
-          onLoad: async () => {
-            return [];
+        });
+        DC.addType('he-hero-component', {
+          isComponent: (el: any) => el.classList && el.classList.contains('luxury-hero'),
+          model: {
+            defaults: {
+              traits: [
+                { type: 'text', name: 'data-hero-title', label: 'Title' },
+                { type: 'text', name: 'data-hero-subtitle', label: 'Subtitle' },
+                { type: 'text', name: 'data-hero-bg', label: 'Background URL' },
+              ],
+            },
           },
-          // Custom providers — these show up in the asset picker filter
-          providers: [
-            {
-              id: 'property-photos',
-              types: 'image',
-              label: 'Property Photos',
-              onLoad: async () => {
-                // Force load photos if not yet loaded
-                if (!this.store.propertyId()) {
-                  try {
-                    const prop = await this.repository.getPropertyByName(this.propertyName());
-                    if (prop?.id) {
-                      await this.store.loadProperty(prop.id);
-                    }
-                  } catch (e) {
-                    console.warn('[Assets] Failed to load property:', e);
+        });
+        DC.addType('he-booking-component', {
+          isComponent: (el: any) => el.classList && el.classList.contains('luxury-booking-card'),
+          model: {
+            defaults: {
+              traits: [
+                { type: 'number', name: 'data-price', label: 'Price' },
+                { type: 'text', name: 'data-currency', label: 'Currency' },
+                { type: 'select', name: 'data-period', label: 'Period', options: [{ value: 'night', name: 'Night' }, { value: 'week', name: 'Week' }] },
+              ],
+            },
+          },
+        });
+        DC.addType('he-stats-component', {
+          isComponent: (el: any) => el.classList && el.classList.contains('luxury-bar'),
+          model: {
+            defaults: {
+              traits: [
+                { type: 'number', name: 'data-guests', label: 'Guests' },
+                { type: 'number', name: 'data-bedrooms', label: 'Bedrooms' },
+                { type: 'number', name: 'data-bathrooms', label: 'Bathrooms' },
+              ],
+            },
+          },
+        });
+        DC.addType('he-cta-component', {
+          isComponent: (el: any) => el.tagName === 'DIV' && (el.textContent || '').includes('Book Now') && (el.textContent || '').includes('Ready to Experience'),
+          model: {
+            defaults: {
+              traits: [
+                { type: 'text', name: 'data-cta-title', label: 'Heading' },
+                { type: 'text', name: 'data-cta-text', label: 'Body Text' },
+                { type: 'text', name: 'data-cta-btn', label: 'Button Text' },
+              ],
+            },
+          },
+        });
+
+        // Clean up any stale resizer handle from body
+        document.querySelectorAll('.he-panel-resizer').forEach(e => e.remove());
+
+        // ── Property Photos: add as a sector in the StyleManager (positioned below 'Extra') ──
+        const PHOTOS_TYPE = 'he-photo-picker';
+        let photosInputEl: HTMLElement | null = null;
+
+        const isGalleryComponent = (cmp: any): boolean => {
+          if (!cmp || typeof cmp.get !== 'function') return false;
+          const selType = cmp.get('type') || '';
+          const attrsCls = (cmp.get('attributes') || {}).class || '';
+          const modelCls = cmp.get('class') || '';
+          let classesCls = '';
+          if (typeof cmp.getClasses === 'function') {
+            const arr = cmp.getClasses();
+            classesCls = Array.isArray(arr) ? arr.join(' ') : '';
+          }
+          const clsCombined = [attrsCls, modelCls, classesCls].filter(Boolean).join(' ');
+          return selType.includes('gallery')
+            || clsCombined.includes('luxury-gallery')
+            || clsCombined.includes('gallery-')
+            || clsCombined.includes('he-gallery');
+        };
+
+        const openPhotosDialog = (gallery: any) => {
+          const photos = (this.store.photos() || []).slice();
+          if (photos.length === 0) {
+            this.store.setToastMessage('No property photos available. Upload via the property manager.');
+            return;
+          }
+
+          // Pre-select images already used in the gallery (preserve order)
+          const existingImgs: any[] = gallery.find?.('img') || [];
+          const existingSrcs = existingImgs.map((img: any) => img.get?.('src') || '').filter((s: string) => s && !s.includes('base64') && !s.includes('placeholder') && !s.includes('unsplash'));
+          const selectedSet = new Set<string>(existingSrcs);
+
+          // DOM containers
+          const backdrop = document.createElement('div');
+          backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99998;display:flex;align-items:center;justify-content:center';
+          const dialog = document.createElement('div');
+          dialog.style.cssText = 'background:#0f172a;color:#e2e8f0;border:1px solid #1e293b;border-radius:8px;width:min(900px,90vw);max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.6);font-family:inherit';
+          dialog.addEventListener('click', (e) => e.stopPropagation());
+          backdrop.appendChild(dialog);
+          backdrop.addEventListener('click', () => backdrop.remove());
+          document.body.appendChild(backdrop);
+
+          // Header
+          const header = document.createElement('div');
+          header.style.cssText = 'padding:16px 20px;border-bottom:1px solid #1e293b;display:flex;align-items:center;justify-content:space-between';
+          header.innerHTML = '<div><div style="font-size:15px;font-weight:600;color:#fff">Select photos</div><div style="font-size:12px;color:#94a3b8;margin-top:2px">Click to toggle selection</div></div>';
+          const closeBtn = document.createElement('button');
+          closeBtn.innerHTML = '×';
+          closeBtn.style.cssText = 'background:transparent;border:none;color:#94a3b8;font-size:24px;cursor:pointer;line-height:1;padding:0 8px';
+          closeBtn.addEventListener('click', () => backdrop.remove());
+          header.appendChild(closeBtn);
+          dialog.appendChild(header);
+
+          // Toolbar
+          const selCount = document.createElement('span');
+          selCount.style.cssText = 'color:#D4AF37;font-weight:600';
+          const clearBtn = document.createElement('button');
+          clearBtn.textContent = 'Clear all';
+          clearBtn.style.cssText = 'margin-left:auto;padding:4px 10px;background:transparent;color:#94a3b8;border:1px solid rgba(255,255,255,.1);border-radius:3px;font-size:11px;cursor:pointer';
+          const toolbar = document.createElement('div');
+          toolbar.style.cssText = 'padding:8px 20px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:8px;font-size:12px;color:#94a3b8';
+          toolbar.appendChild(selCount);
+          toolbar.appendChild(clearBtn);
+          dialog.appendChild(toolbar);
+
+          // Grid
+          const grid = document.createElement('div');
+          grid.style.cssText = 'padding:16px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;overflow-y:auto;flex:1;min-height:0';
+          dialog.appendChild(grid);
+
+          // Footer
+          const applyBtn = document.createElement('button');
+          applyBtn.style.cssText = 'padding:8px 20px;background:#D4AF37;color:#000;border:none;border-radius:4px;font-size:12px;font-weight:600;cursor:pointer';
+          const cancelBtn = document.createElement('button');
+          cancelBtn.textContent = 'Cancel';
+          cancelBtn.style.cssText = 'padding:8px 16px;background:transparent;color:#94a3b8;border:1px solid rgba(255,255,255,.1);border-radius:4px;font-size:12px;cursor:pointer';
+          const footer = document.createElement('div');
+          footer.style.cssText = 'padding:12px 20px;border-top:1px solid #1e293b;display:flex;justify-content:flex-end;gap:8px';
+          footer.appendChild(cancelBtn);
+          footer.appendChild(applyBtn);
+          dialog.appendChild(footer);
+
+          // --- Behavior (all references now resolve) ---
+          const updateLabels = () => {
+            selCount.textContent = selectedSet.size + ' selected';
+            applyBtn.textContent = 'Apply (' + selectedSet.size + ')';
+          };
+
+          const renderGrid = () => {
+            grid.innerHTML = '';
+            const selectedList = Array.from(selectedSet);
+            photos.forEach((p: any) => {
+              const isSel = selectedSet.has(p.url);
+              const card = document.createElement('div');
+              card.style.cssText = 'position:relative;aspect-ratio:1;border-radius:4px;overflow:hidden;cursor:pointer;border:2px solid ' + (isSel ? '#D4AF37' : 'transparent') + ';transition:all .15s;background:#0a1424';
+              const img = document.createElement('img');
+              img.src = p.url;
+              img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+              img.loading = 'lazy';
+              card.appendChild(img);
+              if (isSel) {
+                const badge = document.createElement('div');
+                badge.textContent = '✓';
+                badge.style.cssText = 'position:absolute;top:4px;right:4px;background:#D4AF37;color:#000;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;box-shadow:0 2px 4px rgba(0,0,0,.4)';
+                card.appendChild(badge);
+                const order = document.createElement('div');
+                order.textContent = String(selectedList.indexOf(p.url) + 1);
+                order.style.cssText = 'position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.8);color:#D4AF37;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700';
+                card.appendChild(order);
+              }
+              card.addEventListener('click', () => {
+                if (selectedSet.has(p.url)) selectedSet.delete(p.url);
+                else selectedSet.add(p.url);
+                renderGrid();
+                updateLabels();
+              });
+              grid.appendChild(card);
+            });
+          };
+
+          clearBtn.addEventListener('click', () => {
+            selectedSet.clear();
+            renderGrid();
+            updateLabels();
+          });
+
+          cancelBtn.addEventListener('click', () => backdrop.remove());
+
+          applyBtn.addEventListener('click', () => {
+            const selected = photos.filter((p: any) => selectedSet.has(p.url)).map((p: any) => p.url);
+            const imgs: any[] = gallery.find?.('img') || [];
+            const empty = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            for (let i = 0; i < imgs.length; i++) {
+              if (i < selected.length) imgs[i].set('src', selected[i]);
+              else imgs[i].set('src', empty);
+            }
+            backdrop.remove();
+          });
+
+          renderGrid();
+          updateLabels();
+        };
+
+        const renderPhotosInto = (wrap: HTMLElement) => {
+          try {
+            const sel = this.editor.getSelected();
+            const isGallery = isGalleryComponent(sel);
+
+            if (!isGallery) {
+              wrap.innerHTML = '';
+              return;
+            }
+
+            wrap.innerHTML = '<div style="padding:8px"><button data-he-action="select-images" style="width:100%;padding:10px;background:#D4AF37;color:#000;border:none;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer">Select photos</button></div>';
+
+            wrap.querySelector('[data-he-action="select-images"]')?.addEventListener('click', () => {
+              openPhotosDialog(sel);
+            });
+          } catch (e) {
+            console.warn('[Photos Sector] render error:', e);
+          }
+        };
+
+        // Custom property type: renders a "Select photos" button
+        try {
+          this.editor.StyleManager.addType(PHOTOS_TYPE, {
+            create() {
+              const wrap = document.createElement('div');
+              wrap.className = 'he-photo-picker';
+              wrap.style.cssText = 'background:#0a1424;padding:0;';
+              photosInputEl = wrap;
+              renderPhotosInto(wrap);
+              return wrap;
+            },
+          });
+        } catch (e) {
+          console.warn('[Photos Sector] addType failed:', e);
+        }
+
+        // Add sector to StyleManager — order 6 places it right after 'Extra' (order 5)
+        try {
+          this.editor.StyleManager.addSector('he-photos', {
+            name: 'Photos',
+            open: true,
+            order: 6,
+            properties: [{ type: PHOTOS_TYPE, name: 'picker' }],
+          });
+        } catch (e) {
+          console.warn('[Photos Sector] addSector failed:', e);
+        }
+
+        // Re-render on selection change
+        this.editor.on('component:selected', (cmp: any) => {
+          setTimeout(() => {
+            if (!photosInputEl || !photosInputEl.isConnected) {
+              photosInputEl = document.querySelector('.he-photo-grid') as HTMLElement | null;
+            }
+            if (photosInputEl) renderPhotosInto(photosInputEl);
+          }, 100);
+          if (cmp && cmp.is && cmp.is('image')) {
+            this.store.setToastMessage('Image selected — pick a photo from the 📷 Property Photos sector below.');
+          }
+          if (cmp && cmp.get && (cmp.get('class') || '').includes('luxury-gallery-container')) {
+            this.store.setToastMessage('Gallery selected — pick photos from the 📷 Property Photos sector below.');
+          }
+        });
+
+        // Periodic re-render (photos list may change; element may be re-created)
+        setInterval(() => {
+          if (!photosInputEl || !photosInputEl.isConnected) {
+            photosInputEl = document.querySelector('.he-photo-grid') as HTMLElement | null;
+          }
+          if (photosInputEl) renderPhotosInto(photosInputEl);
+        }, 3000);
+
+        const populateAssetManager = () => {
+          try {
+            const list = this.store.photos() || [];
+            const am = this.editor.AssetManager;
+            if (!am) return;
+            if (am && typeof am.getConfig === 'function') {
+              const config = am.getConfig();
+              if (config) config.upload = false;
+            }
+            const assets = list.length > 0
+              ? list.map(p => ({ type: 'image', src: p.url, name: p.category || 'Property Photo' }))
+              : [{ type: 'image', src: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80', name: 'Placeholder' }];
+            am.getAll().reset(assets);
+          } catch (e) {
+            console.warn('[AssetManager] populate error:', e);
+          }
+        };
+        populateAssetManager();
+        setTimeout(populateAssetManager, 1000);
+
+        this.editor.on('asset:open', () => {
+          const list = this.store.photos() || [];
+          if (list.length > 0) {
+            populateAssetManager();
+          }
+        });
+
+        // Gallery interactivity removed — GrapesJS editor intercepts all mouse events
+        // for editing (selection, double-click → AssetManager). Interactive galleries
+        // require deep integration with GrapesJS's event system which is beyond
+        // quick fix scope. The gallery layouts work visually via pure CSS.
+
+        // ── Replace template images with property photos and ensure gallery structures ─
+        this.editor.on('component:mount', (cmp: any) => {
+          const all = this.store.photos() || [];
+          const cls = cmp.get('class') || '';
+          if (cls.includes('luxury-gallery-container')) {
+            // Prevent duplicate gallery structures
+            if (cmp.get('data-gallery-structures-added')) return;
+            cmp.set('data-gallery-structures-added', true);
+            
+            ['curtain', 'scatter', 'carousel'].forEach(type => {
+              const existing = cmp.find(`.gallery-${type}`);
+              if (!existing || existing.length === 0) {
+                // Use ALL property photos (up to 20) for the gallery
+                const photoUrls = all.length > 0 ? all.map((p: any) => p.url) : ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80'];
+                const count = Math.min(photoUrls.length, 20);
+                let html = '';
+                if (type === 'curtain') {
+                  html = `<div class="gallery-curtain" data-no-select><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;padding:20px">${photoUrls.slice(0, count).map((src, i) => `<div class="he-lb-item" data-no-select style="cursor:pointer;overflow:hidden;border-radius:8px;${i === 0 ? 'grid-column:span 2;grid-row:span 2' : ''}"><img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s" /></div>`).join('')}</div></div>`;
+                } else if (type === 'scatter') {
+                  html = `<div class="gallery-scatter" data-no-select><div style="columns:3;gap:16px;padding:20px">${photoUrls.slice(0, count).map(src => `<div data-no-select style="break-inside:avoid;margin-bottom:16px;overflow:hidden;border-radius:8px"><img src="${src}" style="width:100%;display:block" /></div>`).join('')}</div></div>`;
+                } else if (type === 'carousel') {
+                  html = `<div class="gallery-carousel" data-no-select style="overflow:hidden;background:#0d0d0d"><div class="he-drag-track" data-no-select style="display:flex;gap:3vmin;padding:4vmin 6vmin;cursor:grab;user-select:none">${photoUrls.slice(0, count).map(src => `<div data-no-select style="width:38vmin;height:52vmin;flex-shrink:0;overflow:hidden;border-radius:10px;filter:brightness(0.8)"><img src="${src}" style="width:100%;height:100%;object-fit:cover" draggable="false" /></div>`).join('')}</div></div>`;
+                }
+                if (html) {
+                  const newComponents = cmp.append(html);
+                  // Mark gallery children as non-selectable/non-hoverable so GrapesJS doesn't intercept clicks
+                  if (Array.isArray(newComponents)) {
+                    newComponents.forEach((c: any) => {
+                      try { c.set('selectable', false); c.set('hoverable', false); c.set('clickable', false); c.set('draggable', false); } catch(e) {}
+                    });
+                  } else if (newComponents) {
+                    try { newComponents.set('selectable', false); newComponents.set('hoverable', false); newComponents.set('clickable', false); newComponents.set('draggable', false); } catch(e) {}
                   }
                 }
-                let photosList = this.store.photos() || [];
-                if (photosList.length === 0) {
-                  await new Promise(r => setTimeout(r, 500));
-                  photosList = this.store.photos() || [];
-                }
-                const photoAssets = photosList.map(p => ({
-                  src: p.url,
-                  name: p.category || 'Property Photo',
-                }));
-                // Always provide a fallback so the picker is never empty
-                if (photoAssets.length === 0) {
-                  return [{
-                    src: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
-                    name: 'Property Photo',
-                  }];
-                }
-                return photoAssets;
               }
-            }
-          ]
-        },
-        templates: {
-          onLoad: async ({ editor, fetchCommunityTemplates }) => {
-            const list = await fetchCommunityTemplates() || [];
-            await this.store.loadTemplates();
-            const savedTemplates = this.store.templates();
-            const customSavedTemplates = savedTemplates.filter(t => !t.is_predefined);
-            const savedTemplateEntries = customSavedTemplates.map(t => ({
-              id: t.id,
-              name: t.name,
-              media: t.media || 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=80',
-              data: {
-                pages: [{
-                  name: 'Home',
-                  component: (t.css ? '<style>' + t.css + '</style>' : '') + t.html
-                }]
-              }
-            }));
-            const myTemplatesHeader = customSavedTemplates.length > 0 ? [{
-              id: '---my-templates-header---',
-              name: '— My Saved Templates —',
-              media: '',
-              data: { pages: [] }
-            }] : [];
-            return [
-              {
-                id: 'le-collectionist',
-                name: 'Le Collectionist Luxury Style',
-                media: 'https://cdn.lecollectionist.com/__lecollectionist__/production/houses/8076/photos/IgJA7syOTbGe4kyvXl9b_72f6f733-d7a7-4ada-d93a-804ae9fd4375.jpg?q=50&width=600',
-                data: {
-                  pages: [{
-                    name: 'Home',
-                    component: `<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Sora:wght@100..800&display=swap" rel="stylesheet">
-<style>
-.luxury-template { font-family: 'Sora', sans-serif; color: #202020; background-color: #ffffff; line-height: 1.6; }
-.luxury-serif { font-family: 'Playfair Display', serif; }
-.luxury-hero { position: relative; height: 75vh; background-image: url('${coverImage}'); background-size: cover; background-position: center; display: flex; align-items: flex-end; padding: 60px 4%; }
-.luxury-hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.6)); }
-.luxury-hero-content { position: relative; z-index: 10; color: #ffffff; }
-.luxury-hero-title { font-size: 3.5rem; font-weight: 400; margin: 0 0 10px; letter-spacing: -0.02em; }
-.luxury-hero-subtitle { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.9; }
-.luxury-bar { border-bottom: 1px solid #eaeaea; padding: 24px 4%; display: flex; gap: 40px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.08em; color: #757575; background: #fafafa; }
-.luxury-bar span strong { color: #202020; }
-.luxury-container { max-width: 1200px; margin: 60px auto; padding: 0 4%; display: grid; grid-template-columns: 1.6fr 1fr; gap: 60px; }
-@media(max-width: 992px) { .luxury-container { grid-template-columns: 1fr; gap: 40px; } }
-.luxury-story-title { font-size: 2rem; font-weight: 400; margin: 0 0 24px; line-height: 1.3; }
-.luxury-story-text { font-size: 1.05rem; color: #4c4c4c; margin-bottom: 30px; line-height: 1.7; }
-.luxury-booking-card { border: 1px solid #eaeaea; border-radius: 4px; padding: 32px; position: sticky; top: 100px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); background: #ffffff; }
-.luxury-price-label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; color: #757575; }
-.luxury-price { font-size: 1.8rem; font-weight: 500; color: #202020; margin: 4px 0 24px; }
-.luxury-btn { width: 100%; padding: 16px; background-color: #202020; color: #ffffff; border: none; border-radius: 2px; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: background-color 0.2s; }
-.luxury-btn:hover { background-color: #000000; }
-.luxury-amenities-section { border-top: 1px solid #eaeaea; padding-top: 40px; margin-top: 40px; }
-.luxury-section-title { font-size: 1.4rem; font-weight: 400; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.08em; }
-.luxury-amenities-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 40px; }
-.luxury-amenity-item { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; color: #4c4c4c; }
-.luxury-amenity-icon { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; }
-.luxury-gallery { max-width: 1200px; margin: 80px auto; padding: 0 4%; }
-</style>
-<div class="luxury-template">
-  <div class="luxury-hero">
-    <div class="luxury-hero-content">
-      <span class="luxury-hero-subtitle">Exclusive Rental</span>
-      <h1 class="luxury-hero-title luxury-serif">${title}</h1>
-      <span class="luxury-hero-subtitle">${location}</span>
-    </div>
-  </div>
-  <div class="luxury-bar">
-    <span>Guests <strong>${guests}</strong></span>
-    <span>Bedrooms <strong>${bedrooms}</strong></span>
-    <span>Bathrooms <strong>${bathrooms}</strong></span>
-    <span>Pool <strong>${poolStatus}</strong></span>
-    <span>Spa & Hamam <strong>${spaStatus}</strong></span>
-  </div>
-  <div class="luxury-container">
-    <div>
-      <h2 class="luxury-story-title luxury-serif">A luxury retreat built with exceptional refinement.</h2>
-      <div class="luxury-story-text">${description}</div>
-      <div class="luxury-amenities-section">
-        <h3 class="luxury-section-title luxury-serif">Premium Amenities</h3>
-        <div class="luxury-amenities-grid">${amenitiesHtml}</div>
-      </div>
-    </div>
-    <div>
-      <div class="luxury-booking-card">
-        ${priceHtml}
-        <button class="luxury-btn">Inquire About Stay</button>
-        <div style="margin-top: 20px; font-size: 0.8rem; color: #757575; text-align: center;">Concierge Services & In-House Staff Included</div>
-      </div>
-    </div>
-  </div>
-  <div class="luxury-gallery">
-    <h3 class="luxury-section-title luxury-serif" style="margin-bottom:32px;">The Property Gallery</h3>
-    ${galleryHtml}
-  </div>
-</div>`
-                  }]
-                }
-              },
-              {
-                id: 'villa-serenity',
-                name: 'Villa Serenity — Amalfi Luxury',
-                media: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600&q=80',
-                data: {
-                  pages: [{
-                    name: 'Home',
-                    component: `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet">
-<style>:root{--bg:#f7f5f0;--fg:#1e2a35;--primary:#1a6b73;--primary-fg:#fff;--muted-fg:#6b7a85;--accent:#c9975b;--border:#d9d2c7;--sans:'Inter',system-ui,sans-serif;--serif:'Playfair Display',Georgia,serif;--shadow-lg:0 10px 30px rgba(0,0,0,0.1);--shadow-xl:0 20px 50px rgba(0,0,0,0.15);--max-w:1280px}*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}body{font-family:var(--sans);background:var(--bg);color:var(--fg);line-height:1.6;-webkit-font-smoothing:antialiased}h1,h2,h3{font-family:var(--serif);line-height:1.2}img{max-width:100%;display:block}button{cursor:pointer;font-family:inherit;border:none;background:none}.container{max-width:var(--max-w);margin:0 auto;padding:0 1rem}@media(min-width:768px){.container{padding:0 2rem}}@keyframes fade-up{0%{opacity:0;transform:translateY(30px)}100%{opacity:1;transform:translateY(0)}}@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}.anim{opacity:0;animation:fade-up .7s ease-out forwards}.d1{animation-delay:.1s}.d2{animation-delay:.2s}.d3{animation-delay:.3s}.section-pad{padding:5rem 1rem}@media(min-width:768px){.section-pad{padding:7rem 1rem}}.section-tag{font-size:.75rem;text-transform:uppercase;letter-spacing:.2em;color:var(--primary);font-weight:500;margin-bottom:.75rem}.section-title{font-size:2rem;color:var(--fg)}@media(min-width:768px){.section-title{font-size:3rem}}.section-sub{color:var(--muted-fg);font-size:1rem;margin-top:1rem;max-width:36rem;margin-left:auto;margin-right:auto;line-height:1.7}.text-center{text-align:center}.bg-soft{background:#faf8f5}.navbar{position:fixed;top:0;left:0;right:0;z-index:100;padding:1.25rem 0;transition:background .4s,padding .4s}.navbar.scrolled{background:rgba(255,255,255,.95);backdrop-filter:blur(8px);box-shadow:0 1px 2px rgba(0,0,0,.05);padding:.75rem 0}.navbar .container{display:flex;align-items:center;justify-content:space-between}.brand{font-family:var(--serif);font-size:1.25rem;color:#fff;transition:color .3s}.scrolled .brand{color:var(--fg)}.nav-links{display:none;align-items:center;gap:2rem}@media(min-width:768px){.nav-links{display:flex}}.nav-link{font-size:.8125rem;text-transform:uppercase;letter-spacing:.08em;font-weight:500;color:rgba(255,255,255,.8);transition:color .3s}.nav-link:hover{color:#fff}.scrolled .nav-link{color:rgba(30,42,53,.7)}.scrolled .nav-link:hover{color:var(--fg)}.btn-cta{padding:.5rem 1.5rem;border-radius:9999px;font-size:.875rem;font-weight:500;background:#fff;color:var(--primary);transition:background .3s}.btn-cta:hover{background:rgba(255,255,255,.9)}.scrolled .btn-cta{background:var(--primary);color:var(--primary-fg)}.scrolled .btn-cta:hover{background:#155a61}.hero{position:relative;height:100vh;min-height:600px;display:flex;align-items:center;justify-content:center;overflow:hidden}.hero-bg{position:absolute;inset:0}.hero-bg img{width:100%;height:100%;object-fit:cover}.hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.5),rgba(0,0,0,.3) 50%,rgba(0,0,0,.6))}.hero-content{position:relative;z-index:10;text-align:center;padding:0 1rem;max-width:56rem}.hero-loc{color:rgba(255,255,255,.8);font-size:.8125rem;text-transform:uppercase;letter-spacing:.3em;margin-bottom:1rem;font-weight:500}.hero-title{font-size:2.5rem;color:#fff;margin-bottom:1.25rem}@media(min-width:768px){.hero-title{font-size:5rem}}@media(min-width:1024px){.hero-title{font-size:6rem}}.hero-desc{color:rgba(255,255,255,.8);font-size:1rem;max-width:36rem;margin:0 auto 2rem;line-height:1.7}.hero-actions{display:flex;flex-direction:column;gap:1rem;align-items:center;justify-content:center}@media(min-width:640px){.hero-actions{flex-direction:row}}.btn-pill{display:inline-flex;align-items:center;justify-content:center;padding:.75rem 2rem;border-radius:9999px;font-size:1rem;font-weight:500;transition:background .3s,transform .2s}.btn-pill:hover{transform:translateY(-1px)}.btn-light{background:#fff;color:var(--fg)}.btn-light:hover{background:rgba(255,255,255,.9)}.btn-outline{background:transparent;color:#fff;border:1.5px solid #fff}.btn-outline:hover{background:rgba(255,255,255,.1)}.hero-scroll{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);animation:bounce 2s infinite;width:1.5rem;height:1.5rem;color:rgba(255,255,255,.6)}.ov-grid{display:grid;gap:2.5rem;align-items:center}@media(min-width:768px){.ov-grid{grid-template-columns:1fr 1fr;gap:3.5rem}}.ov-img{width:100%;height:320px;object-fit:cover;border-radius:1rem;box-shadow:var(--shadow-lg)}@media(min-width:768px){.ov-img{height:520px}}.ov-text{display:flex;flex-direction:column;gap:1.25rem}.ov-desc{color:var(--muted-fg);line-height:1.7;font-size:1.125rem}.stats{display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding-top:1rem}@media(min-width:640px){.stats{grid-template-columns:repeat(4,1fr);gap:1.5rem}}.stat{text-align:center;padding:.75rem}.stat-icon{width:1.5rem;height:1.5rem;margin:0 auto .5rem;color:var(--primary)}.stat-val{font-family:var(--serif);font-size:1.25rem;font-weight:600}@media(min-width:768px){.stat-val{font-size:1.5rem}}.stat-lbl{font-size:.75rem;color:var(--muted-fg)}@media(min-width:768px){.stat-lbl{font-size:.875rem}}.am-grid{display:grid;gap:1.25rem}@media(min-width:640px){.am-grid{grid-template-columns:1fr 1fr}}@media(min-width:1024px){.am-grid{grid-template-columns:repeat(4,1fr)}}.am-card{background:#faf8f5;border-radius:1rem;padding:1.5rem;transition:box-shadow .3s,transform .3s}.am-card:hover{box-shadow:var(--shadow-xl);transform:translateY(-4px)}.am-icon{width:3rem;height:3rem;border-radius:50%;background:rgba(26,107,115,.1);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;transition:background .3s}.am-card:hover .am-icon{background:var(--primary)}.am-icon svg{width:1.25rem;height:1.25rem;color:var(--primary);transition:color .3s}.am-card:hover .am-icon svg{color:#fff}.am-title{font-family:var(--serif);font-size:1.125rem;margin-bottom:.5rem}.am-desc{color:var(--muted-fg);font-size:.875rem;line-height:1.6}.gal-grid{display:grid;gap:1rem}@media(min-width:768px){.gal-grid{grid-template-columns:repeat(3,1fr);grid-auto-rows:240px}}.gal-item{overflow:hidden;border-radius:1rem}@media(min-width:768px){.gal-item.featured{grid-column:span 2;grid-row:span 2}}.gal-item img{width:100%;height:100%;object-fit:cover;transition:transform .7s;cursor:pointer}.gal-item img:hover{transform:scale(1.05)}.test-grid{display:grid;gap:1.5rem}@media(min-width:768px){.test-grid{grid-template-columns:repeat(3,1fr);gap:2rem}}.test-card{background:#fff;border-radius:1rem;padding:1.5rem;box-shadow:0 1px 2px rgba(0,0,0,.05);border:1px solid rgba(217,210,199,.5)}.test-quote{width:2rem;height:2rem;color:rgba(26,107,115,.2);margin-bottom:1rem}.test-text{color:var(--muted-fg);line-height:1.7;margin-bottom:1.5rem;font-style:italic;font-size:.875rem}.test-name{font-weight:500;color:var(--fg);font-size:.9375rem}.test-loc{font-size:.8125rem;color:var(--muted-fg)}.booking{background:var(--primary);position:relative;overflow:hidden;padding:5rem 1rem;text-align:center}.booking-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1920&q=80') center/cover;opacity:.05}.booking-content{max-width:56rem;margin:0 auto;position:relative;z-index:10}.booking-tag{font-size:.75rem;text-transform:uppercase;letter-spacing:.2em;color:rgba(255,255,255,.6);font-weight:500;margin-bottom:.75rem}.booking-title{font-size:2rem;color:#fff}@media(min-width:768px){.booking-title{font-size:3rem}}.booking-sub{color:rgba(255,255,255,.7);font-size:1rem;max-width:36rem;margin:.75rem auto 2.5rem;line-height:1.7}.book-form{background:#fff;border-radius:1rem;padding:1.5rem;box-shadow:var(--shadow-xl);max-width:28rem;margin:0 auto;text-align:left}.form-row{display:grid;gap:1rem}@media(min-width:640px){.form-row{grid-template-columns:1fr 1fr}}.form-g{margin-bottom:1.25rem}.form-l{display:block;font-size:.875rem;font-weight:500;color:var(--fg);margin-bottom:.5rem}.input-w{position:relative}.input-w svg{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);width:1rem;height:1rem;color:var(--muted-fg);pointer-events:none}.form-i{width:100%;height:2.5rem;padding:0 .75rem 0 2.5rem;border:1px solid var(--border);border-radius:.75rem;background:var(--bg);font-size:.875rem;color:var(--fg);outline:none;transition:border-color .2s}.form-i:focus{border-color:var(--primary);box-shadow:0 0 0 2px rgba(26,107,115,.15)}.btn-sub{width:100%;padding:1rem 1.5rem;border-radius:9999px;background:var(--primary);color:var(--primary-fg);font-size:1rem;font-weight:500;margin-top:1.25rem;transition:background .3s}.btn-sub:hover{background:#155a61}.footer{background:#1a1a2e;color:rgba(255,255,255,.8);padding:4rem 1rem}.footer-grid{display:grid;gap:2.5rem}@media(min-width:640px){.footer-grid{grid-template-columns:1fr 1fr}}@media(min-width:1024px){.footer-grid{grid-template-columns:repeat(4,1fr);gap:3rem}}.footer-brand{font-family:var(--serif);font-size:1.5rem;color:#fff;margin-bottom:1rem}.footer-desc{font-size:.875rem;line-height:1.6;color:rgba(255,255,255,.6)}.footer-h{font-size:.8125rem;text-transform:uppercase;letter-spacing:.08em;color:#fff;font-weight:500;margin-bottom:1rem}.footer-contact{list-style:none;display:flex;flex-direction:column;gap:.75rem;font-size:.875rem}.footer-links{list-style:none;display:flex;flex-direction:column;gap:.5rem}.footer-links button{background:none;border:none;color:rgba(255,255,255,.8);font-size:.875rem;cursor:pointer;text-align:left;padding:0}.footer-links button:hover{color:#fff}.social{display:flex;gap:.75rem}.social a{width:2.5rem;height:2.5rem;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;transition:background .3s;color:rgba(255,255,255,.8)}.social a:hover{background:var(--primary)}.footer-bottom{border-top:1px solid rgba(255,255,255,.1);margin-top:3rem;padding-top:2rem;display:flex;flex-direction:column;align-items:center;gap:1rem;font-size:.875rem;color:rgba(255,255,255,.4)}@media(min-width:640px){.footer-bottom{flex-direction:row;justify-content:space-between}}[data-toast]{position:fixed;top:5rem;right:1rem;z-index:200;width:24rem;background:var(--primary);color:#fff;padding:.875rem 1.25rem;border-radius:.75rem;box-shadow:var(--shadow-lg);font-size:.875rem;transform:translateX(120%);transition:transform .4s,opacity .4s;opacity:0}[data-toast].s{transform:translateX(0);opacity:1}</style>
-<div style="font-family:var(--sans);background:var(--bg);color:var(--fg)">
-<nav class="navbar" id="navbar">
-<div class="container">
-<span class="brand" onclick="window.scrollTo({top:0,behavior:'smooth'})">${title}</span>
-<div class="nav-links">
-<a class="nav-link" onclick="document.getElementById('overview').scrollIntoView({behavior:'smooth'})">The Villa</a>
-<a class="nav-link" onclick="document.getElementById('amenities').scrollIntoView({behavior:'smooth'})">Amenities</a>
-<a class="nav-link" onclick="document.getElementById('gallery').scrollIntoView({behavior:'smooth'})">Gallery</a>
-<a class="nav-link" onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">Reviews</a>
-<button class="btn-cta" onclick="document.getElementById('booking').scrollIntoView({behavior:'smooth'})">Book Now</button>
-</div>
-</div>
-</nav>
-<section class="hero">
-<div class="hero-bg"><img src="${coverImage}" alt="${title}" /></div>
-<div class="hero-overlay"></div>
-<div class="hero-content">
-<p class="hero-loc anim">${location}</p>
-<h1 class="hero-title anim d1">${title}</h1>
-<p class="hero-desc anim d2">Experience unparalleled luxury — where timeless elegance meets breathtaking coastline.</p>
-<div class="hero-actions anim d3">
-<button class="btn-pill btn-light" onclick="document.getElementById('booking').scrollIntoView({behavior:'smooth'})">Book Your Stay</button>
-<button class="btn-pill btn-outline" onclick="document.getElementById('overview').scrollIntoView({behavior:'smooth'})">Explore</button>
-</div>
-</div>
-<svg class="hero-scroll" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-</section>
-<section id="overview" class="section-pad bg-soft">
-<div class="container ov-grid">
-<img class="ov-img" src="https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?auto=format&fit=crop&w=1200&q=80" alt="Villa interior" />
-<div class="ov-text">
-<p class="section-tag">The Villa</p>
-<h2 class="section-title">Where Every Moment Becomes a Memory</h2>
-<p class="ov-desc">${description}</p>
-<div class="stats">
-<div class="stat"><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg><div class="stat-val">${bedrooms}</div><div class="stat-lbl">Bedrooms</div></div>
-<div class="stat"><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12h16a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1z"/><path d="M6 12V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v7"/></svg><div class="stat-val">${bathrooms}</div><div class="stat-lbl">Bathrooms</div></div>
-<div class="stat"><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><div class="stat-val">${guests}</div><div class="stat-lbl">Guests</div></div>
-<div class="stat"><svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg><div class="stat-val">∞</div><div class="stat-lbl">Pool</div></div>
-</div>
-</div>
-</div>
-</section>
-<section id="amenities" class="section-pad">
-<div class="container">
-<div class="text-center">
-<p class="section-tag">Amenities</p>
-<h2 class="section-title">Everything You Need</h2>
-<p class="section-sub">Every detail thoughtfully considered for your comfort.</p>
-</div>
-<div class="am-grid" style="margin-top:3.5rem">
-<div class="am-card"><div class="am-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="M15 5l4 4"/></svg></div><h3 class="am-title">Panoramic Views</h3><p class="am-desc">Breathtaking sea views from every room</p></div>
-<div class="am-card"><div class="am-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg></div><h3 class="am-title">Infinity Pool</h3><p class="am-desc">Heated infinity pool overlooking the coastline</p></div>
-<div class="am-card"><div class="am-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" x2="18" y1="17" y2="17"/></svg></div><h3 class="am-title">Gourmet Kitchen</h3><p class="am-desc">Professional-grade appliances for culinary excellence</p></div>
-<div class="am-card"><div class="am-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><path d="M22 17H2"/><path d="M22 21H2"/><path d="M6 11l4-4 4 4"/></svg></div><h3 class="am-title">Private Beach</h3><p class="am-desc">Exclusive access to a secluded Mediterranean cove</p></div>
-<div class="am-card"><div class="am-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 22h8"/><path d="M7 10h10"/><path d="M12 15v7"/><path d="M12 15a5 5 0 0 0 5-5c0-2-.5-4-2-8H9c-1.5 4-2 6-2 8a5 5 0 0 0 5 5Z"/></svg></div><h3 class="am-title">Wine Cellar</h3><p class="am-desc">Curated selection of fine Italian wines</p></div>
-<div class="am-card"><div class="am-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h.01"/><path d="M6 20h.01"/><path d="M18 20h.01"/><path d="M2 7.45 12 2l10 5.45"/><path d="M12 2v3"/><path d="M4 15.5V17a8 8 0 0 0 16 0v-1.5"/></svg></div><h3 class="am-title">Spa Bathrooms</h3><p class="am-desc">Marble bathrooms with soaking tubs</p></div>
-<div class="am-card"><div class="am-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div><h3 class="am-title">Butler Service</h3><p class="am-desc">Dedicated butler available 24/7</p></div>
-<div class="am-card"><div class="am-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></div><h3 class="am-title">Hiking Trails</h3><p class="am-desc">Scenic coastal trails from the property</p></div>
-</div>
-</div>
-</section>
-<section id="gallery" class="section-pad bg-soft">
-<div class="container">
-<div class="text-center">
-<p class="section-tag">Gallery</p>
-<h2 class="section-title">A Glimpse Inside</h2>
-<p class="section-sub">Explore the beauty through our curated collection.</p>
-</div>
-<div class="gal-grid" style="margin-top:3.5rem">${galleryItemsHtml}</div>
-</div>
-</section>
-<section id="reviews" class="section-pad">
-<div class="container">
-<div class="text-center">
-<p class="section-tag">Testimonials</p>
-<h2 class="section-title">What Our Guests Say</h2>
-<p class="section-sub">Hear from those who have experienced the villa firsthand.</p>
-</div>
-<div class="test-grid" style="margin-top:3.5rem">
-<div class="test-card">
-<svg class="test-quote" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
-<p class="test-text">&ldquo;An absolutely magical experience. The villa exceeded every expectation. We are already planning our return.&rdquo;</p>
-<p class="test-name">Elizabeth &amp; James Mitchell</p>
-<p class="test-loc">London, UK</p>
-</div>
-<div class="test-card">
-<svg class="test-quote" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
-<p class="test-text">&ldquo;We celebrated our anniversary here — pure perfection. From the private chef dinner to sunset yoga on the terrace.&rdquo;</p>
-<p class="test-name">Sophie Laurent</p>
-<p class="test-loc">Paris, France</p>
-</div>
-<div class="test-card">
-<svg class="test-quote" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21c0 0-1 0-1 1v1c0 1 1 2 2 2h14c1 0 1-1 1-1v-3c-3 0-3-1-3-2V11c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
-<p class="test-text">&ldquo;The perfect family getaway. The kids loved the pool and private beach, while we enjoyed the wine cellar and spa.&rdquo;</p>
-<p class="test-name">The Anderson Family</p>
-<p class="test-loc">New York, USA</p>
-</div>
-</div>
-</div>
-</section>
-<section id="booking" class="booking">
-<div class="booking-bg"></div>
-<div class="booking-content">
-<p class="booking-tag">Reserve Your Stay</p>
-<h2 class="booking-title">Your Dream Vacation Awaits</h2>
-<p class="booking-sub">Check availability and secure your dates. Our concierge team will ensure every detail is perfect.</p>
-<div class="book-form">
-<div class="form-row">
-<div class="form-g"><label class="form-l">Check In</label><div class="input-w"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg><input class="form-i" type="date" /></div></div>
-<div class="form-g"><label class="form-l">Check Out</label><div class="input-w"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg><input class="form-i" type="date" /></div></div>
-</div>
-<div class="form-g"><label class="form-l">Guests</label><div class="input-w"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><select class="form-i" style="appearance:none;cursor:pointer"><option>2 Guests</option><option>4 Guests</option><option>6 Guests</option><option>8 Guests</option><option>10 Guests</option></select></div></div>
-<button class="btn-sub" onclick="var t=this.parentElement.parentElement.parentElement;var d=document.createElement('div');d.setAttribute('data-toast','');d.className='s';d.textContent='Thank you! We will check availability and get back to you within 24 hours.';document.body.appendChild(d);setTimeout(function(){d.classList.remove('s');setTimeout(function(){d.remove()},400)},5000)">Check Availability</button>
-</div>
-</div>
-</section>
-<footer class="footer">
-<div class="container">
-<div class="footer-grid">
-<div><h3 class="footer-brand">${title}</h3><p class="footer-desc">Your private sanctuary awaits on the Amalfi Coast.</p></div>
-<div><h4 class="footer-h">Contact</h4><ul class="footer-contact"><li>📍 ${location}</li><li>📞 +39 089 123 4567</li><li>✉️ stay@villaserenity.com</li></ul></div>
-<div><h4 class="footer-h">Quick Links</h4><ul class="footer-links"><li><button onclick="document.getElementById('overview').scrollIntoView({behavior:'smooth'})">The Villa</button></li><li><button onclick="document.getElementById('amenities').scrollIntoView({behavior:'smooth'})">Amenities</button></li><li><button onclick="document.getElementById('gallery').scrollIntoView({behavior:'smooth'})">Gallery</button></li><li><button onclick="document.getElementById('reviews').scrollIntoView({behavior:'smooth'})">Reviews</button></li></ul></div>
-<div><h4 class="footer-h">Follow Us</h4><div class="social"><a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg></a><a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a></div></div>
-</div>
-<div class="footer-bottom"><p>&copy; 2026 ${title}. All rights reserved.</p></div>
-</div>
-</footer>
-<script>window.addEventListener('scroll',function(){var n=document.getElementById('navbar');if(window.scrollY>50)n.classList.add('scrolled');else n.classList.remove('scrolled')});</script>
-</div>`
-                  }]
-                }
-              },
-              ...myTemplatesHeader,
-              ...savedTemplateEntries,
-              ...list
-            ];
+            });
           }
-        },
-        gjsOptions: {
-          allowScripts: true,
-          storageManager: false,
-          assetManager: {
-            upload: false,
-            noAssets: 'No property images available. Please add photos to the property first.',
-          },
-        } as any,
-        onReady: async (editorInstance) => {
-          this.editor = editorInstance;
-          const setEditorMode = () => {
-            const frame = this.editor?.Canvas?.getFrameEl();
-            if (frame) {
-              if (frame.contentDocument && frame.contentDocument.body) {
-                frame.contentDocument.body.setAttribute('data-editor-mode', 'true');
+          if (all.length > 0) {
+            let idx = 0;
+            const walk = (c: any) => {
+              if (c.is && c.is('image')) {
+                const cur = c.get('src');
+                if (!cur || cur.includes('unsplash') || cur.includes('placeholder')) {
+                  c.set('src', all[idx % all.length].url);
+                  idx++;
+                }
               }
-              if (frame.contentWindow) {
-                (frame.contentWindow as any).isGjsPreview = () => this.isPreviewActive;
+              if (c.components && typeof c.components === 'function') {
+                c.components().forEach((child: any) => walk(child));
               }
-            }
-          };
-          setEditorMode();
-          this.editor.on('canvas:frame:load', setEditorMode);
-          
-          const originalStates = new Map<any, any>();
-          this.editor.on('run:preview', () => {
-            this.isPreviewActive = true;
-            this.editor.select(null);
-            originalStates.clear();
-            this.editor.getWrapper().find('*').forEach((cmp: any) => {
-              originalStates.set(cmp, { selectable: cmp.get('selectable'), hoverable: cmp.get('hoverable'), draggable: cmp.get('draggable'), editable: cmp.get('editable') });
-              cmp.set('selectable', false);
-              cmp.set('hoverable', false);
-              cmp.set('draggable', false);
-              cmp.set('editable', false);
-            });
-            const frame = this.editor.Canvas.getFrameEl();
-            if (frame && frame.contentDocument && frame.contentDocument.body) {
-              frame.contentDocument.body.setAttribute('data-preview-mode', 'true');
-            }
-          });
-          this.editor.on('stop:preview', () => {
-            this.isPreviewActive = false;
-            originalStates.forEach((state, cmp) => {
-              cmp.set('selectable', state.selectable);
-              cmp.set('hoverable', state.hoverable);
-              cmp.set('draggable', state.draggable);
-              cmp.set('editable', state.editable);
-            });
-            const frame = this.editor.Canvas.getFrameEl();
-            if (frame && frame.contentDocument && frame.contentDocument.body) {
-              frame.contentDocument.body.removeAttribute('data-preview-mode');
-            }
-          });
-          this.editor.setDevice('desktop');
-
-          // Populate the GrapesJS AssetManager with property photos.
-          // This is what the "Select Image" dialog uses when changing an image's src.
-          const populateAssetManager = () => {
-            try {
-              const list = this.store.photos() || [];
-              const am = this.editor.AssetManager;
-              if (!am) return;
-              // Disable upload so only property photos are shown
-              if (am && typeof am.getConfig === 'function') {
-                const config = am.getConfig();
-                if (config) config.upload = false;
-              }
-              const assets = list.length > 0
-                ? list.map(p => ({ type: 'image', src: p.url, name: p.category || 'Property Photo' }))
-                : [{ type: 'image', src: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80', name: 'Placeholder' }];
-              am.getAll().reset(assets);
-            } catch (e) {
-              console.warn('[AssetManager] populate error:', e);
-            }
-          };
-          populateAssetManager();
-          setTimeout(populateAssetManager, 1000);
-
-          // Re-populate the AssetManager every time it opens.
-          // This ensures property photos are always present, even if the SDK or
-          // another plugin cleared them.
-          this.editor.on('asset:open', () => {
+            };
+            walk(cmp);
+          }
+        });
+        // Keep Asset Manager populated with property photos
+        this.editor.on('component:update', (cmp: any) => {
+          if (cmp.is && cmp.is('image')) {
             const list = this.store.photos() || [];
-            if (list.length > 0) {
-              populateAssetManager();
+            if (list.length) {
+              const am = this.editor.AssetManager;
+              if (am) am.getAll().reset(list.map((p: any) => ({ type: 'image', src: p.url, name: p.category || 'Property Photo' })));
             }
-          });
+          }
+        });
 
-          // When a new image is dropped, auto-assign the first property photo as src
-          this.editor.on('component:create', (cmp: any) => {
-            if (cmp.is('image') && !cmp.get('src')) {
-              const photos = this.store.photos();
-              if (photos.length > 0) {
-                cmp.set('src', photos[0].url);
-              }
+        const savedMeta = this.store.pageConfig()?.grapesjsMeta;
+        if (savedMeta && savedMeta.html) {
+          this.initialListingMeta = { html: savedMeta.html, css: savedMeta.css || '' };
+          try {
+            this.editor.setComponents(savedMeta.html);
+            if (savedMeta.css) {
+              this.editor.setStyle(savedMeta.css);
             }
-          });
-
-          // Load saved editor state if it exists
-          const savedMeta = this.store.pageConfig()?.grapesjsMeta;
-          if (savedMeta && savedMeta.html) {
-            this.initialListingMeta = { html: savedMeta.html, css: savedMeta.css || '' };
-            try {
-              this.editor.setComponents(savedMeta.html);
-              if (savedMeta.css) {
-                this.editor.setStyle(savedMeta.css);
-              }
-            } catch (e) {
-              console.warn('[Studio SDK] Failed to load saved state:', e);
-            }
-          } else {
-            // Apply a default template instead of showing a generic empty page
-            try {
-              const defaultHtml = `<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Sora:wght@100..800&display=swap" rel="stylesheet">
+          } catch (e) {
+            console.warn('[GrapesJS] Failed to load saved state:', e);
+          }
+        } else {
+          try {
+            const defaultHtml = `<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Sora:wght@100..800&display=swap" rel="stylesheet">
 <style>
 .luxury-template { font-family: 'Sora', sans-serif; color: #202020; background-color: #ffffff; line-height: 1.6; }
 .luxury-serif { font-family: 'Playfair Display', serif; }
@@ -828,17 +1194,16 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
     ${galleryHtml}
   </div>
 </div>`;
-              this.editor.setStyle('');
-              this.editor.setComponents(defaultHtml);
-              this.initialListingMeta = { html: defaultHtml, css: '' };
-            } catch (err) {
-              console.warn('[Studio SDK] Failed to load default starting template:', err);
-            }
+            this.editor.setStyle('');
+            this.editor.setComponents(defaultHtml);
+            this.initialListingMeta = { html: defaultHtml, css: '' };
+          } catch (err) {
+            console.warn('[GrapesJS] Failed to load default starting template:', err);
           }
         }
       });
     } catch (err) {
-      console.error('[GrapesJS Studio Editor] Init failed:', err);
+      console.error('[GrapesJS] Init failed:', err);
       alert('Failed to initialize the editor: ' + (err instanceof Error ? err.message : err));
     }
   }
@@ -854,6 +1219,222 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
   }
 
 
+
+  preview(): void {
+    if (!this.editor) return;
+    try {
+      const html = this.editor.getHtml() || '';
+      const css = this.editor.getCss() || '';
+      const propData = this.store.propertyData();
+      const title = propData?.listing_title || propData?.name || 'Property Preview';
+
+      const fullDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title} — Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Sora:wght@100..800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Sora', system-ui, sans-serif; color: #202020; background: #fff; line-height: 1.6; }
+    ${css}
+    .he-preview-back {
+      position: fixed; top: 16px; right: 16px; z-index: 99999;
+      background: rgba(0,0,0,0.85); color: #fff; padding: 8px 16px; border-radius: 8px;
+      font-family: system-ui, sans-serif; font-size: 13px; text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .he-preview-back:hover { background: #1e293b; }
+  </style>
+</head>
+<body>
+  <a class="he-preview-back" href="javascript:window.close()">&larr; Close Preview</a>
+  ${html}
+  <script>
+(function(){
+  var injected = document.createElement('style');
+  injected.textContent = '@keyframes heFadeIn{from{opacity:0}to{opacity:1}}';
+  document.head.appendChild(injected);
+
+  function showLightbox(src){
+    if (!src) return;
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:heFadeIn .2s';
+    var close = document.createElement('button');
+    close.innerHTML = '\\u2715';
+    close.style.cssText = 'position:absolute;top:24px;right:32px;font-size:2.5rem;color:#fff;background:none;border:none;cursor:pointer;z-index:10;line-height:1';
+    var img2 = document.createElement('img');
+    img2.src = src;
+    img2.style.cssText = 'max-width:90vw;max-height:85vh;object-fit:contain;border-radius:4px;box-shadow:0 20px 60px rgba(0,0,0,.5)';
+    var lbl = document.createElement('div');
+    lbl.textContent = 'Click anywhere to close';
+    lbl.style.cssText = 'position:absolute;bottom:24px;left:0;right:0;text-align:center;color:rgba(255,255,255,.55);font-family:system-ui;font-size:13px;letter-spacing:.05em';
+    ov.appendChild(close); ov.appendChild(img2); ov.appendChild(lbl);
+    ov.addEventListener('click', function(){ ov.remove(); });
+    close.addEventListener('click', function(e){ e.stopPropagation(); ov.remove(); });
+    document.body.appendChild(ov);
+  }
+
+  // ── Click-to-lightbox for ALL images in the page ──
+  var allImgs = document.querySelectorAll('img');
+  allImgs.forEach(function(img){
+    if (img.dataset.heLb) return;
+    var src = img.getAttribute('src') || '';
+    if (!src || src.indexOf('data:') === 0) return;
+    img.dataset.heLb = '1';
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', function(e){
+      e.preventDefault();
+      e.stopPropagation();
+      showLightbox(this.src);
+    });
+  });
+
+  // ── Scatter gallery: proper hover/click/zoom behavior ──
+  var scatterContainer = document.querySelector('.gallery-scatter');
+  if (scatterContainer) {
+    // Find all "Photo N" text menu items
+    var photoMenuItems = [];
+    var allChildren = scatterContainer.querySelectorAll('div');
+    allChildren.forEach(function(el){
+      var text = (el.textContent || '').trim();
+      if (/^Photo\\s+\\d+/.test(text) && el.children.length === 0 && el.offsetWidth > 0) {
+        photoMenuItems.push(el);
+      }
+    });
+
+    if (photoMenuItems.length > 0) {
+      // Find the images in the scatter
+      var scatterImgs = scatterContainer.querySelectorAll('img');
+      var allScatterImgs = [];
+      scatterImgs.forEach(function(img){ allScatterImgs.push(img.src); });
+
+      // Create a preview panel on the right
+      scatterContainer.style.display = 'grid';
+      scatterContainer.style.gridTemplateColumns = '1fr 2fr';
+      scatterContainer.style.gap = '32px';
+      scatterContainer.style.padding = '60px 5%';
+      scatterContainer.style.minHeight = '500px';
+      scatterContainer.style.position = 'relative';
+      scatterContainer.style.background = '#fcfbfa';
+
+      // Create the preview area
+      var previewArea = document.createElement('div');
+      previewArea.className = 'scatter-preview';
+      previewArea.style.cssText = 'position:relative;width:100%;height:100%;min-height:400px;display:flex;align-items:center;justify-content:center;background:#f0eeea;border-radius:8px;overflow:hidden';
+      var previewImg = document.createElement('img');
+      previewImg.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;display:none;border-radius:8px';
+      previewImg.addEventListener('click', function(){ showLightbox(previewImg.src); });
+      var placeholder = document.createElement('div');
+      placeholder.textContent = '← Click a photo from the menu';
+      placeholder.style.cssText = 'color:#8c8a87;font-family:system-ui;font-size:14px;font-style:italic';
+      previewArea.appendChild(previewImg);
+      previewArea.appendChild(placeholder);
+      scatterContainer.appendChild(previewArea);
+
+      // Style the menu items
+      photoMenuItems.forEach(function(el, idx){
+        el.style.cursor = 'pointer';
+        el.style.padding = '10px 0';
+        el.style.transition = 'color 0.2s, font-weight 0.2s';
+        el.style.color = '#8c8a87';
+
+        // HOVER: show vignette preview near the text
+        el.addEventListener('mouseenter', function(e){
+          el.style.color = '#1a1a1a';
+          if (allScatterImgs[idx]) {
+            var vignette = document.createElement('div');
+            vignette.className = 'scatter-vignette';
+            vignette.style.cssText = 'position:absolute;left:' + (el.offsetLeft + el.offsetWidth + 20) + 'px;top:' + (el.offsetTop) + 'px;width:200px;height:140px;background-size:cover;background-position:center;background-image:url(\"' + allScatterImgs[idx] + '\");border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.25);z-index:1000;pointer-events:none;animation:heFadeIn .2s';
+            el.parentNode.style.position = 'relative';
+            el.appendChild(vignette);
+          }
+        });
+
+        el.addEventListener('mouseleave', function(){
+          el.style.color = '#8c8a87';
+          var vig = el.querySelector('.scatter-vignette');
+          if (vig) vig.remove();
+        });
+
+        // CLICK: display the photo in the preview area
+        el.addEventListener('click', function(e){
+          e.preventDefault();
+          e.stopPropagation();
+          // Highlight active menu item
+          photoMenuItems.forEach(function(m){ m.style.color = '#8c8a87'; m.style.fontWeight = ''; });
+          el.style.color = '#1a1a1a';
+          el.style.fontWeight = '600';
+          // Show the photo in the preview area
+          if (allScatterImgs[idx]) {
+            previewImg.src = allScatterImgs[idx];
+            previewImg.style.display = 'block';
+            previewImg.style.cursor = 'zoom-in';
+            placeholder.style.display = 'none';
+          }
+        });
+      });
+    } else {
+      // Simple scatter (CSS columns) - just add lightbox to all images
+      scatterContainer.querySelectorAll('img').forEach(function(img){
+        if (img.dataset.heLb) return;
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', function(e){
+          e.preventDefault();
+          showLightbox(this.src);
+        });
+      });
+    }
+  }
+
+  // ── Draggable carousel ──
+  var track = document.querySelector('.he-drag-track');
+  if (track) {
+    track.style.cursor = 'grab';
+    var dX = 0, pp = 0;
+    track.addEventListener('mousedown', function(e){ dX = e.clientX; track.style.cursor = 'grabbing'; e.preventDefault(); });
+    track.addEventListener('touchstart', function(e){ dX = e.touches[0].clientX; }, {passive:true});
+    var onUp = function(){ pp = parseFloat(track.dataset.pp || '0'); dX = 0; track.style.cursor = 'grab'; };
+    var onMv = function(e){
+      if (!dX) return;
+      var cx = e.clientX || (e.touches && e.touches[0] && e.touches[0].clientX) || 0;
+      var dx = dX - cx;
+      var n = Math.max(Math.min(pp + (dx / (window.innerWidth / 2)) * -100, 0), -100);
+      track.dataset.pp = n;
+      track.style.transform = 'translateX(' + n + '%)';
+      track.style.transition = 'transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94)';
+    };
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchend', onUp);
+    window.addEventListener('mousemove', onMv);
+    window.addEventListener('touchmove', onMv, {passive:true});
+  }
+
+  // ── Curtain: add click feedback (images already get lightbox above) ──
+  var curtainImgs = document.querySelectorAll('.gallery-curtain .he-lb-item');
+  curtainImgs.forEach(function(el){
+    el.style.cursor = 'pointer';
+    el.addEventListener('mouseenter', function(){ this.style.transform = 'scale(1.02)'; this.style.transition = 'transform 0.3s'; });
+    el.addEventListener('mouseleave', function(){ this.style.transform = 'scale(1)'; });
+  });
+})();
+  </script>
+</body>
+</html>`;
+
+      const blob = new Blob([fullDoc], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank');
+      if (!win) {
+        alert('Please allow popups to use the preview feature.');
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
+    } catch (err) {
+      console.error('[Preview] Failed:', err);
+      alert('Failed to generate preview: ' + (err instanceof Error ? err.message : err));
+    }
+  }
 
   async save(): Promise<void> {
     if (!this.editor) return;
