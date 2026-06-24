@@ -992,31 +992,29 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           const canvas = el.querySelector('.gjs-cv-canvas') as HTMLElement | null;
           console.log('[Resizer] viewsPanel:', !!viewsPanel, 'viewsContainer:', !!viewsContainer, 'canvas:', !!canvas);
 
-          // Calculate how far the toolbar extends so the sidebar starts below it
-          const findToolbarBottom = (): number => {
-            let maxBottom = 0;
+          // Find toolbar panels to keep them on top of the sidebar
+          const findToolbarPanels = (): HTMLElement[] => {
+            const panels: HTMLElement[] = [];
             el.querySelectorAll('.gjs-pn-panel').forEach(p => {
               const panel = p as HTMLElement;
               if (panel.classList.contains('gjs-pn-views')) return;
               if (panel.offsetTop < 60 && panel.offsetHeight < 100) {
-                const b = panel.offsetTop + panel.offsetHeight;
-                if (b > maxBottom) maxBottom = b;
+                panels.push(panel);
               }
             });
-            return maxBottom || 40;
+            return panels;
           };
+          const toolbarPanels = findToolbarPanels();
 
           const setPanelWidth = (w: number) => {
-            const tb = findToolbarBottom();
-            // Sidebar starts below the toolbar, never overlaps it
-            viewsPanel.style.setProperty('top', tb + 'px', 'important');
-            viewsPanel.style.setProperty('bottom', '0', 'important');
             viewsPanel.style.setProperty('width', w + 'px', 'important');
             if (viewsContainer) viewsContainer.style.setProperty('width', w + 'px', 'important');
             if (canvas) {
               canvas.style.setProperty('width', 'auto', 'important');
               canvas.style.setProperty('right', w + 'px', 'important');
             }
+            // Keep toolbar panels above the sidebar via z-index
+            toolbarPanels.forEach(p => p.style.setProperty('z-index', '9998', 'important'));
             try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
           };
 
