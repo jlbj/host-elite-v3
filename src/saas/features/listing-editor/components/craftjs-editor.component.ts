@@ -1015,8 +1015,8 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               canvas.style.setProperty('width', 'auto', 'important');
               canvas.style.setProperty('right', w + 'px', 'important');
             }
-            // Shrink toolbar panels so the sidebar doesn't cover them
-            toolbarPanels.forEach(p => p.style.setProperty('right', w + 'px', 'important'));
+            // Keep toolbar panels on top of the sidebar so icons stay accessible
+            toolbarPanels.forEach(p => p.style.setProperty('z-index', '9998', 'important'));
             try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
           };
 
@@ -1035,12 +1035,15 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           const setHandleStyle = () => {
             if (!viewsPanel.isConnected) return;
             const vr = viewsPanel.getBoundingClientRect();
+            const editorRect = el.getBoundingClientRect();
+            // Extend handle to the bottom of the editor container (canvas bottom)
+            const handleHeight = editorRect.bottom - vr.top;
             handle.style.cssText = `
               position: fixed !important;
               left: ${vr.left}px !important;
               top: ${vr.top}px !important;
               width: 14px !important;
-              height: ${vr.height}px !important;
+              height: ${handleHeight}px !important;
               cursor: col-resize !important;
               z-index: 99999 !important;
               pointer-events: auto !important;
