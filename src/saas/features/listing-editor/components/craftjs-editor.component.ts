@@ -992,20 +992,6 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           const canvas = el.querySelector('.gjs-cv-canvas') as HTMLElement | null;
           console.log('[Resizer] viewsPanel:', !!viewsPanel, 'viewsContainer:', !!viewsContainer, 'canvas:', !!canvas);
 
-          // Find toolbar panels to keep them on top of the sidebar
-          const findToolbarPanels = (): HTMLElement[] => {
-            const panels: HTMLElement[] = [];
-            el.querySelectorAll('.gjs-pn-panel').forEach(p => {
-              const panel = p as HTMLElement;
-              if (panel.classList.contains('gjs-pn-views')) return;
-              if (panel.offsetTop < 60 && panel.offsetHeight < 100) {
-                panels.push(panel);
-              }
-            });
-            return panels;
-          };
-          const toolbarPanels = findToolbarPanels();
-
           const setPanelWidth = (w: number) => {
             viewsPanel.style.setProperty('width', w + 'px', 'important');
             if (viewsContainer) viewsContainer.style.setProperty('width', w + 'px', 'important');
@@ -1013,15 +999,14 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               canvas.style.setProperty('width', 'auto', 'important');
               canvas.style.setProperty('right', w + 'px', 'important');
             }
-            // Shrink toolbar/commands panel from the right; keep device panel full-width
-            toolbarPanels.forEach(p => {
-              const isDevicePanel = p.className.includes('device') || p.className.includes('option');
-              if (isDevicePanel) {
-                p.style.setProperty('z-index', '9998', 'important');
-              } else {
-                p.style.setProperty('right', w + 'px', 'important');
-                p.style.setProperty('min-width', '280px', 'important');
-              }
+            // Shrink the commands/toolbar panel from the right
+            el.querySelectorAll('.gjs-pn-commands').forEach(p => {
+              (p as HTMLElement).style.setProperty('right', w + 'px', 'important');
+              (p as HTMLElement).style.setProperty('min-width', '200px', 'important');
+            });
+            // Keep any device/options panels on top so their icons stay visible
+            el.querySelectorAll('.gjs-pn-devices, .gjs-pn-options').forEach(p => {
+              (p as HTMLElement).style.setProperty('z-index', '9998', 'important');
             });
             try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
           };
