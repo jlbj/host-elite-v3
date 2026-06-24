@@ -992,6 +992,8 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           const canvas = el.querySelector('.gjs-cv-canvas') as HTMLElement | null;
           console.log('[Resizer] viewsPanel:', !!viewsPanel, 'viewsContainer:', !!viewsContainer, 'canvas:', !!canvas);
 
+          const panelsContainer = el.querySelector('.gjs-pn-panels') as HTMLElement | null;
+
           const setPanelWidth = (w: number) => {
             viewsPanel.style.setProperty('width', w + 'px', 'important');
             if (viewsContainer) viewsContainer.style.setProperty('width', w + 'px', 'important');
@@ -999,15 +1001,10 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               canvas.style.setProperty('width', 'auto', 'important');
               canvas.style.setProperty('right', w + 'px', 'important');
             }
-            // Shrink the commands/toolbar panel from the right
-            el.querySelectorAll('.gjs-pn-commands').forEach(p => {
-              (p as HTMLElement).style.setProperty('right', w + 'px', 'important');
-              (p as HTMLElement).style.setProperty('min-width', '200px', 'important');
-            });
-            // Keep any device/options panels on top so their icons stay visible
-            el.querySelectorAll('.gjs-pn-devices, .gjs-pn-options').forEach(p => {
-              (p as HTMLElement).style.setProperty('z-index', '9998', 'important');
-            });
+            // Add padding-right to the panels container — all child panels shift inward
+            if (panelsContainer) {
+              panelsContainer.style.setProperty('padding-right', w + 'px', 'important');
+            }
             try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
           };
 
