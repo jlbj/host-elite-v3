@@ -80,6 +80,15 @@ import type { SavedTemplate } from '../models/paving.types';
     :host ::ng-deep .gjs-pn-btn:hover { fill: #e2e8f0; color: #e2e8f0; background: rgba(255,255,255,0.05); }
     :host ::ng-deep .gjs-pn-active { fill: #e2e8f0; color: #e2e8f0; background: rgba(255,255,255,0.08); }
     :host ::ng-deep .gjs-pn-views { background: #0f172a; border-left: 1px solid #1e293b; }
+    :host ::ng-deep .gjs-pn-views-container { overflow: auto !important; }
+    :host ::ng-deep .gjs-block { box-sizing: border-box !important; width: 80px !important; max-width: 80px !important; min-width: 80px !important; flex: 0 0 80px !important; min-height: 72px !important; padding: 6px 4px !important; }
+    :host ::ng-deep .gjs-block svg, :host ::ng-deep .gjs-block-media svg { width: 22px !important; height: 22px !important; max-width: 22px !important; max-height: 22px !important; }
+    :host ::ng-deep .gjs-block-label { font-size: 9px !important; line-height: 1.1 !important; padding: 2px 0 0 !important; }
+    :host ::ng-deep .gjs-pn-views-container::-webkit-scrollbar { width: 6px; }
+    :host ::ng-deep .gjs-pn-views-container::-webkit-scrollbar-track { background: transparent; }
+    :host ::ng-deep .gjs-pn-views-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    :host ::ng-deep .gjs-pn-views-container::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
     :host ::ng-deep .gjs-pn-views .gjs-pn-btn { border-bottom: 1px solid #1e293b; }
     :host ::ng-deep .gjs-pn-views-container[data-active-view="layers"] .gjs-sm-sectors,
     :host ::ng-deep .gjs-pn-views-container[data-active-view="layers"] .gjs-blocks-cs,
@@ -963,8 +972,165 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           },
         });
 
-        // Clean up any stale resizer handle from body
+        // ── Resizable right panel (views panel) ──
+        // Clean up any stale resizer state
         document.querySelectorAll('.he-panel-resizer').forEach(e => e.remove());
+        document.querySelectorAll('.he-resizer-handle').forEach(e => e.remove());
+
+        setTimeout(() => {
+          const viewsPanel = el.querySelector('.gjs-pn-views') as HTMLElement | null;
+          console.log('[Resizer] viewsPanel found:', !!viewsPanel);
+          if (!viewsPanel) return;
+
+          // Ensure editor is positioned so absolute children reference it correctly
+          const editorEl = el.querySelector('.gjs-editor') as HTMLElement | null;
+          if (editorEl && editorEl.style.position !== 'relative' && editorEl.style.position !== 'absolute' && editorEl.style.position !== 'fixed') {
+            editorEl.style.position = 'relative';
+          }
+
+          const viewsContainer = el.querySelector('.gjs-pn-views-container') as HTMLElement | null;
+          const canvas = el.querySelector('.gjs-cv-canvas') as HTMLElement | null;
+          console.log('[Resizer] viewsPanel:', !!viewsPanel, 'viewsContainer:', !!viewsContainer, 'canvas:', !!canvas);
+
+          // Find toolbar panels (top-positioned panels with small height) to keep them from being overlapped
+          const findToolbarPanels = (): HTMLElement[] => {
+            const panels: HTMLElement[] = [];
+            el.querySelectorAll('.gjs-pn-panel').forEach(p => {
+              const panel = p as HTMLElement;
+              if (panel.classList.contains('gjs-pn-views')) return;
+              // Only panels near the top with small height = toolbar panels
+              if (panel.offsetTop < 60 && panel.offsetHeight < 100) {
+                panels.push(panel);
+              }
+            });
+            return panels;
+          };
+          const toolbarPanels = findToolbarPanels();
+          console.log('[Resizer] viewsPanel:', !!viewsPanel, 'toolbarPanels:', toolbarPanels.length);
+
+          const setPanelWidth = (w: number) => {
+            viewsPanel.style.setProperty('width', w + 'px', 'important');
+            if (viewsContainer) viewsContainer.style.setProperty('width', w + 'px', 'important');
+            if (canvas) {
+              canvas.style.setProperty('width', 'auto', 'important');
+              canvas.style.setProperty('right', w + 'px', 'important');
+            }
+            // Shrink toolbar panels so the sidebar doesn't cover them
+            toolbarPanels.forEach(p => p.style.setProperty('right', w + 'px', 'important'));
+            try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
+          };
+
+          // Restore saved width or use default
+          const savedWidth = localStorage.getItem('he-editor-views-width');
+          const defaultWidth = 340;
+          const initialW = savedWidth ? parseInt(savedWidth, 10) : defaultWidth;
+          setPanelWidth(initialW);
+          viewsPanel.style.minWidth = '180px';
+          viewsPanel.style.maxWidth = '55vw';
+
+          // Create handle with ALL inline styles (no CSS dependency)
+          const handle = document.createElement('div');
+          handle.className = 'he-resizer-handle';
+
+          const setHandleStyle = () => {
+            if (!viewsPanel.isConnected) return;
+            const vr = viewsPanel.getBoundingClientRect();
+            handle.style.cssText = `
+              position: fixed !important;
+              left: ${vr.left}px !important;
+              top: ${vr.top}px !important;
+              width: 14px !important;
+              height: ${vr.height}px !important;
+              cursor: col-resize !important;
+              z-index: 99999 !important;
+              pointer-events: auto !important;
+              border-left: 2px solid #D4AF37 !important;
+              background: rgba(0,0,0,0.1) !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            `;
+          };
+          setHandleStyle();
+          document.body.appendChild(handle);
+          console.log('[Resizer] handle added to body');
+
+          let isResizing = false;
+          let startX = 0;
+          let startWidth = 0;
+
+          const onMouseDown = (e: MouseEvent) => {
+            console.log('[Resizer] mousedown on handle');
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = viewsPanel.offsetWidth;
+            handle.style.borderLeftColor = '#FFD700';
+            handle.style.background = 'rgba(212,175,55,0.15)';
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            e.preventDefault();
+          };
+
+          const onMouseMove = (e: MouseEvent) => {
+            if (!isResizing) return;
+            const delta = e.clientX - startX;
+            const newWidth = startWidth - delta;
+            const minPx = 180;
+            const maxPx = Math.round(window.innerWidth * 0.55);
+            const clamped = Math.max(minPx, Math.min(maxPx, newWidth));
+            setPanelWidth(clamped);
+            const vr = viewsPanel.getBoundingClientRect();
+            handle.style.left = vr.left + 'px';
+            try { (this.editor as any).Canvas.refresh({ all: true }); } catch (_) {}
+          };
+
+          const onMouseUp = () => {
+            if (!isResizing) return;
+            console.log('[Resizer] mouseup');
+            isResizing = false;
+            handle.style.borderLeftColor = '#D4AF37';
+            handle.style.background = 'rgba(0,0,0,0.1)';
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            localStorage.setItem('he-editor-views-width', String(viewsPanel.offsetWidth));
+            try { (this.editor as any).Canvas.refresh({ all: true }); } catch (_) {}
+          };
+
+          handle.addEventListener('mousedown', onMouseDown);
+
+          // Keep handle aligned on window resize
+          const onWindowResize = () => {
+            setHandleStyle();
+            const current = viewsPanel.offsetWidth;
+            const maxAllowed = Math.round(window.innerWidth * 0.55);
+            if (current > maxAllowed) {
+              viewsPanel.style.width = maxAllowed + 'px';
+              try { (this.editor as any).Canvas.refresh({ all: true }); } catch (_) {}
+            }
+          };
+          window.addEventListener('resize', onWindowResize);
+
+          // Continuous repositioning for GrapesJS internal relayouts
+          const repositionInterval = setInterval(() => {
+            if (!viewsPanel.isConnected) {
+              clearInterval(repositionInterval);
+              return;
+            }
+            setHandleStyle();
+          }, 500);
+
+          // Clean up on editor destroy
+          this.editor.on('destroy', () => {
+            clearInterval(repositionInterval);
+            window.removeEventListener('resize', onWindowResize);
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            handle.remove();
+          });
+        }, 1000);
 
         // ── Property Photos: add as a sector in the StyleManager (positioned below 'Extra') ──
         const PHOTOS_TYPE = 'he-photo-picker';
@@ -1110,7 +1276,7 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           updateLabels();
         };
 
-        const renderPhotosInto = (wrap: HTMLElement) => {
+        const renderPhotosInto = async (wrap: HTMLElement) => {
           try {
             const sel = this.editor.getSelected();
             const isGallery = isGalleryComponent(sel);
@@ -1120,11 +1286,55 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               return;
             }
 
-            wrap.innerHTML = '<div style="padding:8px"><button data-he-action="select-images" style="width:100%;padding:10px;background:#D4AF37;color:#000;border:none;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer">Select photos</button></div>';
+            let photos = (this.store.photos() || []).slice();
+            // Try repository for more complete photo list
+            try {
+              const fullProp = await this.repository.getPropertyByName(this.propertyName());
+              if (fullProp?.property_photos?.length && fullProp.property_photos.length > photos.length) {
+                photos = fullProp.property_photos.map((p: any) => ({ url: p.url, category: p.category || '' }));
+              }
+            } catch (_) {}
+            console.log('[Photos] photos count:', photos.length, 'first url:', photos[0]?.url);
+            const existingImgs: any[] = sel.find?.('img') || [];
+            const existingSrcs = new Set(existingImgs.map((img: any) => img.get?.('src') || '').filter((s: string) => s && !s.includes('base64') && !s.includes('placeholder') && !s.includes('unsplash')));
 
-            wrap.querySelector('[data-he-action="select-images"]')?.addEventListener('click', () => {
-              openPhotosDialog(sel);
+            if (photos.length === 0) {
+              wrap.innerHTML = '<div style="padding:8px;color:#64748b;font-size:11px">No photos loaded. Use property manager.</div>';
+              return;
+            }
+
+            let html = '<div style="padding:8px"><label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:4px">Select Photos</label><div style="max-height:200px;overflow-y:auto">';
+            photos.forEach((p: any) => {
+              const checked = existingSrcs.has(p.url) ? 'checked' : '';
+              html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                <input type="checkbox" data-he-photo-check="${p.url}" ${checked} style="flex-shrink:0" />
+                <img src="${p.url}" style="width:32px;height:32px;object-fit:cover;border-radius:3px;flex-shrink:0" />
+                <input type="text" data-he-photo-caption="${p.url}" value="${(p.category || '').replace(/"/g,'&quot;')}" placeholder="Caption..." style="flex:1;min-width:0;background:#1e293b;border:1px solid #334155;border-radius:4px;padding:2px 6px;color:white;font-size:11px" />
+              </div>`;
             });
+            html += '</div></div>';
+
+            // Store current state for event binding
+            wrap.innerHTML = html;
+
+            // Bind events
+            const updateGallery = () => {
+              const checkedCbs = wrap.querySelectorAll('[data-he-photo-check]:checked');
+              const selected: { url: string; caption: string }[] = [];
+              checkedCbs.forEach(cb => {
+                const url = (cb as HTMLInputElement).getAttribute('data-he-photo-check') || '';
+                const inp = wrap.querySelector(`[data-he-photo-caption="${url}"]`) as HTMLInputElement;
+                selected.push({ url, caption: inp?.value || '' });
+              });
+              const imgs: any[] = sel.find?.('img') || [];
+              const empty = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+              for (let i = 0; i < imgs.length; i++) {
+                imgs[i].set('src', i < selected.length ? selected[i].url : empty);
+              }
+              sel.set('attributes', { ...sel.get('attributes'), 'data-gallery-photos': JSON.stringify(selected) });
+            };
+            wrap.querySelectorAll('[data-he-photo-check]').forEach(el => (el as HTMLInputElement).addEventListener('change', updateGallery));
+            wrap.querySelectorAll('[data-he-photo-caption]').forEach(el => (el as HTMLInputElement).addEventListener('input', updateGallery));
           } catch (e) {
             console.warn('[Photos Sector] render error:', e);
           }
