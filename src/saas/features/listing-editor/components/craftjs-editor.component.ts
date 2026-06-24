@@ -1013,10 +1013,15 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               canvas.style.setProperty('width', 'auto', 'important');
               canvas.style.setProperty('right', w + 'px', 'important');
             }
-            // Shrink toolbar from the right so the sidebar doesn't overlap it
+            // Shrink toolbar/commands panel from the right; keep device panel full-width
             toolbarPanels.forEach(p => {
-              p.style.setProperty('right', w + 'px', 'important');
-              p.style.setProperty('min-width', '280px', 'important');
+              const isDevicePanel = p.className.includes('device') || p.className.includes('option');
+              if (isDevicePanel) {
+                p.style.setProperty('z-index', '9998', 'important');
+              } else {
+                p.style.setProperty('right', w + 'px', 'important');
+                p.style.setProperty('min-width', '280px', 'important');
+              }
             });
             try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
           };
