@@ -992,13 +992,38 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           const canvas = el.querySelector('.gjs-cv-canvas') as HTMLElement | null;
           console.log('[Resizer] viewsPanel:', !!viewsPanel, 'viewsContainer:', !!viewsContainer, 'canvas:', !!canvas);
 
+          // Calculate toolbar height so sidebar shifts below it
+          const getToolbarHeight = (): number => {
+            let maxBottom = 0;
+            el.querySelectorAll('.gjs-pn-panel').forEach(p => {
+              const panel = p as HTMLElement;
+              if (panel.classList.contains('gjs-pn-views')) return;
+              if (panel.offsetTop < 60 && panel.offsetHeight < 100) {
+                const b = panel.offsetTop + panel.offsetHeight;
+                if (b > maxBottom) maxBottom = b;
+              }
+            });
+            return maxBottom || 0;
+          };
+
           const setPanelWidth = (w: number) => {
+            const th = getToolbarHeight();
+            // Use margin-top to shift sidebar below toolbar (margin doesn't break internal layout)
+            viewsPanel.style.marginTop = th + 'px';
+            // Reduce bottom to compensate for margin-top so total height stays correct
             viewsPanel.style.setProperty('width', w + 'px', 'important');
             if (viewsContainer) viewsContainer.style.setProperty('width', w + 'px', 'important');
             if (canvas) {
               canvas.style.setProperty('width', 'auto', 'important');
               canvas.style.setProperty('right', w + 'px', 'important');
             }
+            // Keep toolbar panels clickable with z-index
+            el.querySelectorAll('.gjs-pn-panel').forEach(p => {
+              const panel = p as HTMLElement;
+              if (!panel.classList.contains('gjs-pn-views')) {
+                panel.style.setProperty('z-index', '9998', 'important');
+              }
+            });
             try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
           };
 
