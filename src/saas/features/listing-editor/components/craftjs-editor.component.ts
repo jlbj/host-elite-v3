@@ -992,31 +992,31 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           const canvas = el.querySelector('.gjs-cv-canvas') as HTMLElement | null;
           console.log('[Resizer] viewsPanel:', !!viewsPanel, 'viewsContainer:', !!viewsContainer, 'canvas:', !!canvas);
 
-          // Find toolbar panels (top-positioned panels with small height) to keep them from being overlapped
-          const findToolbarPanels = (): HTMLElement[] => {
-            const panels: HTMLElement[] = [];
+          // Calculate how far the toolbar extends so the sidebar starts below it
+          const findToolbarBottom = (): number => {
+            let maxBottom = 0;
             el.querySelectorAll('.gjs-pn-panel').forEach(p => {
               const panel = p as HTMLElement;
               if (panel.classList.contains('gjs-pn-views')) return;
-              // Only panels near the top with small height = toolbar panels
               if (panel.offsetTop < 60 && panel.offsetHeight < 100) {
-                panels.push(panel);
+                const b = panel.offsetTop + panel.offsetHeight;
+                if (b > maxBottom) maxBottom = b;
               }
             });
-            return panels;
+            return maxBottom || 40;
           };
-          const toolbarPanels = findToolbarPanels();
-          console.log('[Resizer] viewsPanel:', !!viewsPanel, 'toolbarPanels:', toolbarPanels.length);
 
           const setPanelWidth = (w: number) => {
+            const tb = findToolbarBottom();
+            // Sidebar starts below the toolbar, never overlaps it
+            viewsPanel.style.setProperty('top', tb + 'px', 'important');
+            viewsPanel.style.setProperty('bottom', '0', 'important');
             viewsPanel.style.setProperty('width', w + 'px', 'important');
             if (viewsContainer) viewsContainer.style.setProperty('width', w + 'px', 'important');
             if (canvas) {
               canvas.style.setProperty('width', 'auto', 'important');
               canvas.style.setProperty('right', w + 'px', 'important');
             }
-            // Keep toolbar panels on top of the sidebar so icons stay accessible
-            toolbarPanels.forEach(p => p.style.setProperty('z-index', '9998', 'important'));
             try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
           };
 
