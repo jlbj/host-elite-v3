@@ -6,6 +6,7 @@ import { HostRepository } from '../../../../services/host-repository.service';
 import grapesjs from 'grapesjs';
 import gjsPresetWebpage from 'grapesjs-preset-webpage';
 import { TemplateManagerComponent } from './template-manager.component';
+import { moveDevicesPanelLeft } from './grapesjs-reposition-devices-panel';
 import type { SavedTemplate } from '../models/paving.types';
 
 @Component({
@@ -79,7 +80,11 @@ import type { SavedTemplate } from '../models/paving.types';
     :host ::ng-deep .gjs-pn-btn { fill: #94a3b8; color: #94a3b8; }
     :host ::ng-deep .gjs-pn-btn:hover { fill: #e2e8f0; color: #e2e8f0; background: rgba(255,255,255,0.05); }
     :host ::ng-deep .gjs-pn-active { fill: #e2e8f0; color: #e2e8f0; background: rgba(255,255,255,0.08); }
-    :host ::ng-deep .gjs-pn-views { background: #0f172a; border-left: 1px solid #1e293b; }
+    :host ::ng-deep .gjs-pn-views {
+      background: #0f172a;
+      border-left: 1px solid #1e293b;
+      top: 40px !important;
+    }
     :host ::ng-deep .gjs-pn-views-container { overflow: auto !important; }
     :host ::ng-deep .gjs-block { box-sizing: border-box !important; width: 80px !important; max-width: 80px !important; min-width: 80px !important; flex: 0 0 80px !important; min-height: 72px !important; padding: 6px 4px !important; }
     :host ::ng-deep .gjs-block svg, :host ::ng-deep .gjs-block-media svg { width: 22px !important; height: 22px !important; max-width: 22px !important; max-height: 22px !important; }
@@ -88,6 +93,7 @@ import type { SavedTemplate } from '../models/paving.types';
     :host ::ng-deep .gjs-pn-views-container::-webkit-scrollbar-track { background: transparent; }
     :host ::ng-deep .gjs-pn-views-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
     :host ::ng-deep .gjs-pn-views-container::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
 
     :host ::ng-deep .gjs-pn-views .gjs-pn-btn { border-bottom: 1px solid #1e293b; }
     :host ::ng-deep .gjs-pn-views-container[data-active-view="layers"] .gjs-sm-sectors,
@@ -453,6 +459,9 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
         allowScripts: true,
       };
       this.editor = grapesjs.init(config as any);
+
+      // Move the device icons panel to the far left, above the sidebar
+      moveDevicesPanelLeft(this.editor);
 
       const setEditorMode = () => {
         const frame = this.editor?.Canvas?.getFrameEl();
@@ -992,40 +1001,15 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           const canvas = el.querySelector('.gjs-cv-canvas') as HTMLElement | null;
           console.log('[Resizer] viewsPanel:', !!viewsPanel, 'viewsContainer:', !!viewsContainer, 'canvas:', !!canvas);
 
-          // Calculate toolbar height so sidebar shifts below it
-          const getToolbarHeight = (): number => {
-            let maxBottom = 0;
-            el.querySelectorAll('.gjs-pn-panel').forEach(p => {
-              const panel = p as HTMLElement;
-              if (panel.classList.contains('gjs-pn-views')) return;
-              if (panel.offsetTop < 60 && panel.offsetHeight < 100) {
-                const b = panel.offsetTop + panel.offsetHeight;
-                if (b > maxBottom) maxBottom = b;
-              }
-            });
-            return maxBottom || 0;
-          };
-
-          const setPanelWidth = (w: number) => {
-            const th = getToolbarHeight();
-            // Use margin-top to shift sidebar below toolbar (margin doesn't break internal layout)
-            viewsPanel.style.marginTop = th + 'px';
-            // Reduce bottom to compensate for margin-top so total height stays correct
-            viewsPanel.style.setProperty('width', w + 'px', 'important');
-            if (viewsContainer) viewsContainer.style.setProperty('width', w + 'px', 'important');
-            if (canvas) {
-              canvas.style.setProperty('width', 'auto', 'important');
-              canvas.style.setProperty('right', w + 'px', 'important');
-            }
-            // Keep toolbar panels clickable with z-index
-            el.querySelectorAll('.gjs-pn-panel').forEach(p => {
-              const panel = p as HTMLElement;
-              if (!panel.classList.contains('gjs-pn-views')) {
-                panel.style.setProperty('z-index', '9998', 'important');
-              }
-            });
-            try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
-          };
+const setPanelWidth = (w: number) => {
+  viewsPanel.style.setProperty('width', w + 'px', 'important');
+  if (viewsContainer) viewsContainer.style.setProperty('width', w + 'px', 'important');
+  if (canvas) {
+    canvas.style.setProperty('width', 'auto', 'important');
+    canvas.style.setProperty('right', w + 'px', 'important');
+  }
+  try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
+};
 
           // Restore saved width or use default
           const savedWidth = localStorage.getItem('he-editor-views-width');
