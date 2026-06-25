@@ -1,4 +1,21 @@
-export type SectionType = 'hero' | 'photos' | 'description' | 'contact' | 'price' | 'header' | 'characteristics' | 'otherProperties' | 'bottom' | 'closeTo' | 'amenities' | 'map' | 'facilities' | 'floorPlan' | 'rules' | 'testimonials' | 'location' | 'recap' | 'ADAPTIVE' | 'FIXED';
+export type SectionType = 'hero' | 'photos' | 'description' | 'contact' | 'price' | 'header' | 'characteristics' | 'otherProperties' | 'bottom' | 'closeTo' | 'amenities' | 'map' | 'facilities' | 'floorPlan' | 'rules' | 'testimonials' | 'location' | 'recap' | 'ADAPTIVE' | 'FIXED' | 'custom';
+
+export type RentalMode = 'entire_place' | 'private_rooms' | 'both';
+
+export type BedType = 'king' | 'queen' | 'double' | 'twin' | 'bunk' | 'single' | 'sofa_bed' | 'crib';
+
+export interface RentableRoom {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  maxGuests: number;
+  bedType: BedType;
+  privateBathroom: boolean;
+  surface?: number;
+  amenities?: string[];
+  photos?: string[];
+}
 
 export interface SectionContent {
   [key: string]: unknown;
@@ -14,7 +31,7 @@ export interface SectionStyle {
   backgroundSize?: 'cover' | 'contain' | 'auto' | 'stretch';
   backgroundPosition?: string;
   scrollEffect?: 'none' | 'parallax' | 'zoom-parallax' | 'translate-parallax';
-  galleryStyle?: 'grid' | 'masonry' | 'justified' | 'carousel-scroll' | 'carousel-interactive' | 'marquee';
+  galleryStyle?: 'grid' | 'masonry' | 'justified' | 'carousel-scroll' | 'carousel-interactive' | 'marquee' | 'lookbook' | 'filmstrip' | 'curtain' | 'scatter';
   padding?: string;
 }
 
@@ -48,6 +65,12 @@ export interface PageConfig {
   sections: Section[];
   rootBlock?: Block | null;
   globalStyle: GlobalStyle;
+  grapesjsMeta?: any;
+  // Additional settings for UI preferences, e.g., gallery display mode
+  settings?: {
+    galleryMode?: 'grid' | 'carousel';
+    // Future UI settings can be added here
+  };
 }
 
 export interface PropertyData {
@@ -67,6 +90,7 @@ export interface PropertyData {
   created_at: string;
   updated_at: string;
   property_type: string | null;
+  rental_mode: RentalMode;
   rooms: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -82,6 +106,20 @@ export interface PropertyPhoto {
   url: string;
   category: string;
   created_at: string;
+}
+
+export interface SavedTemplate {
+  id: string;
+  name: string;
+  description?: string;
+  media?: string;
+  html: string;
+  css: string;
+  components?: string;
+  owner_id?: string;
+  created_at: string;
+  updated_at: string;
+  is_predefined?: boolean;
 }
 
 export interface Theme {

@@ -38,6 +38,14 @@ export class MicrositeRendererComponent {
     // Internal state for the guide modal
     guideModalState = signal<GuideModalState>({ isOpen: false, title: '', content: '', icon: '' });
 
+    rentalModeLabel(rentalMode: string | undefined): string {
+        switch (rentalMode) {
+            case 'private_rooms': return 'Private Rooms';
+            case 'both': return 'Entire Place & Rooms';
+            default: return 'Entire Place';
+        }
+    }
+
     openGuideModal(titleKeyOrText: string, contentKeyOrText: string, icon: string) {
         const title = this.isTranslationKey(titleKeyOrText)
             ? this.translationService.translate(titleKeyOrText)

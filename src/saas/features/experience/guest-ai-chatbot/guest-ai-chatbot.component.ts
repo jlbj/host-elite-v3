@@ -253,11 +253,13 @@ export class GuestAiChatbotComponent implements AfterViewChecked {
         const p = this.propertyDetails();
         if (!p) return 'No property data available.';
 
+        const rentalLabels: Record<string, string> = { entire_place: 'Entire Place', private_rooms: 'Private Rooms', both: 'Entire Place & Rooms' };
         return `
             Property Name: ${p.name}
             Address: ${p.address}
             Listing Title: ${p.listing_title}
             Description: ${p.listing_description}
+            Rental Mode: ${rentalLabels[p.rental_mode] || 'Entire Place'}
             
             INSTRUCTIONS & RULES:
             - WiFi: ${p.wifi_code || 'Check house manual'}

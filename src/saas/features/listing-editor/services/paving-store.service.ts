@@ -1,10 +1,11 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import type {
   PropertyData, PropertyPhoto, PageConfig, Section, SectionType,
   Theme, Layout, GridBlock, SectionStyle, EdgeDragState, BlockHistory,
-  ViewMode, EditorMode, SplitDirection, SavedLayout, ListingLayout,
+  ViewMode, EditorMode, SplitDirection, SavedLayout, ListingLayout, SavedTemplate,
 } from '../models/paving.types';
 import { THEMES, LAYOUTS, DEFAULT_SECTION_CONTENT, generateId, DEFAULT_SECTION_TYPES } from '../constants/paving.constants';
+import { PREDEFINED_TEMPLATES } from '../constants/default-templates';
 import { PavingSupabaseService } from './paving-supabase.service';
 import { GridUtilsService } from './grid-utils.service';
 
@@ -85,7 +86,7 @@ function createSectionsFromProperty(propertyData: PropertyData, photos: Property
       enabled: true,
       content: {
         images: photos.map(p => ({ url: p.url, caption: '' })),
-        layout: 'grid',
+        layout: 'lookbook',
         columns: 3,
       },
       style: {},
@@ -143,6 +144,8 @@ export class PavingStoreService {
   readonly previousLayoutId = signal<string | null>(null);
   readonly editorMode = signal<EditorMode>('display');
   readonly isFullScreen = signal(false);
+  readonly rentalMode = computed(() => this.propertyData()?.rental_mode ?? 'entire_place');
+  readonly templates = signal<SavedTemplate[]>([]);
 
   async loadProperty(propertyId: string): Promise<void> {
     this.isLoading.set(true);
@@ -912,6 +915,65 @@ export class PavingStoreService {
 
   getIsLayoutEditing(): boolean {
     return this.isLayoutEditing();
+  }
+
+  async loadTemplates(): Promise<void> {
+    const pd = this.propertyData();
+    const ownerId = pd?.owner_id;
+    const dbTemplates = await this.supabase.fetchTemplates(ownerId);
+    
+    const customTemplates = (dbTemplates || []).map(t => ({
+      ...t,
+      is_predefined: false
+    }));
+    const customIds = new Set(customTemplates.map(t => t.id));
+    
+    const markedPredefined = PREDEFINED_TEMPLATES.map(pt => ({
+      ...pt,
+      is_predefined: true
+    }));
+    
+    const filteredPredefined = markedPredefined.filter(pt => !customIds.has(pt.id));
+    
+    this.templates.set([...filteredPredefined, ...customTemplates]);
+  }
+
+  async saveTemplate(name: string, html: string, css: string, components?: string, media?: string): Promise<SavedTemplate | null> {
+    const pd = this.propertyData();
+    const existing = this.templates().find(t => t.name === name);
+    const template: SavedTemplate = existing
+      ? { ...existing, html, css, components, media: media || existing.media, updated_at: new Date().toISOString() }
+      : {
+          id: `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          name,
+          html,
+          css,
+          components,
+          media,
+          owner_id: pd?.owner_id || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+    const saved = await this.supabase.saveTemplate(template);
+    if (saved) {
+      await this.loadTemplates();
+    }
+    return saved;
+  }
+
+  async updateTemplate(template: SavedTemplate): Promise<SavedTemplate | null> {
+    const saved = await this.supabase.saveTemplate(template);
+    if (saved) {
+      await this.loadTemplates();
+    }
+    return saved;
+  }
+
+  async deleteTemplate(templateId: string): Promise<void> {
+    const success = await this.supabase.deleteTemplate(templateId);
+    if (success) {
+      await this.loadTemplates();
+    }
   }
 
   generatePredefinedBlocks(layoutId: string, sections: Section[]): GridBlock[] {

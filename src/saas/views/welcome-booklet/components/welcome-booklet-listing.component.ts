@@ -63,6 +63,14 @@ export class WelcomeBookletListingComponent {
         return description;
     });
 
+    rentalModeLabel(rentalMode: string | undefined): string {
+        switch (rentalMode) {
+            case 'private_rooms': return this.translate.translate('LISTING.RentalModePrivateRooms') || 'Private Rooms';
+            case 'both': return this.translate.translate('LISTING.RentalModeBoth') || 'Both Entire Place & Rooms';
+            default: return this.translate.translate('LISTING.RentalModeEntirePlace') || 'Entire Place';
+        }
+    }
+
     // Translate equipment names
     translateEquipment(name: string): string {
         const translations: Record<string, Record<string, string>> = {

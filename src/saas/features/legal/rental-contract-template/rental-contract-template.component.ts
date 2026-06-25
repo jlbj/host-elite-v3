@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Language } from '../../../../services/translation.service';
@@ -30,6 +30,7 @@ interface ContractData {
   cancellationPolicy: string;
   houseRules: string;
   liability: string;
+  rentedRoom: string;
 }
 
 @Component({
@@ -82,8 +83,26 @@ export class RentalContractTemplateComponent {
     paymentSchedule: '',
     cancellationPolicy: '',
     houseRules: '',
-    liability: ''
+    liability: '',
+    rentedRoom: ''
   };
+
+  propertyDetails = input<any>();
+
+  rentalModeLabel = computed(() => {
+    const rm = this.propertyDetails()?.rental_mode;
+    switch (rm) {
+      case 'private_rooms': return 'Private Rooms';
+      case 'both': return 'Entire Place & Rooms';
+      default: return 'Entire Place';
+    }
+  });
+
+  rentalRooms = computed(() => {
+    const rooms = this.propertyDetails()?.page_config?.sections
+      ?.find((s: any) => s.type === 'price')?.content?.rooms;
+    return Array.isArray(rooms) ? rooms : [];
+  });
 
   constructor() {
     const browserLang = navigator.language.split('-')[0];

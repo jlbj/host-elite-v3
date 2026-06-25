@@ -9,6 +9,7 @@ export interface PreviewData {
     content: Record<string, any>;
     photos?: Array<{ url: string; category: string }>;
     propertyDetails?: any;
+    rentalMode?: string;
 }
 
 @Injectable({
@@ -832,10 +833,19 @@ export class PreviewGenerationService {
         return html;
     }
     
+    private rentalModeLabel(mode: string | undefined): string {
+        switch (mode) {
+            case 'private_rooms': return 'Private Rooms';
+            case 'both': return 'Entire Place & Rooms';
+            default: return 'Entire Place';
+        }
+    }
+
     private generateHeroSectionByLayout(layoutType: string, photoUrl: string, title: string, propertyDetails?: any, photos?: any[]): string {
         console.log('[Preview] generateHeroSectionByLayout called:', layoutType, ' photos:', photos?.length);
         
-        const subtitle = `${propertyDetails?.property_type || 'Entire Home'} · ${propertyDetails?.bedrooms || '2'} Beds · ${propertyDetails?.bathrooms || '1'} Bath`;
+        const rentalLabel = this.rentalModeLabel(propertyDetails?.rental_mode);
+        const subtitle = `${propertyDetails?.property_type || 'Entire Home'} · ${rentalLabel} · ${propertyDetails?.bedrooms || '2'} Beds · ${propertyDetails?.bathrooms || '1'} Bath`;
         
         // Ensure we always have photos for display
         const displayPhotos = photos && photos.length > 0 ? photos : [
@@ -1099,12 +1109,13 @@ export class PreviewGenerationService {
     }
     
     private generateHeroSection(photoUrl: string, title: string, propertyDetails?: any): string {
+        const rentalLabel = this.rentalModeLabel(propertyDetails?.rental_mode);
         return `
             <section class="hero-section" style="background-image: url('${photoUrl}');">
                 <div class="hero-content">
                     <h1 class="hero-headline">${title}</h1>
                     <p style="font-size: 1.25rem; margin-top: 1rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
-                        ${propertyDetails?.property_type || 'Entire Home'} · ${propertyDetails?.bedrooms || '2'} Beds · ${propertyDetails?.bathrooms || '1'} Bath
+                        ${propertyDetails?.property_type || 'Entire Home'} · ${rentalLabel} · ${propertyDetails?.bedrooms || '2'} Beds · ${propertyDetails?.bathrooms || '1'} Bath
                     </p>
                 </div>
             </section>

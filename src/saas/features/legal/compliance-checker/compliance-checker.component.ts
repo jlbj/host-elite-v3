@@ -206,9 +206,10 @@ export class ComplianceCheckerComponent implements OnInit, OnChanges {
         const cityCandidate = cityMatch ? cityMatch[1].trim() : this.address;
 
         try {
+            const rentalMode = this.propertyDetails()?.rental_mode || 'entire_place';
             if (this.isTier3()) {
                 // Real-time AI Scan for Gold Tier
-                const aiResult = await this.gemini.checkCompliance(this.address, cityCandidate);
+                const aiResult = await this.gemini.checkCompliance(this.address, cityCandidate, rentalMode);
                 this.riskScore.set(aiResult.riskScore);
                 this.riskLevel.set(aiResult.riskLevel);
                 this.riskStatus.set(aiResult.riskStatus);
