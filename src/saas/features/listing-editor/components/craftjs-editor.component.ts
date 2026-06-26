@@ -76,7 +76,13 @@ import type { SavedTemplate } from '../models/paving.types';
     :host { display: block; height: calc(100vh - 220px); min-height: 550px; }
     :host ::ng-deep .gjs-editor { background: #1e293b; }
     :host ::ng-deep .gjs-cv-canvas { background: #f8f6f0; }
-    :host ::ng-deep .gjs-pn-panel { background: #0f172a; border-color: #1e293b; }
+    :host ::ng-deep .gjs-pn-panel { background: #0f172a; border-color: #1e293b; z-index: 100000 !important; }
+    :host ::ng-deep .gjs-pn-options { left: auto !important; right: 340px !important; }
+    :host ::ng-deep .gjs-toolbar,
+    :host ::ng-deep .gjs-toolbar-item,
+    :host ::ng-deep .gjs-toolbar__items { z-index: 100000 !important; position: absolute !important; pointer-events: auto !important; }
+    :host ::ng-deep .gjs-toolbar { top: -34px !important; }
+    :host ::ng-deep .gjs-toolbar .gjs-toolbar-item { cursor: pointer !important; }
     :host ::ng-deep .gjs-pn-btn { fill: #94a3b8; color: #94a3b8; }
     :host ::ng-deep .gjs-pn-btn:hover { fill: #e2e8f0; color: #e2e8f0; background: rgba(255,255,255,0.05); }
     :host ::ng-deep .gjs-pn-active { fill: #e2e8f0; color: #e2e8f0; background: rgba(255,255,255,0.08); }
@@ -85,7 +91,46 @@ import type { SavedTemplate } from '../models/paving.types';
       border-left: 1px solid #1e293b;
       top: 40px !important;
     }
-    :host ::ng-deep .gjs-pn-views-container { overflow: auto !important; }
+    :host ::ng-deep .gjs-pn-views .gjs-pn-buttons { display: none !important; }
+    :host ::ng-deep .gjs-pn-views-container { overflow: auto !important; padding-top: 40px !important; }
+    :host ::ng-deep .he-view-tabs {
+      position: absolute !important;
+      top: 0 !important;
+      right: 0 !important;
+      width: 340px !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      background: #0f172a !important;
+      border-left: 1px solid #1e293b !important;
+      z-index: 100001 !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      overflow: visible !important;
+      pointer-events: auto !important;
+      box-sizing: border-box !important;
+    }
+    :host ::ng-deep .he-view-tabs button {
+      flex: 1 !important;
+      height: 40px !important;
+      min-height: 40px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: transparent !important;
+      border: none !important;
+      color: #e2e8f0 !important;
+      cursor: pointer !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    :host ::ng-deep .he-view-tabs button:hover { color: #D4AF37 !important; background: rgba(255,255,255,0.05) !important; }
+    :host ::ng-deep .he-view-tabs button.active { color: #D4AF37 !important; background: rgba(212,175,55,0.12) !important; }
+    :host ::ng-deep .he-view-tabs button svg { width: 18px !important; height: 18px !important; fill: currentColor !important; color: currentColor !important; visibility: visible !important; opacity: 1 !important; }
     :host ::ng-deep .gjs-block { box-sizing: border-box !important; width: 80px !important; max-width: 80px !important; min-width: 80px !important; flex: 0 0 80px !important; min-height: 72px !important; padding: 6px 4px !important; }
     :host ::ng-deep .gjs-block svg, :host ::ng-deep .gjs-block-media svg { width: 22px !important; height: 22px !important; max-width: 22px !important; max-height: 22px !important; }
     :host ::ng-deep .gjs-block-label { font-size: 9px !important; line-height: 1.1 !important; padding: 2px 0 0 !important; }
@@ -509,6 +554,7 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
       });
 
       this.editor.on('load', () => {
+        console.log('>>> BUILD VERSION 2026-06-26-001: red/green tabs + toolbar offset 60 + no clip-path');
         this.editor.setDevice('desktop');
 
         // Inject gallery type CSS and body reset into the canvas
@@ -821,6 +867,13 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               const traitsEl = root.querySelector('.gjs-trt-traits');
               if (traitsEl) (traitsEl as HTMLElement).style.setProperty('display', '', 'important');
             }
+            // Sync custom tab bar active state
+            const tabsBar = document.querySelector('.he-view-tabs');
+            if (tabsBar) {
+              tabsBar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+              const activeBtn = tabsBar.querySelector(`button[data-view="${val}"]`);
+              if (activeBtn) activeBtn.classList.add('active');
+            }
             console.log('[ViewIsolation] active:', activeId, 'view:', val);
           } catch (e) {}
         };
@@ -833,6 +886,81 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
         this.editor.on('component:selected', () => setTimeout(updateActiveView, 50));
         setInterval(updateActiveView, 200);
         setTimeout(updateActiveView, 200);
+
+        // ── Custom view tabs (Styles / Layers / Blocks / Traits) ──
+        // GrapesJS preset-webpage does not render the default views tab bar in this
+        // configuration, so we inject our own and wire it to the existing commands.
+        // Placed in the top toolbar row, to the right of the delete/options icons.
+        setTimeout(() => {
+          const viewsPanelEl = document.querySelector('.gjs-pn-views') as HTMLElement | null;
+          if (viewsPanelEl && !document.querySelector('.he-view-tabs')) {
+            const tabs = document.createElement('div');
+            tabs.className = 'he-view-tabs';
+            tabs.style.cssText = `
+              position: absolute !important;
+              top: 0 !important;
+              right: 0 !important;
+              width: 340px !important;
+              height: 40px !important;
+              min-height: 40px !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: space-between !important;
+              background: #0f172a !important;
+              border-left: 1px solid #1e293b !important;
+              z-index: 100001 !important;
+              visibility: visible !important;
+              opacity: 1 !important;
+              overflow: visible !important;
+              pointer-events: auto !important;
+              box-sizing: border-box !important;
+            `;
+            tabs.setAttribute('role', 'tablist');
+            const tabDefs = [
+              { id: 'styles', cmd: 'open-sm', title: 'Styles', svg: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/><circle cx="12" cy="12" r="3"/></svg>' },
+              { id: 'layers', cmd: 'open-layers', title: 'Layers', svg: '<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>' },
+              { id: 'blocks', cmd: 'open-blocks', title: 'Blocks', svg: '<svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zm10 0h6v6h-6zM4 14h6v6H4zm10 0h6v6h-6z"/></svg>' },
+              { id: 'traits', cmd: 'open-tm', title: 'Traits', svg: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10h-2a8 8 0 1 1-8-8V2z"/><circle cx="12" cy="12" r="2"/></svg>' },
+            ];
+            tabDefs.forEach(def => {
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.title = def.title;
+              btn.setAttribute('aria-label', def.title);
+              btn.setAttribute('data-view', def.id);
+              btn.style.cssText = `
+                flex: 1 !important;
+                height: 40px !important;
+                min-height: 40px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                background: transparent !important;
+                border: none !important;
+                color: #94a3b8 !important;
+                cursor: pointer !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+              `;
+              btn.innerHTML = def.svg;
+              btn.addEventListener('click', () => {
+                try { this.editor.runCommand(def.cmd); } catch (_) {}
+                tabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const container = document.querySelector('.gjs-pn-views-container');
+                if (container) container.setAttribute('data-active-view', def.id);
+                viewsPanelEl.setAttribute('data-active-view', def.id);
+              });
+              tabs.appendChild(btn);
+            });
+            el.appendChild(tabs);
+            const stylesBtn = tabs.querySelector('[data-view="styles"]');
+            if (stylesBtn) stylesBtn.classList.add('active');
+          }
+        }, 300);
 
         // Ensure hoverable matches selectable for ALL components to prevent hover/selection mismatch
         const syncHoverAndSelect = () => {
@@ -982,36 +1110,38 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
         });
 
         // ── Resizable right panel (views panel) ──
-        // Clean up any stale resizer state
-        document.querySelectorAll('.he-panel-resizer').forEach(e => e.remove());
-        document.querySelectorAll('.he-resizer-handle').forEach(e => e.remove());
-
+        // DOM injection approach: create the handle as a fixed-position element on document.body.
+        // This is the approach the user confirmed was working (visible and draggable).
+        // The GrapesJS panels are forced to z-index 100000 via CSS so the top toolbar sits above the handle.
         setTimeout(() => {
           const viewsPanel = el.querySelector('.gjs-pn-views') as HTMLElement | null;
-          console.log('[Resizer] viewsPanel found:', !!viewsPanel);
           if (!viewsPanel) return;
 
-          // Ensure editor is positioned so absolute children reference it correctly
-          const editorEl = el.querySelector('.gjs-editor') as HTMLElement | null;
-          if (editorEl && editorEl.style.position !== 'relative' && editorEl.style.position !== 'absolute' && editorEl.style.position !== 'fixed') {
-            editorEl.style.position = 'relative';
-          }
+          // Clean up any stale handle
+          document.querySelectorAll('.he-resizer-handle').forEach(e => e.remove());
 
           const viewsContainer = el.querySelector('.gjs-pn-views-container') as HTMLElement | null;
           const canvas = el.querySelector('.gjs-cv-canvas') as HTMLElement | null;
-          console.log('[Resizer] viewsPanel:', !!viewsPanel, 'viewsContainer:', !!viewsContainer, 'canvas:', !!canvas);
 
-const setPanelWidth = (w: number) => {
-  viewsPanel.style.setProperty('width', w + 'px', 'important');
-  if (viewsContainer) viewsContainer.style.setProperty('width', w + 'px', 'important');
-  if (canvas) {
-    canvas.style.setProperty('width', 'auto', 'important');
-    canvas.style.setProperty('right', w + 'px', 'important');
-  }
-  try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
-};
+          const setPanelWidth = (w: number) => {
+            viewsPanel.style.setProperty('width', w + 'px', 'important');
+            if (viewsContainer) viewsContainer.style.setProperty('width', w + 'px', 'important');
+            if (canvas) {
+              canvas.style.setProperty('width', 'auto', 'important');
+              canvas.style.setProperty('right', w + 'px', 'important');
+            }
+            // Keep options panel at the right edge of the canvas
+            const optionsPanel = el.querySelector('.gjs-pn-options') as HTMLElement | null;
+            if (optionsPanel) {
+              optionsPanel.style.setProperty('right', w + 'px', 'important');
+              optionsPanel.style.setProperty('left', 'auto', 'important');
+            }
+            // Keep custom tab bar aligned with the right edge / sidebar width
+            const tabs = el.querySelector('.he-view-tabs') as HTMLElement | null;
+            if (tabs) tabs.style.setProperty('width', w + 'px', 'important');
+            try { (this.editor as any).Panels?.getPanel?.('views')?.set?.('width', w); } catch (_) {}
+          };
 
-          // Restore saved width or use default
           const savedWidth = localStorage.getItem('he-editor-views-width');
           const defaultWidth = 340;
           const initialW = savedWidth ? parseInt(savedWidth, 10) : defaultWidth;
@@ -1019,95 +1149,100 @@ const setPanelWidth = (w: number) => {
           viewsPanel.style.minWidth = '180px';
           viewsPanel.style.maxWidth = '55vw';
 
-          // Create handle with ALL inline styles (no CSS dependency)
+          // Create the handle as a fixed-position element on document.body
           const handle = document.createElement('div');
           handle.className = 'he-resizer-handle';
 
+          const TOOLBAR_OFFSET = 60; // Fixed offset to stay below the GrapesJS top toolbar
+
           const setHandleStyle = () => {
             if (!viewsPanel.isConnected) return;
+            const containerRect = el.getBoundingClientRect();
             const vr = viewsPanel.getBoundingClientRect();
-            const editorRect = el.getBoundingClientRect();
-            // Extend handle to the bottom of the editor container (canvas bottom)
-            const handleHeight = editorRect.bottom - vr.top;
+            const rightFromContainerEdge = containerRect.right - vr.left + 2;
             handle.style.cssText = `
-              position: fixed !important;
-              left: ${vr.left}px !important;
-              top: ${vr.top}px !important;
-              width: 14px !important;
-              height: ${handleHeight}px !important;
+              position: absolute !important;
+              right: ${rightFromContainerEdge}px !important;
+              top: ${TOOLBAR_OFFSET}px !important;
+              width: 16px !important;
+              bottom: 0 !important;
               cursor: col-resize !important;
-              z-index: 99999 !important;
+              z-index: 50000 !important;
               pointer-events: auto !important;
-              border-left: 2px solid #D4AF37 !important;
-              background: rgba(0,0,0,0.1) !important;
+              background: rgba(148,163,184,0.25) !important;
+              border-right: 2px solid #D4AF37 !important;
               margin: 0 !important;
               padding: 0 !important;
+              box-sizing: border-box !important;
+              touch-action: none !important;
             `;
           };
           setHandleStyle();
-          document.body.appendChild(handle);
-          console.log('[Resizer] handle added to body');
+          el.appendChild(handle);
+          console.log('[Resizer] handle created at', handle.getBoundingClientRect());
 
           let isResizing = false;
           let startX = 0;
           let startWidth = 0;
 
-          const onMouseDown = (e: MouseEvent) => {
-            console.log('[Resizer] mousedown on handle');
+          const onPointerDown = (clientX: number, e: Event) => {
             isResizing = true;
-            startX = e.clientX;
+            startX = clientX;
             startWidth = viewsPanel.offsetWidth;
-            handle.style.borderLeftColor = '#FFD700';
-            handle.style.background = 'rgba(212,175,55,0.15)';
+            handle.style.borderRightColor = '#FFD700';
+            handle.style.background = 'rgba(212,175,55,0.25)';
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none';
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
             e.preventDefault();
           };
 
-          const onMouseMove = (e: MouseEvent) => {
+          const onPointerMove = (clientX: number) => {
             if (!isResizing) return;
-            const delta = e.clientX - startX;
-            const newWidth = startWidth - delta;
-            const minPx = 180;
-            const maxPx = Math.round(window.innerWidth * 0.55);
-            const clamped = Math.max(minPx, Math.min(maxPx, newWidth));
+            const delta = clientX - startX;
+            const clamped = Math.max(180, Math.min(Math.round(window.innerWidth * 0.55), startWidth - delta));
             setPanelWidth(clamped);
-            const vr = viewsPanel.getBoundingClientRect();
-            handle.style.left = vr.left + 'px';
-            try { (this.editor as any).Canvas.refresh({ all: true }); } catch (_) {}
+            // Only update right position, don't reset other styles (keeps clip-path intact)
+            const containerRect = el.getBoundingClientRect();
+            const vr2 = viewsPanel.getBoundingClientRect();
+            const rightFromContainerEdge = containerRect.right - vr2.left + 2;
+            handle.style.right = rightFromContainerEdge + 'px';
+            try { (this.editor as any).Canvas?.refresh?.({ all: true }); } catch (_) {}
           };
 
-          const onMouseUp = () => {
+          const onPointerUp = () => {
             if (!isResizing) return;
-            console.log('[Resizer] mouseup');
             isResizing = false;
-            handle.style.borderLeftColor = '#D4AF37';
-            handle.style.background = 'rgba(0,0,0,0.1)';
+            handle.style.borderRightColor = '#D4AF37';
+            handle.style.background = 'rgba(148,163,184,0.25)';
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
             localStorage.setItem('he-editor-views-width', String(viewsPanel.offsetWidth));
-            try { (this.editor as any).Canvas.refresh({ all: true }); } catch (_) {}
           };
 
-          handle.addEventListener('mousedown', onMouseDown);
-
-          // Keep handle aligned on window resize
-          const onWindowResize = () => {
-            setHandleStyle();
-            const current = viewsPanel.offsetWidth;
-            const maxAllowed = Math.round(window.innerWidth * 0.55);
-            if (current > maxAllowed) {
-              viewsPanel.style.width = maxAllowed + 'px';
-              try { (this.editor as any).Canvas.refresh({ all: true }); } catch (_) {}
+          const onMouseDown = (e: MouseEvent) => onPointerDown(e.clientX, e);
+          const onTouchStart = (e: TouchEvent) => {
+            const t = e.touches[0];
+            if (t) onPointerDown(t.clientX, e);
+          };
+          const onMouseMoveDoc = (e: MouseEvent) => onPointerMove(e.clientX);
+          const onTouchMoveDoc = (e: TouchEvent) => {
+            const t = e.touches[0];
+            if (t) {
+              e.preventDefault();
+              onPointerMove(t.clientX);
             }
           };
-          window.addEventListener('resize', onWindowResize);
+          const onMouseUpDoc = () => onPointerUp();
+          const onTouchEndDoc = () => onPointerUp();
 
-          // Continuous repositioning for GrapesJS internal relayouts
+          handle.addEventListener('mousedown', onMouseDown);
+          handle.addEventListener('touchstart', onTouchStart, { passive: false });
+          document.addEventListener('mousemove', onMouseMoveDoc);
+          document.addEventListener('mouseup', onMouseUpDoc);
+          document.addEventListener('touchmove', onTouchMoveDoc, { passive: false });
+          document.addEventListener('touchend', onTouchEndDoc);
+
+          // Keep handle aligned on GrapesJS internal relayouts
           const repositionInterval = setInterval(() => {
             if (!viewsPanel.isConnected) {
               clearInterval(repositionInterval);
@@ -1116,12 +1251,14 @@ const setPanelWidth = (w: number) => {
             setHandleStyle();
           }, 500);
 
-          // Clean up on editor destroy
+          const onWindowResize = () => {
+            setHandleStyle();
+          };
+          window.addEventListener('resize', onWindowResize);
+
           this.editor.on('destroy', () => {
             clearInterval(repositionInterval);
             window.removeEventListener('resize', onWindowResize);
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
             handle.remove();
           });
         }, 1000);
