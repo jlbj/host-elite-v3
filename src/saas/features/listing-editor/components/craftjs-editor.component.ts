@@ -1156,6 +1156,8 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           const el_ = component.getEl();
           if (!el_) return;
           if (el_.querySelector('[data-placeholder-resolved]')) return;
+          // Skip gallery containers — the mount handler generates photo content
+          if (el_.classList?.contains('luxury-gallery-container')) return;
           const propData = this.store.propertyData();
           // Resolve placeholders in innerHTML of any descendant
           const allWithPlaceholders: Element[] = [el_];
