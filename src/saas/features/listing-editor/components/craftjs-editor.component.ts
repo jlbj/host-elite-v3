@@ -1602,6 +1602,7 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
             const photoData = all.length > 0 ? all : [{ url: photoUrls[0], category: 'Photo' }];
             // Use the same HTML generation as templates for consistency
             const fullHtml = this.generateGalleryInnerHtml(photoData);
+            console.log('[Gallery] mount: all.length=' + all.length, 'first photo:', all[0], 'fullHtml length:', fullHtml.length, 'first 300:', fullHtml.substring(0, 300));
             if (fullHtml) {
               const newComponents = cmp.append(fullHtml);
               // Mark all gallery children as non-interactive in editor
