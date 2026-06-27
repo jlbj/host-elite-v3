@@ -8,11 +8,6 @@ import { LoggingService, LogEntry, LogCategory } from '../services/logging.servi
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <button (click)="toggle()" 
-            class="fixed top-4 right-4 z-[9998] px-3 py-1.5 bg-slate-800 text-white text-xs font-mono rounded border border-slate-600 hover:bg-slate-700 shadow-lg">
-      📋 Logs
-    </button>
-    
     @if (isVisible()) {
       <div class="fixed inset-0 bg-black/50 z-[9999] flex items-end" (click)="toggle()">
         <div class="w-full max-w-full max-h-[80vh] bg-slate-900 border-t-2 border-slate-700 text-white flex flex-col font-mono text-xs" (click)="$event.stopPropagation()">

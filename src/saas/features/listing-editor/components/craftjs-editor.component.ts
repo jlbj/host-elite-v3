@@ -45,6 +45,7 @@ function resolvePlaceholders(
     photo_4: photos && photos[3]?.url || (data.cover_image_url || ''),
     photo_5: photos && photos[4]?.url || (data.cover_image_url || ''),
     photo_6: photos && photos[5]?.url || (data.cover_image_url || ''),
+    photo_7: photos && photos[6]?.url || (data.cover_image_url || ''),
   };
   return html.replace(/\{\{(\w+)\}\}/g, (_, key) => {
     return key in map ? map[key] : `[${key} not loaded]`;
@@ -838,26 +839,31 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
         // Update data-active-view AND directly enforce visibility
         const updateActiveView = () => {
           try {
-            const viewsPanel: any = this.editor.Panels.getPanel('views');
-            if (!viewsPanel) return;
-            const btns: any = viewsPanel.get('buttons');
-            if (!btns) return;
             const container = document.querySelector('.gjs-pn-views-container');
             const views = document.querySelector('.gjs-pn-views');
             if (!container && !views) return;
-            let activeId = '';
-            btns.models.forEach((b: any) => {
-              if (b.get('active')) activeId = b.get('id');
-            });
-            const viewMap: Record<string, string> = {
-              'open-styles': 'styles',
-              'open-layers': 'layers',
-              'open-blocks': 'blocks',
-              'open-traits': 'traits',
-              'open-sm': 'styles',
-              'open-tm': 'traits',
-            };
-            const val = viewMap[activeId] || '';
+            // Determine active view: prefer custom tab bar, fall back to GrapesJS buttons
+            const activeCustomBtn = document.querySelector('.he-view-tabs button.active');
+            let activeId = activeCustomBtn?.getAttribute('data-view') || '';
+            let val = '';
+            if (activeId) {
+              val = activeId;
+            } else {
+              const viewsPanel: any = this.editor.Panels.getPanel('views');
+              const btns: any = viewsPanel?.get('buttons');
+              if (btns) {
+                btns.models.forEach((b: any) => {
+                  if (b.get('active')) activeId = b.get('id');
+                });
+                const viewMap: Record<string, string> = {
+                  'open-styles': 'styles', 'open-layers': 'layers',
+                  'open-blocks': 'blocks', 'open-traits': 'traits',
+                  'open-sm': 'styles', 'open-tm': 'traits',
+                };
+                val = viewMap[activeId] || '';
+              }
+            }
+            // Set data-active-view attribute
             if (val) {
               if (container) container.setAttribute('data-active-view', val);
               if (views) views.setAttribute('data-active-view', val);
@@ -865,19 +871,15 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               if (container) container.removeAttribute('data-active-view');
               if (views) views.removeAttribute('data-active-view');
             }
-
-            // --- Direct JavaScript enforcement (bypasses CSS selector issues) ---
-            // Use .gjs-pn-views as root because the class manager (.gjs-clm-tags) lives OUTSIDE the container
+            // Direct JavaScript enforcement
             const root = views || container || document;
             const allContent = root.querySelectorAll('.gjs-clm-tags, .gjs-clm-sels-info, .gjs-sm-sectors, .gjs-layers, .gjs-blocks-cs, .gjs-trt-traits');
             allContent.forEach((el: Element) => {
               (el as HTMLElement).style.setProperty('display', 'none', 'important');
             });
-            // Show only the active view's content
             if (val === 'layers') {
               const layersEl = root.querySelector('.gjs-layers');
               if (layersEl) (layersEl as HTMLElement).style.setProperty('display', '', 'important');
-              // Force-highlight the selected layer if any
               const selectedCmp = this.editor.getSelected();
               if (selectedCmp) {
                 const layerItems = root.querySelectorAll('.gjs-layer-item, .gjs-layer');
@@ -886,7 +888,6 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
                   (item as HTMLElement).style.removeProperty('background');
                   (item as HTMLElement).style.removeProperty('border-left');
                 });
-                // Try to find and highlight the selected component's layer
                 const id = selectedCmp.get('id') || selectedCmp.ccid;
                 root.querySelectorAll(`[data-id="${id}"], [gjs-cid="${id}"]`).forEach((el: Element) => {
                   (el as HTMLElement).style.setProperty('background', '#D4AF37', 'important');
@@ -989,12 +990,12 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               `;
               btn.innerHTML = def.svg;
               btn.addEventListener('click', () => {
-                try { this.editor.runCommand(def.cmd); } catch (_) {}
                 tabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 const container = document.querySelector('.gjs-pn-views-container');
                 if (container) container.setAttribute('data-active-view', def.id);
                 viewsPanelEl.setAttribute('data-active-view', def.id);
+                try { this.editor.runCommand(def.cmd); } catch (_) {}
               });
               tabs.appendChild(btn);
             });
@@ -1063,8 +1064,7 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
         B('he-stats', { label: 'Stats Bar', category: 'Property', media: s+'<path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/></svg>', content: '<div class="luxury-bar" data-guests="{{guests}}" data-bedrooms="{{bedrooms}}" data-bathrooms="{{bathrooms}}" style="border-bottom:1px solid #eaeaea;padding:24px 4%;display:flex;gap:40px;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.08em;color:#757575;background:#fafafa"><span>Guests <strong>{{guests}}</strong></span><span>Bedrooms <strong>{{bedrooms}}</strong></span><span>Bathrooms <strong>{{bathrooms}}</strong></span><span>Pool <strong>Heated</strong></span></div>' });
         B('he-description', { label: 'Description', category: 'Property', media: s+'<path d="M4 6h16M4 12h16M4 18h12"/></svg>', content: '<div style="max-width:1200px;margin:60px auto;padding:0 4%"><h2 style="font-size:2rem;font-weight:400;margin:0 0 24px;line-height:1.3;font-family:Playfair Display,serif">{{title}}</h2><p style="font-size:1.05rem;color:#4c4c4c;margin-bottom:30px;line-height:1.7">{{description}}</p></div>' });
         B('he-amenities', { label: 'Amenities', category: 'Property', media: s+'<path d="M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 16c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg>', content: '<div style="border-top:1px solid #eaeaea;padding-top:40px;margin:40px 0"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:24px;text-transform:uppercase;letter-spacing:0.08em">{{title}} Amenities ({{amenities_count}})</h3><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px 40px"><div style="display:flex;align-items:center;gap:12px;font-size:0.95rem;color:#4c4c4c"><span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%"><path d="M2 20c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 16c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M12 2v10"/><path d="M8 6h8"/></svg></span><span>Heated Pool</span></div><div style="display:flex;align-items:center;gap:12px;font-size:0.95rem;color:#4c4c4c"><span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%"><path d="M4 12c0-2 2-4 4-4s4 2 4 4"/><path d="M12 12c0-2 2-4 4-4s4 2 4 4"/><path d="M4 20c0-2 2-4 4-4"/><path d="M16 16c2 0 4 2 4 4"/></svg></span><span>Spa & Sauna</span></div><div style="display:flex;align-items:center;gap:12px;font-size:0.95rem;color:#4c4c4c"><span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M9 8v8l6-4z"/></svg></span><span>Cinema Room</span></div><div style="display:flex;align-items:center;gap:12px;font-size:0.95rem;color:#4c4c4c"><span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:100%;height:100%"><path d="M12 2v12"/><path d="M8 14h8v8H8z"/><path d="M6 10c0-3 2-5 6-5s6 2 6 5"/></svg></span><span>Wine Cellar</span></div></div></div>' });
-        B('he-gallery', { label: 'Gallery', category: 'Property', media: s+'<rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="4" rx="1"/><rect x="2" y="14" width="4" height="8" rx="1"/><rect x="10" y="14" width="12" height="8" rx="1"/></svg>', content: '<div class="luxury-gallery-container" data-gallery-type="lookbook" style="max-width:1200px;margin:80px auto;padding:0 4%"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:32px;text-transform:uppercase;letter-spacing:0.08em">{{title}} Gallery</h3><style>.luxury-gallery-container .gallery-lookbook{display:none}.luxury-gallery-container .gallery-filmstrip{display:none}.luxury-gallery-container .gallery-grid{display:none}.luxury-gallery-container[data-gallery-type=lookbook] .gallery-lookbook{display:grid!important}.luxury-gallery-container[data-gallery-type=filmstrip] .gallery-filmstrip{display:block!important}.luxury-gallery-container[data-gallery-type=grid] .gallery-grid{display:grid!important}.gallery-lookbook{background:#fcfbfa;padding:60px 5%;display:grid;grid-template-columns:repeat(12,1fr);gap:32px}.gallery-lookbook>div:nth-child(4n+1){grid-column:1/span 7}.gallery-lookbook>div:nth-child(4n+2){grid-column:9/span 4;margin-top:80px}.gallery-lookbook>div:nth-child(4n+3){grid-column:2/span 5;margin-top:-40px}.gallery-lookbook>div:nth-child(4n){grid-column:8/span 5;margin-top:50px}.gallery-lookbook img{width:100%;object-fit:cover;display:block}.gallery-filmstrip{background:#0d0d0d;padding:40px 0;overflow:hidden}.filmstrip-track{display:flex;gap:40px;overflow-x:auto;padding:20px 8%}.filmstrip-track>div{width:350px;aspect-ratio:3/4;overflow:hidden;background:#1a1a1a}.filmstrip-track img{width:100%;height:100%;object-fit:cover}.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:20px 4%}.gallery-grid img{width:100%;height:250px;object-fit:cover;border-radius:4px}</style><div class="gallery-lookbook"><div><img src="{{photo_1}}" />photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" /></div><div><img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80" /></div><div><img src="https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=600&q=80" /></div><div><img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80" /></div></div><div class="gallery-filmstrip"><div class="filmstrip-track"><div><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" /></div><div><img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80" /></div><div><img src="https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=600&q=80" /></div></div></div><div class="gallery-grid"><img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80" /><img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80" /><img src="https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=600&q=80" /><img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=600&q=80" /><img src="https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=600&q=80" /><img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80" /></div></div>' });
-        B('he-booking', { label: 'Booking Card', category: 'Property', media: s+'<rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>', content: '<div class="luxury-booking-card" data-price="{{price}}" data-currency="€" data-period="week" style="border:1px solid #eaeaea;border-radius:4px;padding:32px;box-shadow:0 10px 30px rgba(0,0,0,0.03);background:#fff;max-width:400px;margin:40px auto"><div style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.1em;color:#757575">Weekly Price From</div><div style="font-size:1.8rem;font-weight:500;color:#202020;margin:4px 0 24px">{{currency}}{{price_formatted}} <span style="font-size:0.9rem;font-weight:400;color:#757575">/ week</span></div><button style="width:100%;padding:16px;background-color:#202020;color:#fff;border:none;border-radius:2px;font-size:0.9rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer">Inquire</button></div>' });
+        B('he-gallery', { label: 'Gallery', category: 'Property', media: s+'<rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="4" rx="1"/><rect x="2" y="14" width="4" height="8" rx="1"/><rect x="10" y="14" width="12" height="8" rx="1"/></svg>', content: '<div class="luxury-gallery-container" data-gallery-type="lookbook" style="max-width:1200px;margin:80px auto;padding:0 4%"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:32px;text-transform:uppercase;letter-spacing:0.08em">{{title}} Gallery</h3><style>.luxury-gallery-container .gallery-lookbook{display:none}.luxury-gallery-container .gallery-filmstrip{display:none}.luxury-gallery-container .gallery-grid{display:none}.luxury-gallery-container[data-gallery-type=lookbook] .gallery-lookbook{display:grid!important}.luxury-gallery-container[data-gallery-type=filmstrip] .gallery-filmstrip{display:block!important}.luxury-gallery-container[data-gallery-type=grid] .gallery-grid{display:grid!important}.gallery-lookbook{background:#fcfbfa;padding:60px 5%;display:grid;grid-template-columns:repeat(12,1fr);gap:32px}.gallery-lookbook>div:nth-child(4n+1){grid-column:1/span 7}.gallery-lookbook>div:nth-child(4n+2){grid-column:9/span 4;margin-top:80px}.gallery-lookbook>div:nth-child(4n+3){grid-column:2/span 5;margin-top:-40px}.gallery-lookbook>div:nth-child(4n){grid-column:8/span 5;margin-top:50px}.gallery-lookbook img{width:100%;object-fit:cover;display:block}.gallery-filmstrip{background:#0d0d0d;padding:40px 0;overflow:hidden}.filmstrip-track{display:flex;gap:40px;overflow-x:auto;padding:20px 8%}.filmstrip-track>div{width:350px;aspect-ratio:3/4;overflow:hidden;background:#1a1a1a}.filmstrip-track img{width:100%;height:100%;object-fit:cover}.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;padding:20px 4%}.gallery-grid img{width:100%;height:250px;object-fit:cover;border-radius:4px}</style></div>' });        B('he-booking', { label: 'Booking Card', category: 'Property', media: s+'<rect x="2" y="4" width="20" height="16" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>', content: '<div class="luxury-booking-card" data-price="{{price}}" data-currency="€" data-period="week" style="border:1px solid #eaeaea;border-radius:4px;padding:32px;box-shadow:0 10px 30px rgba(0,0,0,0.03);background:#fff;max-width:400px;margin:40px auto"><div style="font-size:0.85rem;text-transform:uppercase;letter-spacing:0.1em;color:#757575">Weekly Price From</div><div style="font-size:1.8rem;font-weight:500;color:#202020;margin:4px 0 24px">{{currency}}{{price_formatted}} <span style="font-size:0.9rem;font-weight:400;color:#757575">/ week</span></div><button style="width:100%;padding:16px;background-color:#202020;color:#fff;border:none;border-radius:2px;font-size:0.9rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer">Inquire</button></div>' });
         B('he-contact', { label: 'Contact', category: 'Property', media: s+'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg>', content: '<div style="max-width:600px;margin:40px auto;padding:0 4%;text-align:center"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:24px;text-transform:uppercase;letter-spacing:0.08em;font-family:Playfair Display,serif">Get In Touch</h3><p style="color:#4c4c4c;margin-bottom:8px">📍 {{location}}</p><p style="color:#4c4c4c;margin-bottom:8px">📞 +1 (310) 555-0123</p><p style="color:#4c4c4c">✉️ concierge@theluxuryestate.com</p></div>' });
         B('he-testimonials', { label: 'Testimonials', category: 'Property', media: s+'<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2"/></svg>', content: '<div style="max-width:1200px;margin:60px auto;padding:0 4%"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:32px;text-transform:uppercase;letter-spacing:0.08em;text-align:center">Guest Reviews of {{title}}</h3><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px"><div style="background:#fafafa;padding:24px;border-radius:8px"><p style="font-style:italic;color:#4c4c4c;line-height:1.6;font-size:0.95rem">&ldquo;An absolutely magical experience. The villa exceeded every expectation.&rdquo;</p><p style="font-weight:600;margin-top:16px;color:#202020">Elizabeth Mitchell</p></div><div style="background:#fafafa;padding:24px;border-radius:8px"><p style="font-style:italic;color:#4c4c4c;line-height:1.6;font-size:0.95rem">&ldquo;Pure perfection. From the private chef dinner to sunset yoga.&rdquo;</p><p style="font-weight:600;margin-top:16px;color:#202020">Sophie Laurent</p></div><div style="background:#fafafa;padding:24px;border-radius:8px"><p style="font-style:italic;color:#4c4c4c;line-height:1.6;font-size:0.95rem">&ldquo;The perfect family getaway. Kids loved the pool!&rdquo;</p><p style="font-weight:600;margin-top:16px;color:#202020">The Anderson Family</p></div></div></div>' });
         B('he-rules', { label: 'House Rules', category: 'Property', media: s+'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12l2 2 4-4"/></svg>', content: '<div style="max-width:800px;margin:40px auto;padding:0 4%"><h3 style="font-size:1.4rem;font-weight:400;margin-bottom:24px;text-transform:uppercase;letter-spacing:0.08em">House Rules</h3><ul style="list-style:none;padding:0;color:#4c4c4c;line-height:2.2"><li>✓ Check-in: 4:00 PM - 10:00 PM</li><li>✓ Check-out: 11:00 AM</li><li>✓ No smoking indoors</li><li>✓ Pets considered on request</li><li>✓ Quiet hours after 10:00 PM</li><li>✓ Maximum {{guests}} guests</li></ul></div>' });
@@ -1154,20 +1154,29 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
         // ── Resolve property data placeholders on block drop ──
         this.editor.on('component:create', (component: any) => {
           const el_ = component.getEl();
-          if (!el_ || !el_.innerHTML.includes('{{')) return;
+          if (!el_) return;
           if (el_.querySelector('[data-placeholder-resolved]')) return;
           const propData = this.store.propertyData();
-          const resolved = resolvePlaceholders(el_.innerHTML, propData, equipments, photos);
-          if (resolved !== el_.innerHTML) {
-            el_.innerHTML = resolved;
-            el_.setAttribute('data-placeholder-resolved', 'true');
-          }
-          // Also resolve placeholders in data attributes
-          for (const attr of el_.attributes) {
-            if (attr.value.includes('{{')) {
-              attr.value = resolvePlaceholders(attr.value, propData, equipments, photos);
+          // Resolve placeholders in innerHTML of any descendant
+          const allWithPlaceholders: Element[] = [el_];
+          el_.querySelectorAll('*').forEach((child: Element) => allWithPlaceholders.push(child));
+          let resolved = false;
+          for (const elem of allWithPlaceholders) {
+            if (elem.innerHTML.includes('{{')) {
+              const r = resolvePlaceholders(elem.innerHTML, propData, equipments, photos);
+              if (r !== elem.innerHTML) {
+                elem.innerHTML = r;
+                resolved = true;
+              }
+            }
+            for (const attr of elem.attributes) {
+              if (attr.value.includes('{{')) {
+                attr.value = resolvePlaceholders(attr.value, propData, equipments, photos);
+                resolved = true;
+              }
             }
           }
+          if (resolved) el_.setAttribute('data-placeholder-resolved', 'true');
         });
 
         // ── Resizable right panel (views panel) ──
