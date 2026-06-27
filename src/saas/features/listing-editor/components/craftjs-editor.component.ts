@@ -1602,7 +1602,6 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
             const photoData = all.length > 0 ? all : [{ url: photoUrls[0], category: 'Photo' }];
             // Use the same HTML generation as templates for consistency
             const fullHtml = this.generateGalleryInnerHtml(photoData);
-            console.log('[Gallery] mount: all.length=' + all.length, 'first photo:', all[0], 'fullHtml length:', fullHtml.length, 'first 300:', fullHtml.substring(0, 300));
             if (fullHtml) {
               const newComponents = cmp.append(fullHtml);
               // Mark all gallery children as non-interactive in editor
@@ -2388,10 +2387,7 @@ try{
   }
 
   private generateGalleryHtml(mode: string, photos: { url: string; category?: string }[]): string {
-    console.log('[Gallery] generateGalleryHtml called with', photos.length, 'photos, first:', photos[0]);
-    const result = `<div class="luxury-gallery-container" data-gallery-type="${mode}">${this.generateGalleryInnerHtml(photos)}</div>`;
-    console.log('[Gallery] result length:', result.length);
-    return result;
+    return `<div class="luxury-gallery-container" data-gallery-type="${mode}">${this.generateGalleryInnerHtml(photos)}</div>`;
   }
 
   private generateGalleryInnerHtml(photos: { url: string; category?: string }[]): string {
@@ -2514,39 +2510,39 @@ try{
     "><div class="scatter-bg-canvas" style="position:absolute; inset:0; pointer-events:none; overflow:hidden;"></div><div class="scatter-content-grid" style="position:relative; z-index:10;"><div class="scatter-menu">${scatterMenuItems}</div><div class="scatter-preview"><img class="scatter-preview-image" src="${photos[0] || ''}" alt="Preview" /></div></div></div>`;
 
     const count = Math.min(photos.length, 20);
-    const carouselItems = photos.slice(0, count).map((src, i) => {
+    const carouselItems = photos.slice(0, count).map((p, i) => {
       const angle = i * (360 / Math.min(count, photos.length));
-      return `<div class="carousel-item-3d" style="transform:rotateY(${angle}deg) translateZ(280px)"><img src="${src}" /><div class="card-meta"><span class="card-tag">Photo</span><h4 class="card-title">Photo ${i + 1}</h4></div></div>`;
+      return `<div class="carousel-item-3d" style="transform:rotateY(${angle}deg) translateZ(280px)"><img src="${p.url}" /><div class="card-meta"><span class="card-tag">${getName(p, i)}</span><h4 class="card-title">${getName(p, i)}</h4></div></div>`;
     }).join('');
     const carousel3dHtml = `<div class="gallery-3d-carousel"><div class="carousel-perspective"><div class="carousel-3d-stage" id="carousel-stage">${carouselItems}</div><div class="carousel-controls"><button class="control-btn" id="carousel-prev">&#10094;</button><button class="control-btn play-pause-btn" id="carousel-play-pause"><svg class="play-icon" viewBox="0 0 24 24" width="16" height="16"><path d="M8 5v14l11-7z" fill="currentColor"/></svg><svg class="pause-icon" viewBox="0 0 24 24" width="16" height="16" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="currentColor"/></svg></button><button class="control-btn" id="carousel-next">&#10095;</button></div><div class="carousel-hint">Drag or swipe to spin</div></div></div>`;
 
-    const isoCards = photos.slice(0, count).map(src => `
-      <div class="iso-card"><img src="${src}" class="iso-card-image" /><div class="iso-card-overlay"><span class="iso-tag">Photo</span><h4 class="iso-title">Photo</h4></div></div>
+    const isoCards = photos.slice(0, count).map((p, i) => `
+      <div class="iso-card"><img src="${p.url}" class="iso-card-image" /><div class="iso-card-overlay"><span class="iso-tag">${getName(p, i)}</span><h4 class="iso-title">${getName(p, i)}</h4></div></div>
     `).join('');
     const isometricHtml = `<div class="gallery-isometric-grid"><div class="iso-workspace"><div class="iso-controls"><div class="iso-hint">Hover cards for 3D elevation</div><button class="iso-toggle-btn" id="iso-toggle-angle-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/></svg><span>Toggle 3D View</span></button></div><div class="iso-stage"><div class="iso-grid active-3d" id="iso-grid">${isoCards}</div></div></div></div>`;
 
-    const masonryItems = photos.slice(0, count).map(src => `
-      <div class="masonry-item"><img src="${src}" /><div class="masonry-overlay"><span class="masonry-meta-tag">Photo</span><h4 class="masonry-meta-title">Photo</h4></div></div>
+    const masonryItems = photos.slice(0, count).map((p, i) => `
+      <div class="masonry-item"><img src="${p.url}" /><div class="masonry-overlay"><span class="masonry-meta-tag">${getName(p, i)}</span><h4 class="masonry-meta-title">${getName(p, i)}</h4></div></div>
     `).join('');
     const masonryHtml = `<div class="gallery-masonry"><div class="masonry-wrapper-field"><div class="filter-toolbar" id="filter-tabs"><button class="filter-tab active" data-filter="all">All</button></div><div class="masonry-grid-canvas" id="masonry-canvas">${masonryItems}</div></div></div>`;
 
-    const kenSlides = photos.slice(0, count).map((src, i) => `
-      <div class="ken-slide ${i === 0 ? 'active' : ''}" id="slide-${i}"><img src="${src}" /></div>
+    const kenSlides = photos.slice(0, count).map((p, i) => `
+      <div class="ken-slide ${i === 0 ? 'active' : ''}" id="slide-${i}"><img src="${p.url}" /></div>
     `).join('');
     const kenBurnsHtml = `<div class="gallery-ken-burns"><div class="slideshow-stage-ken"><div class="slideshow-canvas" id="slideshow-canvas">${kenSlides}</div><div class="slideshow-overlay-card"><span class="slideshow-cat" id="slide-tag">Photo</span><h2 class="slideshow-headline" id="slide-title">Photo</h2><p class="slideshow-synopsis" id="slide-desc">Property photo</p><div class="slideshow-action-bar"><button class="action-btn prev-btn" id="slide-prev">&#10094;</button><button class="action-btn action-circle-btn" id="slide-play-pause"><svg class="play-svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="pause-svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button><button class="action-btn next-btn" id="slide-next">&#10095;</button></div></div><div class="slideshow-progress-track"><div class="slideshow-progress-bar" id="slide-progress-bar"></div></div><div class="slideshow-bullets" id="slide-bullets"></div></div></div>`;
 
-    const accordionPanes = photos.slice(0, count).map((src, i) => `
-      <div class="accordion-pane ${i === 0 ? 'active' : ''}"><img src="${src}" /><div class="pane-shroud"></div><div class="pane-text-card"><span class="pane-tag">Photo</span><h4 class="pane-title">Photo ${i + 1}</h4></div><span class="pane-collapsed-line">Photo ${i + 1}</span></div>
+    const accordionPanes = photos.slice(0, count).map((p, i) => `
+      <div class="accordion-pane ${i === 0 ? 'active' : ''}"><img src="${p.url}" /><div class="pane-shroud"></div><div class="pane-text-card"><span class="pane-tag">${getName(p, i)}</span><h4 class="pane-title">${getName(p, i)}</h4></div><span class="pane-collapsed-line">${getName(p, i)}</span></div>
     `).join('');
     const accordionHtml = `<div class="gallery-accordion"><div class="accordion-container" id="accordion-container">${accordionPanes}</div></div>`;
 
-    const parallaxCards = photos.slice(0, count).map((src, i) => `
-      <div class="strip-card"><div class="strip-card-image-box"><img src="${src}" /></div><div class="strip-card-overlay"><span class="strip-tag">Photo</span><h4 class="strip-title">Photo ${i + 1}</h4></div></div>
+    const parallaxCards = photos.slice(0, count).map((p, i) => `
+      <div class="strip-card"><div class="strip-card-image-box"><img src="${p.url}" /></div><div class="strip-card-overlay"><span class="strip-tag">${getName(p, i)}</span><h4 class="strip-title">${getName(p, i)}</h4></div></div>
     `).join('');
     const parallaxHtml = `<div class="gallery-parallax"><div class="parallax-strip-viewport" id="strip-viewport"><div class="parallax-strip-grid" id="strip-grid">${parallaxCards}</div><div class="strip-footer"><div class="strip-hint">Drag horizontally</div><div class="strip-scroll-track"><div class="strip-scroll-bar" id="strip-bar"></div></div></div></div></div>`;
 
-    const polaroidCards = photos.slice(0, count).map((src, i) => `
-      <div class="polaroid-card"><img src="${src}" /><div class="polaroid-text-pane"><div class="polaroid-card-title">Photo ${i + 1}</div></div></div>
+    const polaroidCards = photos.slice(0, count).map((p, i) => `
+      <div class="polaroid-card"><img src="${p.url}" /><div class="polaroid-text-pane"><div class="polaroid-card-title">${getName(p, i)}</div></div></div>
     `).join('');
     const polaroidHtml = `<div class="gallery-polaroid"><div class="polaroid-desk" id="polaroid-desk"><div class="polaroid-desk-header"><div class="polaroid-desk-hint">Click photo to focus</div><button class="reshuffle-btn" id="polaroid-reshuffle-btn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.656 48.656 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3"/></svg>Reshuffle</button></div><div class="polaroid-pile" id="polaroid-pile">${polaroidCards}</div></div></div>`;
 
