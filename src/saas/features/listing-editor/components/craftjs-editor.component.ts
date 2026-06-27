@@ -512,7 +512,7 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
       priceHtml = '<div class="luxury-price-label">Weekly Price From</div><div class="luxury-price">€62,515 <span style="font-size:0.9rem; font-weight:400; color:#757575;">/ week</span></div>';
     }
 
-    const galleryHtml = this.generateGalleryHtml(this.galleryMode(), displayPhotos);
+    const galleryHtml = this.generateGalleryHtml(this.galleryMode(), photos);
 
     // Features for Iconic template
     const defaultFeatures = [
@@ -836,7 +836,6 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
           document.head.appendChild(style);
         }
 
-        // Update data-active-view AND directly enforce visibility
         const updateActiveView = () => {
           try {
             const container = document.querySelector('.gjs-pn-views-container');
@@ -863,7 +862,8 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
                 val = viewMap[activeId] || '';
               }
             }
-            // Set data-active-view attribute
+            console.log('[VIEW]', 'customActive=' + (activeCustomBtn?.getAttribute('data-view') || 'none'), 'val=' + val);
+            // Set data-active-view attribute — CSS rules handle the show/hide
             if (val) {
               if (container) container.setAttribute('data-active-view', val);
               if (views) views.setAttribute('data-active-view', val);
@@ -871,53 +871,15 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
               if (container) container.removeAttribute('data-active-view');
               if (views) views.removeAttribute('data-active-view');
             }
-            // Direct JavaScript enforcement
-            const root = views || container || document;
-            const allContent = root.querySelectorAll('.gjs-clm-tags, .gjs-clm-sels-info, .gjs-sm-sectors, .gjs-layers, .gjs-blocks-cs, .gjs-trt-traits');
-            allContent.forEach((el: Element) => {
-              (el as HTMLElement).style.setProperty('display', 'none', 'important');
-            });
-            if (val === 'layers') {
-              const layersEl = root.querySelector('.gjs-layers');
-              if (layersEl) (layersEl as HTMLElement).style.setProperty('display', '', 'important');
-              const selectedCmp = this.editor.getSelected();
-              if (selectedCmp) {
-                const layerItems = root.querySelectorAll('.gjs-layer-item, .gjs-layer');
-                layerItems.forEach((item: Element) => {
-                  (item as HTMLElement).classList.remove('he-layer-selected');
-                  (item as HTMLElement).style.removeProperty('background');
-                  (item as HTMLElement).style.removeProperty('border-left');
-                });
-                const id = selectedCmp.get('id') || selectedCmp.ccid;
-                root.querySelectorAll(`[data-id="${id}"], [gjs-cid="${id}"]`).forEach((el: Element) => {
-                  (el as HTMLElement).style.setProperty('background', '#D4AF37', 'important');
-                  (el as HTMLElement).style.setProperty('color', '#000', 'important');
-                  (el as HTMLElement).style.setProperty('border-left', '3px solid #0f172a', 'important');
-                  (el as HTMLElement).style.setProperty('text-decoration', 'none', 'important');
-                });
+            // Sync custom tab bar active state to match GrapesJS state (only when GrapesJS is the source)
+            if (!activeId && val) {
+              const tabsBar = document.querySelector('.he-view-tabs');
+              if (tabsBar) {
+                tabsBar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+                const activeBtn = tabsBar.querySelector(`button[data-view="${val}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
               }
-            } else if (val === 'blocks') {
-              const blocksEl = root.querySelector('.gjs-blocks-cs');
-              if (blocksEl) (blocksEl as HTMLElement).style.setProperty('display', '', 'important');
-            } else if (val === 'styles') {
-              const smEl = root.querySelector('.gjs-sm-sectors');
-              const clmEl = root.querySelector('.gjs-clm-tags');
-              const infoEl = root.querySelector('.gjs-clm-sels-info');
-              if (smEl) (smEl as HTMLElement).style.setProperty('display', '', 'important');
-              if (clmEl) (clmEl as HTMLElement).style.setProperty('display', '', 'important');
-              if (infoEl) (infoEl as HTMLElement).style.setProperty('display', '', 'important');
-            } else if (val === 'traits') {
-              const traitsEl = root.querySelector('.gjs-trt-traits');
-              if (traitsEl) (traitsEl as HTMLElement).style.setProperty('display', '', 'important');
             }
-            // Sync custom tab bar active state
-            const tabsBar = document.querySelector('.he-view-tabs');
-            if (tabsBar) {
-              tabsBar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-              const activeBtn = tabsBar.querySelector(`button[data-view="${val}"]`);
-              if (activeBtn) activeBtn.classList.add('active');
-            }
-            console.log('[ViewIsolation] active:', activeId, 'view:', val);
           } catch (e) {}
         };
 
@@ -1637,8 +1599,9 @@ export class CraftjsEditorComponent implements AfterViewInit, OnDestroy {
             cmp.set('data-gallery-structures-added', true);
             
             const photoUrls = all.length > 0 ? all.map((p: any) => p.url) : ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80'];
+            const photoData = all.length > 0 ? all : [{ url: photoUrls[0], category: 'Photo' }];
             // Use the same HTML generation as templates for consistency
-            const fullHtml = this.generateGalleryInnerHtml(photoUrls);
+            const fullHtml = this.generateGalleryInnerHtml(photoData);
             if (fullHtml) {
               const newComponents = cmp.append(fullHtml);
               // Mark all gallery children as non-interactive in editor
@@ -2423,11 +2386,11 @@ try{
     }
   }
 
-  private generateGalleryHtml(mode: string, photos: string[]): string {
+  private generateGalleryHtml(mode: string, photos: { url: string; category?: string }[]): string {
     return `<div class="luxury-gallery-container" data-gallery-type="${mode}">${this.generateGalleryInnerHtml(photos)}</div>`;
   }
 
-  private generateGalleryInnerHtml(photos: string[]): string {
+  private generateGalleryInnerHtml(photos: { url: string; category?: string }[]): string {
     const styleBlock = `
 <style>
 .luxury-gallery-container { width: 100%; display: flex; flex-direction: column; }
@@ -2473,13 +2436,14 @@ try{
 </style>`;
 
     const photosJson = JSON.stringify(photos);
-    const lookbookItems = photos.map((url, i) => `<div class="lookbook-item"><div class="lookbook-image-wrapper"><img src="${url}" alt="Lookbook ${i+1}" /></div></div>`).join('');
-    const filmstripItems = photos.map((url, i) => `<div class="filmstrip-item"><div class="filmstrip-image-wrapper"><img src="${url}" alt="Filmstrip ${i+1}" /></div></div>`).join('');
-    const curtainSlides = photos.map((url, i) => `<div class="curtain-slide ${i === 0 ? 'active' : ''}"><img src="${url}" alt="Slide ${i+1}" /></div>`).join('');
-    
-    const scatterMenuItems = photos.map((url, i) => `
+    const getName = (p: { url: string; category?: string }, i: number) => p.category || `Photo ${i+1}`;
+    const lookbookItems = photos.map((p, i) => `<div class="lookbook-item"><div class="lookbook-image-wrapper"><img src="${p.url}" alt="${getName(p, i)}" /></div></div>`).join('');
+    const filmstripItems = photos.map((p, i) => `<div class="filmstrip-item"><div class="filmstrip-image-wrapper"><img src="${p.url}" alt="${getName(p, i)}" /></div></div>`).join('');
+    const curtainSlides = photos.map((p, i) => `<div class="curtain-slide ${i === 0 ? 'active' : ''}"><img src="${p.url}" alt="${getName(p, i)}" /></div>`).join('');
+
+    const scatterMenuItems = photos.map((p, i) => `
       <div role="button" tabindex="0" class="scatter-menu-item ${i === 0 ? 'active' : ''}" style="outline:none;" onmouseenter="
-        
+
         this.parentNode.querySelectorAll('.scatter-menu-item').forEach(el => el.classList.remove('active'));
         this.classList.add('active');
         const idx = Array.from(this.parentNode.querySelectorAll('.scatter-menu-item')).indexOf(this);
@@ -2489,7 +2453,7 @@ try{
           const images = photosData ? JSON.parse(photosData) : [];
           if (images[idx]) previewImg.src = images[idx];
         }
-      ">Photo ${i+1}</div>`).join('');
+      ">${getName(p, i)}</div>`).join('');
 
     const lookbookHtml = `<div class="gallery-lookbook">${lookbookItems}</div>`;
     const filmstripHtml = `<div class="gallery-filmstrip"><div class="filmstrip-track">${filmstripItems}</div></div>`;
@@ -2803,7 +2767,7 @@ try{
     // 9. Map Gallery Container
     const luxuryGallery = doc.querySelector('.luxury-gallery-container');
     if (luxuryGallery && photos.length > 0) {
-      const newGalleryHtml = this.generateGalleryHtml(this.galleryMode(), photos.map(p => p.url));
+      const newGalleryHtml = this.generateGalleryHtml(this.galleryMode(), photos);
       const tempDiv = doc.createElement('div');
       tempDiv.innerHTML = newGalleryHtml;
       if (tempDiv.firstElementChild) {
