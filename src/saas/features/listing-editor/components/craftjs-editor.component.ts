@@ -2388,7 +2388,10 @@ try{
   }
 
   private generateGalleryHtml(mode: string, photos: { url: string; category?: string }[]): string {
-    return `<div class="luxury-gallery-container" data-gallery-type="${mode}">${this.generateGalleryInnerHtml(photos)}</div>`;
+    console.log('[Gallery] generateGalleryHtml called with', photos.length, 'photos, first:', photos[0]);
+    const result = `<div class="luxury-gallery-container" data-gallery-type="${mode}">${this.generateGalleryInnerHtml(photos)}</div>`;
+    console.log('[Gallery] result length:', result.length);
+    return result;
   }
 
   private generateGalleryInnerHtml(photos: { url: string; category?: string }[]): string {
@@ -2452,7 +2455,7 @@ try{
         if (previewImg) {
           const photosData = this.closest('.gallery-scatter').getAttribute('data-photos');
           const images = photosData ? JSON.parse(photosData) : [];
-          if (images[idx]) previewImg.src = images[idx];
+          if (images[idx]) previewImg.src = images[idx].url || images[idx];
         }
       ">${getName(p, i)}</div>`).join('');
 
@@ -2474,7 +2477,8 @@ try{
         const activeIdx = menu ? Array.from(menu.querySelectorAll('.scatter-menu-item')).findIndex(c => c.classList.contains('active')) : 0;
         const images = JSON.parse(this.getAttribute('data-photos') || '[]');
         if (images.length === 0) return;
-        const url = images[activeIdx] || images[0];
+        const photo = images[activeIdx] || images[0];
+        const url = photo.url || photo;
         
         const canvas = this.querySelector('.scatter-bg-canvas') || this;
         const particle = document.createElement('div');
