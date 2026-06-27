@@ -2080,6 +2080,14 @@ try{
         if (bullet) bullet.classList.toggle('active', i === idx);
       });
       currentIdx = idx;
+      // Update text labels from the active slide's data attributes
+      var activeSlide = slides[idx];
+      if (activeSlide) {
+        var name = activeSlide.getAttribute('data-name') || 'Photo';
+        if (tagEl) tagEl.textContent = name;
+        if (titleEl) titleEl.textContent = name;
+        if (descEl) descEl.textContent = 'Property photo';
+      }
       resetProgress();
     }
     function nextKen(){
@@ -2527,7 +2535,7 @@ try{
     const masonryHtml = `<div class="gallery-masonry"><div class="masonry-wrapper-field"><div class="filter-toolbar" id="filter-tabs"><button class="filter-tab active" data-filter="all">All</button></div><div class="masonry-grid-canvas" id="masonry-canvas">${masonryItems}</div></div></div>`;
 
     const kenSlides = photos.slice(0, count).map((p, i) => `
-      <div class="ken-slide ${i === 0 ? 'active' : ''}" id="slide-${i}"><img src="${p.url}" /></div>
+      <div class="ken-slide ${i === 0 ? 'active' : ''}" id="slide-${i}" data-name="${getName(p, i)}" data-category="Photo"><img src="${p.url}" alt="${getName(p, i)}" /></div>
     `).join('');
     const kenBurnsHtml = `<div class="gallery-ken-burns"><div class="slideshow-stage-ken"><div class="slideshow-canvas" id="slideshow-canvas">${kenSlides}</div><div class="slideshow-overlay-card"><span class="slideshow-cat" id="slide-tag">Photo</span><h2 class="slideshow-headline" id="slide-title">Photo</h2><p class="slideshow-synopsis" id="slide-desc">Property photo</p><div class="slideshow-action-bar"><button class="action-btn prev-btn" id="slide-prev">&#10094;</button><button class="action-btn action-circle-btn" id="slide-play-pause"><svg class="play-svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><svg class="pause-svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button><button class="action-btn next-btn" id="slide-next">&#10095;</button></div></div><div class="slideshow-progress-track"><div class="slideshow-progress-bar" id="slide-progress-bar"></div></div><div class="slideshow-bullets" id="slide-bullets"></div></div></div>`;
 
